@@ -1,4 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.List" %>
+<%@ page import="model.SuCo" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -24,7 +26,7 @@
             position: fixed;
             left: 0;
             top: 0;
-            border-right: 1px solid #e0e0e0; /* Dùng border thay cho shadow để trông phẳng và liền mạch hơn */
+            border-right: 1px solid #e0e0e0;
             z-index: 1000;
         }
         .main-content {
@@ -51,7 +53,6 @@
             padding: 10px 20px;
             margin-top: 15px;
         }
-        /* Căn lề icon menu */
         .w-20px {
             width: 22px;
             text-align: center;
@@ -60,13 +61,15 @@
         .top-header {
             background-color: #ffffff;
             height: 60px;
-            border-bottom: 1px solid #e0e0e0; /* Đường viền dưới liền mạch với sidebar */
+            border-bottom: 1px solid #e0e0e0;
             display: flex;
             justify-content: flex-end;
             align-items: center;
             padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
         }
-        /* Hero Banner Gradient */
         .hero-banner {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #20c997 100%);
             border-radius: 15px;
@@ -75,7 +78,6 @@
             margin-top: 20px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        /* Stat Cards */
         .stat-card {
             border: none;
             border-radius: 12px;
@@ -100,7 +102,6 @@
 
 <!-- SIDEBAR -->
 <div class="sidebar d-flex flex-column" style="overflow-y: auto;">
-    <!-- Thêm border-bottom đồng nhất với top-header để tạo cảm giác liền mạch -->
     <div class="d-flex align-items-center p-3" style="height: 60px; border-bottom: 1px solid #e0e0e0;">
         <i class="fa-solid fa-building-shield fs-4 text-warning me-2"></i>
         <h5 class="mb-0 fw-bold text-dark" style="font-size: 1.1rem;">KTX - ĐHCNHN</h5>
@@ -113,7 +114,6 @@
     <div class="sidebar-heading">Dịch vụ KTX</div>
     <a href="#" class="nav-link"><i class="fa-solid fa-wrench me-2 w-20px"></i> Báo cáo sự cố</a>
     <a href="#" class="nav-link"><i class="fa-solid fa-list-check me-2 w-20px"></i> Lịch sử báo cáo</a>
-
 
     <div class="sidebar-heading">Trợ giúp & Liên hệ</div>
     <a href="#" class="nav-link"><i class="fa-solid fa-book me-2 w-20px"></i> Hướng dẫn & Nội quy</a>
@@ -169,35 +169,53 @@
 
         <!-- THỐNG KÊ NHANH -->
         <div class="row g-4 mt-1">
-            <div class="col-md-4">
+            <!-- Thẻ 1: Tổng sự cố đã gửi (Đổi từ Thông báo mới để hứng biến total) -->
+            <div class="col-md-3">
                 <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center">
-                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
-                        <i class="fa-regular fa-bell"></i>
+                    <div class="icon-box bg-danger bg-opacity-10 text-danger me-3">
+                        <i class="fa-solid fa-file-invoice"></i>
                     </div>
                     <div>
-                        <h4 class="fw-bold mb-0">3</h4>
-                        <span class="text-muted small">Thông báo mới</span>
+                        <h4 class="fw-bold mb-0">${total != null ? total : 0}</h4>
+                        <span class="text-muted small">Tổng báo cáo đã gửi</span>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+
+            <!-- Thẻ 2: Sự cố chờ xử lý -->
+            <div class="col-md-3">
                 <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center">
                     <div class="icon-box bg-warning bg-opacity-10 text-warning me-3">
                         <i class="fa-solid fa-hourglass-half"></i>
                     </div>
                     <div>
-                        <h4 class="fw-bold mb-0">1</h4>
+                        <h4 class="fw-bold mb-0">${pending != null ? pending : 0}</h4>
                         <span class="text-muted small">Sự cố chờ xử lý</span>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+
+            <!-- Thẻ 3: Sự cố đang xử lý -->
+            <div class="col-md-3" >
+                <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center">
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">${processing != null ? processing : 0}</h4>
+                        <span class="text-muted small">Sự cố đang xử lý</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thẻ 4: Sự cố đã hoàn thành -->
+            <div class="col-md-3">
                 <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center">
                     <div class="icon-box bg-success bg-opacity-10 text-success me-3">
                         <i class="fa-solid fa-check-double"></i>
                     </div>
                     <div>
-                        <h4 class="fw-bold mb-0">5</h4>
+                        <h4 class="fw-bold mb-0">${done != null ? done : 0}</h4>
                         <span class="text-muted small">Sự cố đã hoàn thành</span>
                     </div>
                 </div>
@@ -227,39 +245,84 @@
                         </thead>
                         <tbody>
                         <%
-                            // Mock data giả lập chờ kết nối Servlet
-                            String[][] mockData = {
-                                    {"#SC005", "Chập điện ổ cắm khu vực giường tầng", "Phòng 304 - Tòa A1", "Điện", "KHẨN CẤP", "30/10/2026", "Chờ xử lý", "danger", "warning"},
-                                    {"#SC004", "Rò rỉ nước ở vòi bồn rửa mặt", "Phòng 304 - Tòa A1", "Nước", "TRUNG BÌNH", "28/10/2026", "Đang xử lý", "warning", "primary"},
-                                    {"#SC003", "Quạt trần số 2 kêu to và rung lắc", "Phòng 304 - Tòa A1", "Cơ sở vật chất", "THẤP", "25/10/2026", "Đã hoàn thành", "success", "success"}
-                            };
-
-                            for (int i = 0; i < mockData.length; i++) {
-                                String[] sc = mockData[i];
+                            List<SuCo> recentList = (List<SuCo>) request.getAttribute("recentList");
+                            if (recentList != null && !recentList.isEmpty()) {
+                                for (SuCo task : recentList) {
+                                    String badgeMucDo = "KHẨN CẤP".equals(task.getMucDo()) ? "danger" : ("TRUNG BÌNH".equals(task.getMucDo()) ? "warning" : "success");
+                                    String badgeTrangThai = "Chờ xử lý".equals(task.getTrangThai()) ? "warning" : ("Đang xử lý".equals(task.getTrangThai()) ? "primary" : "success");
                         %>
                         <tr>
-                            <td class="ps-4"><span class="fw-bold text-secondary"><%= sc[0] %></span></td>
+                            <td class="ps-4"><span class="fw-bold text-secondary">#SC0<%= task.getSuCoId() %></span></td>
                             <td>
-                                <div class="fw-bold text-dark"><%= sc[1] %></div>
-                                <div class="text-muted" style="font-size: 0.8rem;"><%= sc[2] %></div>
+                                <div class="fw-bold text-dark"><%= task.getTieuDe() %></div>
+                                <div class="text-muted" style="font-size: 0.8rem;"><i class="fa-solid fa-location-dot text-danger me-1"></i> <%= task.getViTriPhong() %></div>
                             </td>
-                            <td><span class="fw-medium text-secondary"><%= sc[3] %></span></td>
-                            <td><span class="badge bg-<%= sc[7] %> bg-opacity-10 text-<%= sc[7] %> border border-<%= sc[7] %>"><%= sc[4] %></span></td>
-                            <td class="text-muted"><%= sc[5] %></td>
-                            <td><span class="badge bg-<%= sc[8] %> <%= sc[8].equals("warning") ? "text-dark" : "text-white" %>"><%= sc[6] %></span></td>
+                            <td><span class="fw-medium text-secondary">Kỹ thuật</span></td>
+                            <td><span class="badge bg-<%= badgeMucDo %> bg-opacity-10 text-<%= badgeMucDo %> border border-<%= badgeMucDo %>"><%= task.getMucDo() %></span></td>
+                            <td class="text-muted" style="font-size: 0.9rem;"><%= task.getNgayGui() %></td>
+                            <td><span class="badge bg-<%= badgeTrangThai %> <%= "Chờ xử lý".equals(task.getTrangThai()) ? "text-dark" : "text-white" %>"><%= task.getTrangThai() %></span></td>
                             <td class="pe-4 text-center">
                                 <button class="btn btn-sm btn-light text-primary border" title="Xem chi tiết">
-                                    <i class="fa-solid fa-eye"></i>
+                                    <i class="fa-solid fa-eye"></i> Xem
                                 </button>
                             </td>
                         </tr>
                         <%
                             }
+                        } else {
                         %>
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">Bạn chưa gửi báo cáo sự cố nào.</td>
+                        </tr>
+                        <% } %>
                         </tbody>
                     </table>
                 </div>
             </div>
+        </div>
+
+        <!-- BIỂU ĐỒ & NHẬT KÝ HOẠT ĐỘNG (Chia 2 cột) -->
+        <div class="row mb-2 mt-4">
+
+            <!-- Cột trái: Biểu đồ (Chiếm 7/12) -->
+            <div class="col-lg-7 mb-4">
+                <div class="card stat-card border-0 shadow-sm rounded-3 h-100">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 text-center text-dark">Tỷ lệ các loại sự cố đã báo cáo</h6>
+                        <div style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center;">
+                            <canvas id="incidentChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: Nhật ký hoạt động (Chiếm 5/12) lấp đầy khoảng trống -->
+            <div class="col-lg-5 mb-4">
+                <div class="card stat-card border-0 shadow-sm rounded-3 h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h6 class="fw-bold text-dark mb-0">Cập nhật mới nhất</h6>
+                            <a href="#" class="text-decoration-none text-muted" style="font-size: 0.8rem;">Xem tất cả</a>
+                        </div>
+
+                        <div class="timeline">
+                            <!-- Hoạt động 1 -->
+                            <div class="d-flex mb-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 35px; height: 35px; flex-shrink: 0;">
+                                    <i class="fa-solid fa-user-gear fs-6"></i>
+                                </div>
+                                <div>
+                                    <p class="mb-0 fw-medium" style="font-size: 0.9rem;">Kỹ thuật viên <span class="text-primary">Trần Văn Nhân</span> đã tiếp nhận</p>
+                                    <p class="text-muted mb-0" style="font-size: 0.8rem;">Sự cố: #SC003 - Kẹt khóa cửa phòng</p>
+                                    <small class="text-muted" style="font-size: 0.75rem;"><i class="fa-regular fa-clock me-1"></i> Vừa xong</small>
+                                </div>
+                            </div>
+                        </div> <!-- End timeline -->
+
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </div> <!-- End container-fluid -->
@@ -267,5 +330,53 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Thư viện Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('incidentChart').getContext('2d');
+        const incidentChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: [
+                    'Hệ thống Nước & Vệ sinh',
+                    'Hệ thống Điện',
+                    'Cơ sở vật chất & Nội thất',
+                    'Hệ thống Điều hòa & Thông gió',
+                    'Mạng & Internet',
+                    'Khu vực chung & Thiết bị',
+                    'An ninh & Trật tự'
+                ],
+                datasets: [{
+                    data: [25, 30, 15, 10, 12, 5, 3],
+                    backgroundColor: [
+                        '#36a2eb',
+                        '#ffcd56',
+                        '#ff6384',
+                        '#4bc0c0',
+                        '#9966ff',
+                        '#ff9f40',
+                        '#c9cbcf'
+                    ],
+                    borderWidth: 1,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: { size: 12 },
+                            boxWidth: 15
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
 </body>
 </html>

@@ -1,30 +1,72 @@
 package model;
 
-public class SuCo {
-    private String maSC;       // VD: #SC005
-    private String tieuDe;
-    private String danhMuc;    // Điện, Nước...
-    private String viTri;      // Phòng 304 - Tòa A1
-    private String mucDo;      // THẤP, TRUNG BÌNH, KHẨN CẤP
-    private String ngayGui;    // Đã format dd/MM/yyyy
-    private String trangThai;  // Chờ xử lý, Đang xử lý...
+import java.sql.Timestamp;
 
-    public SuCo(String maSC, String tieuDe, String danhMuc, String viTri, String mucDo, String ngayGui, String trangThai) {
-        this.maSC = maSC;
-        this.tieuDe = tieuDe;
-        this.danhMuc = danhMuc;
-        this.viTri = viTri;
-        this.mucDo = mucDo;
-        this.ngayGui = ngayGui;
-        this.trangThai = trangThai;
+public class SuCo {
+    private int suCoId;
+    private int sinhVienId;
+    private int phongId;
+    private int loaiSuCoId;
+    private String tieuDe;
+    private String moTa;
+    private String mucDo;
+    private String trangThai;
+    private Timestamp ngayGui;
+    private Timestamp ngayCapNhat;
+    private int nhanVienId;
+
+    // Các trường phụ trợ (dùng để hiển thị lên giao diện sau khi JOIN bảng)
+    private String tenNguoiGui;
+    private String soDienThoai;
+    private String viTriPhong; // Ví dụ: "Phòng P304 - Tòa A1"
+    private String tenLoaiSuCo;
+
+    public SuCo() {
     }
 
-    // Bạn hãy nhấn Alt + Insert -> Getter để tạo các hàm get...() cho 7 biến này nhé
-    public String getMaSC() { return maSC; }
+    // --- GETTER & SETTER ---
+    public int getSuCoId() { return suCoId; }
+    public void setSuCoId(int suCoId) { this.suCoId = suCoId; }
+
+    public int getSinhVienId() { return sinhVienId; }
+    public void setSinhVienId(int sinhVienId) { this.sinhVienId = sinhVienId; }
+
+    public int getPhongId() { return phongId; }
+    public void setPhongId(int phongId) { this.phongId = phongId; }
+
+    public int getLoaiSuCoId() { return loaiSuCoId; }
+    public void setLoaiSuCoId(int loaiSuCoId) { this.loaiSuCoId = loaiSuCoId; }
+
     public String getTieuDe() { return tieuDe; }
-    public String getDanhMuc() { return danhMuc; }
-    public String getViTri() { return viTri; }
+    public void setTieuDe(String tieuDe) { this.tieuDe = tieuDe; }
+
+    public String getMoTa() { return moTa; }
+    public void setMoTa(String moTa) { this.moTa = moTa; }
+
     public String getMucDo() { return mucDo; }
-    public String getNgayGui() { return ngayGui; }
+    public void setMucDo(String mucDo) { this.mucDo = mucDo; }
+
     public String getTrangThai() { return trangThai; }
+    public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
+
+    public Timestamp getNgayGui() { return ngayGui; }
+    public void setNgayGui(Timestamp ngayGui) { this.ngayGui = ngayGui; }
+
+    public Timestamp getNgayCapNhat() { return ngayCapNhat; }
+    public void setNgayCapNhat(Timestamp ngayCapNhat) { this.ngayCapNhat = ngayCapNhat; }
+
+    public int getNhanVienId() { return nhanVienId; }
+    public void setNhanVienId(int nhanVienId) { this.nhanVienId = nhanVienId; }
+
+    public String getTenNguoiGui() { return tenNguoiGui; }
+    public void setTenNguoiGui(String tenNguoiGui) { this.tenNguoiGui = tenNguoiGui; }
+
+    public String getSoDienThoai() { return soDienThoai; }
+    public void setSoDienThoai(String soDienThoai) { this.soDienThoai = soDienThoai; }
+
+    public String getViTriPhong() { return viTriPhong; }
+    public void setViTriPhong(String viTriPhong) { this.viTriPhong = viTriPhong; }
+
+    public String getTenLoaiSuCo() { return tenLoaiSuCo; }
+    public void setTenLoaiSuCo(String tenLoaiSuCo) { this.tenLoaiSuCo = tenLoaiSuCo; }
 }

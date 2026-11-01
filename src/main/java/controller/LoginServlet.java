@@ -11,45 +11,55 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
-// Chú thích này giúp map đường dẫn URL /login vào Servlet này
 @WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
 
-    // Xử lý khi người dùng nhấn submit form (phương thức POST)
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Lấy dữ liệu từ form HTML
-        String user = request.getParameter("username");
-        String pass = request.getParameter("password");
-
-        TaiKhoanDAO dao = new TaiKhoanDAO();
-        TaiKhoan tk = dao.checkLogin(user, pass);
-
-        if (tk == null) {
-            // Đăng nhập thất bại: Gửi câu thông báo lỗi về lại trang login.jsp
-            request.setAttribute("error", "Tên đăng nhập hoặc mật khẩu không đúng, hoặc tài khoản bị khóa!");
-            request.getRequestDispatcher("login.jsp").forward(request, response);
-        } else {
-            // Đăng nhập thành công: Lưu thông tin vào Session
-            HttpSession session = request.getSession();
-            session.setAttribute("acc", tk);
-
-            // Điều hướng dựa trên vai trò (Role)
-            String role = tk.getVaiTro();
-            if ("ADMIN".equals(role)) {
-                response.sendRedirect(request.getContextPath() + "/admin/admin_home.jsp");
-            } else if ("NHAN_VIEN".equals(role)) {
-                response.sendRedirect(request.getContextPath() + "/employee/employee_home.jsp");
-            } else {
-                // Đã sửa: Trỏ thẳng vào đường dẫn của StudentHomeServlet (bỏ chữ student/)
-                response.sendRedirect(request.getContextPath() + "/student-home");
-            }
-        }
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Nếu người dùng gõ trực tiếp /login trên URL thì đẩy về trang giao diện
+        request.getRequestDispatcher("login.jsp").forward(request, response);
     }
 
-    // Xử lý khi người dùng gõ /login lên thanh địa chỉ (phương thức GET)
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.getRequestDispatcher("login.jsp").forward(request, response);
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // 1. Lấy dữ liệu từ form HTML (thuộc tính name="username" và name="password")
+        String u = request.getParameter("username");
+        String p = request.getParameter("password");
+
+        // 2. Gọi DAO để kiểm tra trong Database
+        TaiKhoanDAO dao = new TaiKhoanDAO();
+        TaiKhoan acc = dao.checkLogin(u, p); // Lưu ý: Đảm bảo hàm checkLogin của bạn tên giống thế này
+
+        // 3. Xử lý logic phân quyền
+        if (acc != null) {
+            // Đăng nhập đúng -> Lưu vào session
+            HttpSession session = request.getSession();
+            session.setAttribute("acc", acc);
+
+            // Lấy vai trò từ CSDL
+            String vaiTro = acc.getVaiTro();
+
+            // Điều hướng dựa trên vai trò
+            if ("SINH_VIEN".equals(vaiTro)) {
+                response.sendRedirect(request.getContextPath() + "/student-home");
+            }
+            else if ("NHAN_VIEN".equals(vaiTro)) {
+                response.sendRedirect(request.getContextPath() + "/employee-home");
+            }
+            else if ("ADMIN".equals(vaiTro)) {
+                // Tạm thời chưa có admin-home, có thể sửa sau khi làm trang Admin
+                response.sendRedirect(request.getContextPath() + "/admin-home");
+            }
+            else {
+                response.sendRedirect(request.getContextPath() + "/login.jsp");
+            }
+        } else {
+            // Đăng nhập sai -> Trả về lỗi
+            request.setAttribute("error", "Tên đăng nhập hoặc mật khẩu không đúng!");
+            request.getRequestDispatcher("login.jsp").forward(request, response);
+        }
     }
 }

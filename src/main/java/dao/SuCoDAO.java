@@ -2,6 +2,7 @@ package dao;
 
 import context.DBContext;
 import model.SuCo;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,51 +10,141 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SuCoDAO {
+    Connection conn = null;
+    PreparedStatement ps = null;
+    ResultSet rs = null;
 
-    // Lấy 5 sự cố gần nhất của 1 sinh viên (thông qua tai_khoan_id)
-    public List<SuCo> getTop5RecentIssues(int taiKhoanId) {
+    // 1. Lấy danh sách sự cố cho Nhân Viên / Admin (Kèm thông tin Phòng và SĐT)
+    public List<SuCo> getAllSuCoForStaff() {
         List<SuCo> list = new ArrayList<>();
-        String query = "SELECT sc.su_co_id, sc.tieu_de, l.ten_loai, CONCAT('Phòng ', p.ma_phong, ' - Tòa ', p.toa_nha) AS vi_tri, " +
-                "sc.muc_do, DATE_FORMAT(sc.ngay_gui, '%d/%m/%Y') AS ngay, sc.trang_thai " +
-                "FROM SU_CO sc " +
-                "JOIN SINH_VIEN sv ON sc.sinh_vien_id = sv.sinh_vien_id " +
-                "JOIN LOAI_SU_CO l ON sc.loai_su_co_id = l.loai_su_co_id " +
-                "JOIN PHONG p ON sc.phong_id = p.phong_id " +
-                "WHERE sv.tai_khoan_id = ? " +
-                "ORDER BY sc.ngay_gui DESC LIMIT 5";
+        /*
+           Sử dụng LEFT JOIN để nối 4 bảng: su_co, phong, sinh_vien, tai_khoan.
+           Sắp xếp ưu tiên: Chờ xử lý -> Đang xử lý -> Đã hoàn thành.
+        */
+        String query = "SELECT sc.su_co_id, sc.tieu_de, sc.muc_do, sc.trang_thai, sc.ngay_gui, " +
+                "p.ma_phong, p.toa_nha, " +
+                "tk.ho_ten, tk.so_dien_thoai " +
+                "FROM su_co sc " +
+                "LEFT JOIN phong p ON sc.phong_id = p.phong_id " +
+                "LEFT JOIN sinh_vien sv ON sc.sinh_vien_id = sv.sinh_vien_id " +
+                "LEFT JOIN tai_khoan tk ON sv.tai_khoan_id = tk.tai_khoan_id " +
+                "ORDER BY FIELD(sc.trang_thai, 'Chờ xử lý', 'Đang xử lý', 'Đã hoàn thành'), sc.ngay_gui DESC";
         try {
-            Connection conn = new DBContext().getConnection();
-            PreparedStatement ps = conn.prepareStatement(query);
-            ps.setInt(1, taiKhoanId);
-            ResultSet rs = ps.executeQuery();
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(new SuCo(
-                        "#SC00" + rs.getInt("su_co_id"),
-                        rs.getString("tieu_de"),
-                        rs.getString("ten_loai"),
-                        rs.getString("vi_tri"),
-                        rs.getString("muc_do"),
-                        rs.getString("ngay"),
-                        rs.getString("trang_thai")
-                ));
+                SuCo sc = new SuCo();
+                sc.setSuCoId(rs.getInt("su_co_id"));
+                sc.setTieuDe(rs.getString("tieu_de"));
+                sc.setMucDo(rs.getString("muc_do"));
+                sc.setTrangThai(rs.getString("trang_thai"));
+                sc.setNgayGui(rs.getTimestamp("ngay_gui"));
+
+                // Gộp thông tin phòng và tòa nhà thành 1 chuỗi để hiển thị
+                String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
+                String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
+                sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+
+                // Hứng tên và số điện thoại từ bảng tai_khoan
+                sc.setTenNguoiGui(rs.getString("ho_ten"));
+                sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
+
+                list.add(sc);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
-    // Đếm tổng số sự cố theo trạng thái
-    public int countIssueByStatus(int taiKhoanId, String status) {
-        String query = "SELECT COUNT(*) FROM SU_CO sc JOIN SINH_VIEN sv ON sc.sinh_vien_id = sv.sinh_vien_id WHERE sv.tai_khoan_id = ?";
-        if (status != null) query += " AND sc.trang_thai = ?";
-
+    // 2. Nhân viên tiếp nhận hoặc báo cáo hoàn thành sự cố
+    public void updateTrangThaiSuCo(int suCoId, String trangThaiMoi, int nhanVienId) {
+        String query = "UPDATE su_co SET trang_thai = ?, nhan_vien_id = ? WHERE su_co_id = ?";
         try {
-            Connection conn = new DBContext().getConnection();
-            PreparedStatement ps = conn.prepareStatement(query);
-            ps.setInt(1, taiKhoanId);
-            if (status != null) ps.setString(2, status);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getInt(1);
-        } catch (Exception e) { e.printStackTrace(); }
-        return 0;
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setString(1, trangThaiMoi);
+            ps.setInt(2, nhanVienId);
+            ps.setInt(3, suCoId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    // --- CÁC HÀM DÀNH CHO LUỒNG SINH VIÊN ---
+
+    // 3. Đếm số lượng sự cố theo trạng thái (hoặc đếm tất cả nếu status = null)
+    public int countIssueByStatus(int tkId, String status) {
+        int count = 0;
+        // Kết nối bảng su_co với sinh_vien để lọc theo tai_khoan_id
+        String query = "SELECT COUNT(*) FROM su_co sc " +
+                "JOIN sinh_vien sv ON sc.sinh_vien_id = sv.sinh_vien_id " +
+                "WHERE sv.tai_khoan_id = ?";
+        if (status != null) {
+            query += " AND sc.trang_thai = ?";
+        }
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, tkId);
+            if (status != null) {
+                ps.setString(2, status);
+            }
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+
+    // 4. Lấy danh sách 5 sự cố mới nhất của sinh viên đó
+    public List<SuCo> getTop5RecentIssues(int tkId) {
+        List<SuCo> list = new ArrayList<>();
+        String query = "SELECT sc.su_co_id, sc.tieu_de, sc.muc_do, sc.trang_thai, sc.ngay_gui, " +
+                "p.ma_phong, p.toa_nha " +
+                "FROM su_co sc " +
+                "JOIN sinh_vien sv ON sc.sinh_vien_id = sv.sinh_vien_id " +
+                "LEFT JOIN phong p ON sc.phong_id = p.phong_id " +
+                "WHERE sv.tai_khoan_id = ? " +
+                "ORDER BY sc.ngay_gui DESC LIMIT 5";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, tkId);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                SuCo sc = new SuCo();
+                sc.setSuCoId(rs.getInt("su_co_id"));
+                sc.setTieuDe(rs.getString("tieu_de"));
+                sc.setMucDo(rs.getString("muc_do"));
+                sc.setTrangThai(rs.getString("trang_thai"));
+                sc.setNgayGui(rs.getTimestamp("ngay_gui"));
+
+                String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
+                String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
+                sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+
+                list.add(sc);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    public int countTotalStudents() {
+        int count = 0;
+        try {
+            conn = new context.DBContext().getConnection();
+            ps = conn.prepareStatement("SELECT COUNT(*) FROM sinh_vien");
+            rs = ps.executeQuery();
+            if (rs.next()) count = rs.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
     }
 }
