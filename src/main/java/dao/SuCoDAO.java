@@ -9,7 +9,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SuCoDAO {
+public class SuCoDAO implements ISuCoDAO {
     Connection conn = null;
     PreparedStatement ps = null;
     ResultSet rs = null;
@@ -146,5 +146,90 @@ public class SuCoDAO {
             e.printStackTrace();
         }
         return count;
+    }
+
+    @Override
+    public boolean insertSuCo(SuCo sc) {
+        // Lấy thời gian hiện tại và mặc định trạng thái là 'Chờ xử lý'
+        String query = "INSERT INTO su_co (sinh_vien_id, phong_id, loai_su_co_id, tieu_de, mo_ta, muc_do, trang_thai, ngay_gui) " +
+                "VALUES (?, ?, ?, ?, ?, ?, 'Chờ xử lý', CURRENT_TIMESTAMP)";
+        try {
+            conn = new context.DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, sc.getSinhVienId());
+            ps.setInt(2, sc.getPhongId());
+            ps.setInt(3, sc.getLoaiSuCoId());
+            ps.setString(4, sc.getTieuDe());
+            ps.setString(5, sc.getMoTa());
+            ps.setString(6, sc.getMucDo());
+
+            int result = ps.executeUpdate();
+            return result > 0; // Trả về true nếu thêm thành công
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // --- HÀM DELETE (Admin xóa sự cố sai/ảo) ---
+    @Override
+    public boolean deleteSuCo(int suCoId) {
+        String query = "DELETE FROM su_co WHERE su_co_id = ?";
+        try {
+            conn = new context.DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, suCoId);
+
+            int result = ps.executeUpdate();
+            return result > 0; // Trả về true nếu xóa thành công
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
+    // Lấy toàn bộ lịch sử báo cáo của Sinh viên (Có kèm bộ lọc trạng thái)
+    public List<SuCo> getHistoryIssues(int tkId, String filter) {
+        List<SuCo> list = new ArrayList<>();
+
+        // Câu lệnh gốc mặc định lấy tất cả
+        String query = "SELECT sc.su_co_id, sc.tieu_de, sc.mo_ta, sc.muc_do, sc.trang_thai, sc.ngay_gui " +
+                "FROM su_co sc " +
+                "JOIN sinh_vien sv ON sc.sinh_vien_id = sv.sinh_vien_id " +
+                "WHERE sv.tai_khoan_id = ? ";
+
+        // Kiểm tra bộ lọc và nối thêm điều kiện vào SQL
+        if ("pending".equals(filter)) {
+            query += "AND sc.trang_thai = 'Chờ xử lý' ";
+        } else if ("processing".equals(filter)) {
+            query += "AND sc.trang_thai = 'Đang xử lý' ";
+        } else if ("done".equals(filter)) {
+            query += "AND sc.trang_thai = 'Đã hoàn thành' ";
+        }
+
+        // Sắp xếp mới nhất lên đầu
+        query += "ORDER BY sc.ngay_gui DESC";
+
+        try {
+            java.sql.Connection conn = new context.DBContext().getConnection();
+            java.sql.PreparedStatement ps = conn.prepareStatement(query);
+            ps.setInt(1, tkId);
+            java.sql.ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                SuCo sc = new SuCo();
+                sc.setSuCoId(rs.getInt("su_co_id"));
+                sc.setTieuDe(rs.getString("tieu_de"));
+                sc.setMoTa(rs.getString("mo_ta"));
+                sc.setMucDo(rs.getString("muc_do"));
+                sc.setTrangThai(rs.getString("trang_thai"));
+                sc.setNgayGui(rs.getTimestamp("ngay_gui"));
+                list.add(sc);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

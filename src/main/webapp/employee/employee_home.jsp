@@ -110,8 +110,9 @@
     <a href="#" class="nav-link"><i class="fa-solid fa-person-digging me-2 w-20px"></i> Đang xử lý</a>
     <a href="#" class="nav-link"><i class="fa-solid fa-clock-rotate-left me-2 w-20px"></i> Lịch sử công việc</a>
 
-    <div class="sidebar-heading">Tài khoản</div>
-    <a href="#" class="nav-link"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
+    <div class="sidebar-heading">Hồ sơ cá nhân</div>
+    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
+    <a href="#" class="nav-link"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
     <a href="${pageContext.request.contextPath}/login.jsp" class="nav-link text-danger mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
 </div>
 
@@ -185,6 +186,7 @@
                 </div>
             </div>
         </div>
+
 
         <!-- BẢNG CÔNG VIỆC CẦN XỬ LÝ NGAY -->
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -284,6 +286,41 @@
     </div> <!-- End container-fluid -->
 </div> <!-- End main-content -->
 
+<!-- MODAL THÔNG TIN CÁ NHÂN (NHÂN VIÊN) -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-pen me-2"></i>Cập nhật thông tin</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="${pageContext.request.contextPath}/update-profile" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên đăng nhập</label>
+                        <input type="text" class="form-control bg-light" value="${acc.tenDangNhap}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Họ và Tên <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="fullName" value="${acc.hoTen}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="sdt" placeholder="Nhập SĐT..." required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="email" class="form-control" name="email" placeholder="Nhập Email...">
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

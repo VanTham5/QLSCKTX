@@ -37,6 +37,11 @@ public class StudentHomeServlet extends HttpServlet {
         List<SuCo> recentList = dao.getTop5RecentIssues(tkId);
         request.setAttribute("recentList", recentList);
 
+        //LẤY THÔNG BÁO
+        dao.ThongBaoDAO tbDao = new dao.ThongBaoDAO();
+        List<model.ThongBao> listTB = tbDao.getAllThongBao();
+        request.setAttribute("listTB", listTB);
+
         // Chuyển hướng sang giao diện JSP
         request.getRequestDispatcher("student/student_home.jsp").forward(request, response);
     }

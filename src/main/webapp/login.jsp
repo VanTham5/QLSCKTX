@@ -35,6 +35,10 @@
             <input type="password" class="form-control" id="password" name="password" required placeholder="Nhập mật khẩu">
         </div>
         <button type="submit" class="btn btn-primary w-100 fw-bold">ĐĂNG NHẬP</button>
+        <div class="text-center mt-3" style="font-size: 0.9rem;">
+            <span>Chưa có tài khoản? </span>
+            <a href="${pageContext.request.contextPath}/register" class="text-primary text-decoration-none fw-bold">Đăng ký ngay</a>
+        </div>
     </form>
 </div>
 
