@@ -8,6 +8,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class SuCoDAO implements ISuCoDAO {
     Connection conn = null;
@@ -101,10 +103,10 @@ public class SuCoDAO implements ISuCoDAO {
         return count;
     }
 
-    // 4. Lấy danh sách 5 sự cố mới nhất của sinh viên đó
+    // 4. Lấy danh sách 5 sự cố mới nhất của sinh viên đó (Đã bổ sung lấy mo_ta)
     public List<SuCo> getTop5RecentIssues(int tkId) {
         List<SuCo> list = new ArrayList<>();
-        String query = "SELECT sc.su_co_id, sc.tieu_de, sc.muc_do, sc.trang_thai, sc.ngay_gui, " +
+        String query = "SELECT sc.su_co_id, sc.tieu_de, sc.mo_ta, sc.muc_do, sc.trang_thai, sc.ngay_gui, " +
                 "p.ma_phong, p.toa_nha " +
                 "FROM su_co sc " +
                 "JOIN sinh_vien sv ON sc.sinh_vien_id = sv.sinh_vien_id " +
@@ -120,6 +122,7 @@ public class SuCoDAO implements ISuCoDAO {
                 SuCo sc = new SuCo();
                 sc.setSuCoId(rs.getInt("su_co_id"));
                 sc.setTieuDe(rs.getString("tieu_de"));
+                sc.setMoTa(rs.getString("mo_ta")); // <--- Bổ sung dòng này để lấy mô tả chi tiết
                 sc.setMucDo(rs.getString("muc_do"));
                 sc.setTrangThai(rs.getString("trang_thai"));
                 sc.setNgayGui(rs.getTimestamp("ngay_gui"));
@@ -135,6 +138,7 @@ public class SuCoDAO implements ISuCoDAO {
         }
         return list;
     }
+
     public int countTotalStudents() {
         int count = 0;
         try {
@@ -223,6 +227,48 @@ public class SuCoDAO implements ISuCoDAO {
                 sc.setTieuDe(rs.getString("tieu_de"));
                 sc.setMoTa(rs.getString("mo_ta"));
                 sc.setMucDo(rs.getString("muc_do"));
+                sc.setTrangThai(rs.getString("trang_thai"));
+                sc.setNgayGui(rs.getTimestamp("ngay_gui"));
+                list.add(sc);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public Map<String, Integer> getThongKeTheoLoai() {
+        Map<String, Integer> map = new LinkedHashMap<>();
+        String query = "SELECT lsc.ten_loai, COUNT(sc.su_co_id) as so_luong " +
+                "FROM su_co sc " +
+                "JOIN loai_su_co lsc ON sc.loai_su_co_id = lsc.loai_su_co_id " +
+                "GROUP BY lsc.ten_loai";
+        try {
+            Connection conn = new DBContext().getConnection();
+            PreparedStatement ps = conn.prepareStatement(query);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getString("ten_loai"), rs.getInt("so_luong"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+    // Lấy danh sách 3 hoạt động cập nhật sự cố mới nhất
+    public List<model.SuCo> getTop3CapNhat() {
+        List<model.SuCo> list = new ArrayList<>();
+        String query = "SELECT sc.* " +
+                "FROM su_co sc " +
+                "ORDER BY sc.ngay_gui DESC LIMIT 3";
+        try {
+            Connection conn = new DBContext().getConnection();
+            PreparedStatement ps = conn.prepareStatement(query);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                model.SuCo sc = new model.SuCo();
+                sc.setSuCoId(rs.getInt("su_co_id"));
+                sc.setTieuDe(rs.getString("tieu_de"));
                 sc.setTrangThai(rs.getString("trang_thai"));
                 sc.setNgayGui(rs.getTimestamp("ngay_gui"));
                 list.add(sc);

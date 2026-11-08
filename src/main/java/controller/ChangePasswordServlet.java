@@ -1,31 +1,47 @@
 package controller;
 
 import dao.TaiKhoanDAO;
-import model.TaiKhoan;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import model.TaiKhoan;
 import java.io.IOException;
 
 @WebServlet(name = "ChangePasswordServlet", urlPatterns = {"/change-password"})
 public class ChangePasswordServlet extends HttpServlet {
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        TaiKhoan acc = (TaiKhoan) request.getSession().getAttribute("acc");
+        request.setCharacterEncoding("UTF-8");
+
+        HttpSession session = request.getSession();
+        TaiKhoan acc = (TaiKhoan) session.getAttribute("acc");
+
         if (acc == null) {
             response.sendRedirect("login.jsp");
             return;
         }
+
         String oldPass = request.getParameter("oldPass");
         String newPass = request.getParameter("newPass");
 
         TaiKhoanDAO dao = new TaiKhoanDAO();
-        boolean isSuccess = dao.changePassword(acc.getTaiKhoanId(), oldPass, newPass);
+        boolean success = dao.changePassword(acc.getTaiKhoanId(), oldPass, newPass);
 
-        // Cập nhật xong thì chuyển hướng về trang chủ
-        response.sendRedirect(request.getContextPath() + "/student-home");
+        // Lấy đường dẫn trang hiện tại để redirect ngược lại
+        String referer = request.getHeader("referer");
+        if (referer == null) referer = request.getContextPath() + "/student-home";
+
+        if (success) {
+            // Đổi thành công -> Chuyển hướng kèm param thông báo thành công
+            response.sendRedirect(referer.split("\\?")[0] + "?msg=pass_success");
+        } else {
+            // Sai mật khẩu cũ -> Điều hướng kèm param lỗi để hiện khung báo đỏ
+            response.sendRedirect(referer.split("\\?")[0] + "?error=wrong_old_pass");
+        }
     }
 }

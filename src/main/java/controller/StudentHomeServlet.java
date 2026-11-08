@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet(name = "StudentHomeServlet", urlPatterns = {"/student-home"})
 public class StudentHomeServlet extends HttpServlet {
@@ -41,6 +42,18 @@ public class StudentHomeServlet extends HttpServlet {
         dao.ThongBaoDAO tbDao = new dao.ThongBaoDAO();
         List<model.ThongBao> listTB = tbDao.getAllThongBao();
         request.setAttribute("listTB", listTB);
+
+        // Gọi DAO lấy dữ liệu thống kê loại sự cố
+        SuCoDAO suCoDao = new SuCoDAO();
+        Map<String, Integer> thongKeMap = suCoDao.getThongKeTheoLoai();
+
+        // Gọi DAO lấy danh sách 3 cập nhật mới nhất
+        suCoDao = new SuCoDAO();
+        List<model.SuCo> listCapNhat = suCoDao.getTop3CapNhat();
+        request.setAttribute("listCapNhat", listCapNhat);
+
+        //Đẩy sang request
+        request.setAttribute("thongKeMap", thongKeMap);
 
         // Chuyển hướng sang giao diện JSP
         request.getRequestDispatcher("student/student_home.jsp").forward(request, response);

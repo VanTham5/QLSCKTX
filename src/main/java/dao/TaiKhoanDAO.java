@@ -147,17 +147,29 @@ public class TaiKhoanDAO {
 
     // Hàm Đổi mật khẩu
     public boolean changePassword(int taiKhoanId, String oldPass, String newPass) {
-        String query = "UPDATE tai_khoan SET mat_khau = ? WHERE tai_khoan_id = ? AND mat_khau = ?";
+        // 1. Kiểm tra xem mật khẩu cũ có đúng không
+        String checkQuery = "SELECT * FROM tai_khoan WHERE tai_khoan_id = ? AND mat_khau = ?";
+        String updateQuery = "UPDATE tai_khoan SET mat_khau = ? WHERE tai_khoan_id = ?";
         try {
-            java.sql.Connection conn = new context.DBContext().getConnection();
-            java.sql.PreparedStatement ps = conn.prepareStatement(query);
-            ps.setString(1, newPass);
-            ps.setInt(2, taiKhoanId);
-            ps.setString(3, oldPass); // Kiểm tra luôn mật khẩu cũ có đúng không
-            return ps.executeUpdate() > 0;
+            Connection conn = new DBContext().getConnection();
+            PreparedStatement psCheck = conn.prepareStatement(checkQuery);
+            psCheck.setInt(1, taiKhoanId);
+            psCheck.setString(2, oldPass);
+            ResultSet rs = psCheck.executeQuery();
+
+            // Nếu tìm thấy tài khoản khớp với mật khẩu cũ
+            if (rs.next()) {
+                PreparedStatement psUpdate = conn.prepareStatement(updateQuery);
+                psUpdate.setString(1, newPass);
+                psUpdate.setInt(2, taiKhoanId);
+                int result = psUpdate.executeUpdate();
+                return result > 0; // Đổi thành công
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+        return false; // Mật khẩu cũ sai hoặc lỗi kết nối
     }
+
+
 }

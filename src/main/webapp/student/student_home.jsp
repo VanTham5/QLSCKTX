@@ -108,10 +108,14 @@
     </div>
 
     <div class="sidebar-heading">Tổng quan</div>
-    <a href="student_home.jsp" class="nav-link active"><i class="fa-solid fa-house me-2 w-20px"></i> Trang chủ</a>
+    <a href="${pageContext.request.contextPath}/student-home" class="nav-link active">
+        <i class="fa-solid fa-house me-2 w-20px"></i> Trang chủ
+    </a>
     <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#noticeModal"><i class="fa-solid fa-bell me-2 w-20px"></i> Thông báo từ BQL</a>
     <div class="sidebar-heading">Dịch vụ KTX</div>
-    <a href="#" class="nav-link"><i class="fa-solid fa-wrench me-2 w-20px"></i> Báo cáo sự cố</a>
+    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#reportIssueModal">
+        <i class="fa-solid fa-wrench me-2 w-20px"></i> Báo cáo sự cố
+    </a>
     <a href="${pageContext.request.contextPath}/student-history" class="nav-link"><i class="fa-solid fa-list-check me-2 w-20px"></i> Lịch sử báo cáo</a>
 
     <div class="sidebar-heading">Trợ giúp & Liên hệ</div>
@@ -305,29 +309,35 @@
                 </div>
             </div>
 
-            <!-- Cột phải: Nhật ký hoạt động -->
+            <!-- Cột phải: Cập nhật mới nhất từ CSDL -->
             <div class="col-lg-5 mb-4">
-                <div class="card stat-card border-0 shadow-sm rounded-3 h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h6 class="fw-bold text-dark mb-0">Cập nhật mới nhất</h6>
-                            <a href="#" class="text-decoration-none text-muted" style="font-size: 0.8rem;">Xem tất cả</a>
-                        </div>
-
-                        <div class="timeline">
-                            <div class="d-flex mb-3">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 35px; height: 35px; flex-shrink: 0;">
-                                    <i class="fa-solid fa-user-gear fs-6"></i>
-                                </div>
-                                <div>
-                                    <p class="mb-0 fw-medium" style="font-size: 0.9rem;">Kỹ thuật viên <span class="text-primary">Trần Văn Nhân</span> đã tiếp nhận</p>
-                                    <p class="text-muted mb-0" style="font-size: 0.8rem;">Sự cố: #SC003 - Kẹt khóa cửa phòng</p>
-                                    <small class="text-muted" style="font-size: 0.75rem;"><i class="fa-regular fa-clock me-1"></i> Vừa xong</small>
-                                </div>
-                            </div>
-                        </div>
-
+                <div class="card stat-card border-0 shadow-sm rounded-3 p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark">Cập nhật mới nhất</h5>
+                        <a href="${pageContext.request.contextPath}/student-history" class="text-decoration-none text-muted small">Xem tất cả</a>
                     </div>
+
+                    <%
+                        List<model.SuCo> listCapNhat = (List<model.SuCo>) request.getAttribute("listCapNhat");
+                        if (listCapNhat != null && !listCapNhat.isEmpty()) {
+                            for (model.SuCo moiNhat : listCapNhat) {
+                                String badgeColor = "Chờ xử lý".equals(moiNhat.getTrangThai()) ? "warning" : ("Đang xử lý".equals(moiNhat.getTrangThai()) ? "primary" : "success");
+                    %>
+                    <div class="d-flex align-items-start mb-3 border-bottom pb-2">
+                        <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle me-3">
+                            <i class="fa-solid fa-triangle-exclamation fs-6"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark" style="font-size: 0.9rem;">#SC0<%= moiNhat.getSuCoId() %> - <%= moiNhat.getTieuDe() %></div>
+                            <div class="text-muted small mt-1">Trạng thái: <span class="badge bg-<%= badgeColor %> <%= "Chờ xử lý".equals(moiNhat.getTrangThai()) ? "text-dark" : "text-white" %>"><%= moiNhat.getTrangThai() %></span></div>
+                            <div class="text-muted mt-1" style="font-size: 0.75rem;"><i class="fa-regular fa-clock me-1"></i> Gửi lúc: <%= moiNhat.getNgayGui() %></div>
+                        </div>
+                    </div>
+                    <%      }
+                    } else {
+                    %>
+                    <p class="text-muted text-center my-auto">Chưa có hoạt động cập nhật nào.</p>
+                    <% } %>
                 </div>
             </div>
 
@@ -490,15 +500,32 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
+
+                <!-- HIỂN THỊ THÔNG BÁO THÀNH CÔNG (MÀU XANH) -->
+                <% if ("pass_success".equals(request.getParameter("msg"))) { %>
+                <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                    <i class="fa-solid fa-circle-check me-2"></i> Đổi mật khẩu thành công!
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <% } %>
+
+                <!-- Form đổi mật khẩu -->
                 <form action="${pageContext.request.contextPath}/change-password" method="POST">
+
                     <div class="mb-3">
                         <label class="form-label fw-bold">Mật khẩu cũ <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" name="oldPass" required>
+                        <!-- Báo đỏ nếu sai mật khẩu cũ -->
+                        <input type="password" class="form-control ${param.error == 'wrong_old_pass' ? 'is-invalid' : ''}" name="oldPass" required>
+                        <div class="invalid-feedback">
+                            Mật khẩu cũ không chính xác. Vui lòng nhập lại!
+                        </div>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label fw-bold">Mật khẩu mới <span class="text-danger">*</span></label>
                         <input type="password" class="form-control" name="newPass" required>
                     </div>
+
                     <div class="d-flex justify-content-end mt-4">
                         <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal">Hủy</button>
                         <button type="submit" class="btn btn-dark fw-bold">Xác nhận đổi</button>
@@ -508,6 +535,17 @@
         </div>
     </div>
 </div>
+
+<!-- Script tự động bật lại Modal khi có thông báo thành công hoặc lỗi -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error') === 'wrong_old_pass' || urlParams.get('msg') === 'pass_success') {
+            var myModal = new bootstrap.Modal(document.getElementById('changePassModal'));
+            myModal.show();
+        }
+    });
+</script>
 
 <!-- VÒNG LẶP TẠO MODAL CHI TIẾT SỰ CỐ (ĐẶT NGOÀI BẢNG ĐỂ KHÔNG BỊ LỖI NHẤP NHÁY) -->
 <%
@@ -659,16 +697,31 @@
             type: 'pie',
             data: {
                 labels: [
-                    'Hệ thống Nước & Vệ sinh',
-                    'Hệ thống Điện',
-                    'Cơ sở vật chất & Nội thất',
-                    'Hệ thống Điều hòa & Thông gió',
-                    'Mạng & Internet',
-                    'Khu vực chung & Thiết bị',
-                    'An ninh & Trật tự'
+                    <%
+                        java.util.Map<String, Integer> map = (java.util.Map<String, Integer>) request.getAttribute("thongKeMap");
+                        if (map != null && !map.isEmpty()) {
+                            for (String key : map.keySet()) {
+                    %>
+                    '<%= key %>',
+                    <%          }
+                            } else {
+                    %>
+                    'Chưa có dữ liệu',
+                    <% } %>
                 ],
                 datasets: [{
-                    data: [25, 30, 15, 10, 12, 5, 3],
+                    data: [
+                        <%
+                            if (map != null && !map.isEmpty()) {
+                                for (Integer val : map.values()) {
+                        %>
+                        <%= val %>,
+                        <%          }
+                                } else {
+                        %>
+                        1,
+                        <% } %>
+                    ],
                     backgroundColor: [
                         '#36a2eb',
                         '#ffcd56',
