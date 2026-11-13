@@ -376,6 +376,9 @@
                                 <option value="1">Hệ thống Điện</option>
                                 <option value="2">Hệ thống Nước & Vệ sinh</option>
                                 <option value="3">Cơ sở vật chất (Giường, tủ, cửa...)</option>
+                                <option value="4">Mạng & Internet</option>
+                                <option value="5">An ninh & Trật tự</option>
+
                             </select>
                             <div class="invalid-feedback">
                                 Bạn chưa chọn danh mục sự cố.

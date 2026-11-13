@@ -100,16 +100,18 @@
     </div>
 
     <div class="sidebar-heading">Tổng quan</div>
-    <a href="employee_home.jsp" class="nav-link active"><i class="fa-solid fa-chart-pie me-2 w-20px"></i> Bảng điều khiển</a>
-
+    <a href="${pageContext.request.contextPath}/employee-home" class="nav-link active">
+        <i class="fa-solid fa-chart-pie me-2 w-20px"></i> Bảng điều khiển
+    </a>
     <div class="sidebar-heading">Quản lý công việc</div>
-    <a href="#" class="nav-link d-flex justify-content-between align-items-center">
-        <span><i class="fa-solid fa-clipboard-list me-2 w-20px"></i> Chờ tiếp nhận</span>
+    <a href="${pageContext.request.contextPath}/employee-history?filter=pending" class="nav-link">
+        <span><i class="fa-solid fa-clipboard-list me-2 w-20px"></i> Chờ xử lý</span>
         <span class="badge bg-danger rounded-pill">${pending}</span>
     </a>
-    <a href="#" class="nav-link"><i class="fa-solid fa-person-digging me-2 w-20px"></i> Đang xử lý</a>
-    <a href="#" class="nav-link"><i class="fa-solid fa-clock-rotate-left me-2 w-20px"></i> Lịch sử công việc</a>
-
+    <a href="${pageContext.request.contextPath}/employee-history?filter=processing" class="nav-link"><i class="fa-solid fa-person-digging me-2 w-20px"></i> Đang xử lý</a>
+    <a href="${pageContext.request.contextPath}/employee-history" class="nav-link">
+        <i class="fa-solid fa-clock-rotate-left me-2 w-20px"></i> Lịch sử công việc
+    </a>
     <div class="sidebar-heading">Hồ sơ cá nhân</div>
     <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
     <a href="#" class="nav-link"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
@@ -191,9 +193,9 @@
         <!-- BẢNG CÔNG VIỆC CẦN XỬ LÝ NGAY -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold mb-0">Danh sách việc cần làm</h5>
-            <div class="btn-group">
-                <button type="button" class="btn btn-sm btn-outline-secondary active">Tất cả</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary">Khẩn cấp</button>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-outline-secondary active" id="btnAll" onclick="filterByPriority('ALL')">Tất cả</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnUrgent" onclick="filterByPriority('KHẨN CẤP')">Khẩn cấp</button>
             </div>
         </div>
 
@@ -219,12 +221,13 @@
                             List<SuCo> listSuCo = (List<SuCo>) request.getAttribute("listSuCo");
 
                             if (listSuCo != null && !listSuCo.isEmpty()) {
+                                // Bắt đầu vòng lặp for
                                 for (SuCo task : listSuCo) {
-                                    // Cài đặt màu sắc badge tự động theo dữ liệu
                                     String badgeMucDo = task.getMucDo().equals("KHẨN CẤP") ? "danger" : (task.getMucDo().equals("TRUNG BÌNH") ? "warning" : "success");
                                     String badgeTrangThai = task.getTrangThai().equals("Chờ xử lý") ? "warning" : (task.getTrangThai().equals("Đang xử lý") ? "primary" : "success");
                         %>
-                        <tr>
+                        <!-- Mỗi dòng <tr> nằm bên trong vòng lặp for nên biến task được nhận diện bình thường -->
+                        <tr class="incident-row" data-mucdo="<%= task.getMucDo() %>">
                             <td class="ps-4"><span class="fw-bold text-secondary">#SC0<%= task.getSuCoId() %></span></td>
                             <td>
                                 <div class="fw-bold text-dark"><%= task.getTieuDe() %></div>
@@ -233,44 +236,52 @@
                             <td><span class="fw-medium text-dark"><i class="fa-solid fa-location-dot text-danger me-1"></i> <%= task.getViTriPhong() %></span></td>
                             <td><span class="badge bg-<%= badgeMucDo %> bg-opacity-10 text-<%= badgeMucDo %> border border-<%= badgeMucDo %>"><%= task.getMucDo() %></span></td>
                             <td>
-                                <a href="tel:<%= task.getSoDienThoai().replace(".", "") %>" class="text-decoration-none fw-medium text-primary">
+                                <a href="tel:<%= task.getSoDienThoai() != null ? task.getSoDienThoai().replace(".", "") : "" %>" class="text-decoration-none fw-medium text-primary">
                                     <i class="fa-solid fa-phone fa-sm me-1"></i> <%= task.getSoDienThoai() %>
                                 </a>
                             </td>
                             <td><span class="badge bg-<%= badgeTrangThai %> <%= task.getTrangThai().equals("Chờ xử lý") ? "text-dark" : "text-white" %>"><%= task.getTrangThai() %></span></td>
 
                             <td class="text-center">
-                                <button class="btn btn-sm btn-light text-primary border" title="Xem chi tiết công việc">
+                                <button type="button" class="btn btn-sm btn-light text-primary border"
+                                        data-bs-toggle="modal" data-bs-target="#detailModal<%= task.getSuCoId() %>" title="Xem chi tiết công việc">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
                             </td>
 
                             <td class="pe-4 text-center">
                                 <% if (task.getTrangThai().equals("Chờ xử lý")) { %>
-                                <!-- Form để bấm "Nhận việc" (Sẽ gửi lên UpdateStatusServlet) -->
-                                <form action="${pageContext.request.contextPath}/update-status" method="post" style="display:inline;">
-                                    <input type="hidden" name="suCoId" value="<%= task.getSuCoId() %>">
-                                    <input type="hidden" name="trangThaiMoi" value="Đang xử lý">
-                                    <button type="submit" class="btn btn-sm btn-success shadow-sm">
-                                        <i class="fa-solid fa-hand-holding-hand me-1"></i> Nhận việc
-                                    </button>
-                                </form>
+                                <!-- Nút Nhận việc (Đã dùng replace để loại bỏ dấu nháy chống vỡ giao diện) -->
+                                <button type="button" class="btn btn-sm btn-success shadow-sm"
+                                        data-suco-id="<%= task.getSuCoId() %>"
+                                        data-trang-thai="Đang xử lý"
+                                        data-title="Xác nhận nhận việc"
+                                        data-message="Bạn có chắc chắn muốn nhận xử lý sự cố '<%= task.getTieuDe() != null ? task.getTieuDe().replace("'", "\\'").replace("\"", "&quot;") : "" %>' này không?"
+                                        data-btn-class="btn-success"
+                                        data-btn-text="Nhận việc"
+                                        onclick="openConfirmModalFromBtn(this)">
+                                    <i class="fa-solid fa-hand-holding-hand me-1"></i> Nhận việc
+                                </button>
+
                                 <% } else if (task.getTrangThai().equals("Đang xử lý")) { %>
-                                <!-- Form để bấm "Xong" -->
-                                <form action="${pageContext.request.contextPath}/update-status" method="post" style="display:inline;">
-                                    <input type="hidden" name="suCoId" value="<%= task.getSuCoId() %>">
-                                    <input type="hidden" name="trangThaiMoi" value="Đã hoàn thành">
-                                    <button type="submit" class="btn btn-sm btn-primary shadow-sm">
-                                        <i class="fa-solid fa-check me-1"></i> Xong
-                                    </button>
-                                </form>
+                                <!-- Nút Xong (Đã dùng replace để loại bỏ dấu nháy chống vỡ giao diện) -->
+                                <button type="button" class="btn btn-sm btn-primary shadow-sm"
+                                        data-suco-id="<%= task.getSuCoId() %>"
+                                        data-trang-thai="Đã hoàn thành"
+                                        data-title="Xác nhận hoàn thành"
+                                        data-message="Xác nhận sự cố '<%= task.getTieuDe() != null ? task.getTieuDe().replace("'", "\\'").replace("\"", "&quot;") : "" %>' đã sửa xong và chuyển sang trạng thái hoàn thành?"
+                                        data-btn-class="btn-primary"
+                                        data-btn-text="Xác nhận xong"
+                                        onclick="openConfirmModalFromBtn(this)">
+                                    <i class="fa-solid fa-check me-1"></i> Xong
+                                </button>
                                 <% } else { %>
                                 <span class="text-success fw-bold"><i class="fa-solid fa-check-double"></i></span>
                                 <% } %>
                             </td>
                         </tr>
                         <%
-                            }
+                            } // Kết thúc dấu đóng ngoặc nhọn của vòng lặp for ở đây
                         } else {
                         %>
                         <tr>
@@ -282,7 +293,6 @@
                 </div>
             </div>
         </div>
-
     </div> <!-- End container-fluid -->
 </div> <!-- End main-content -->
 
@@ -321,7 +331,126 @@
         </div>
     </div>
 </div>
+
+<!-- MODAL XÁC NHẬN THAO TÁC CHUNG -->
+<div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="confirmModalTitle"><i class="fa-solid fa-triangle-exclamation me-2"></i>Xác nhận</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p id="confirmModalMessage" class="fs-6 text-dark mb-0 fw-medium">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+                <!-- Form gửi dữ liệu ngầm lên UpdateStatusServlet -->
+                <form id="confirmActionForm" action="${pageContext.request.contextPath}/update-status" method="post" style="display:inline;">
+                    <input type="hidden" id="modalSuCoId" name="suCoId" value="">
+                    <input type="hidden" id="modalTrangThaiMoi" name="trangThaiMoi" value="">
+                    <button type="submit" id="confirmModalSubmitBtn" class="btn btn-primary px-4 fw-bold">Đồng ý</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT ĐIỀU KHIỂN MODAL XÁC NHẬN -->
+<script>
+    function openConfirmModal(suCoId, trangThaiMoi, title, message, btnClass, btnText) {
+        document.getElementById('confirmModalTitle').innerHTML = '<i class="fa-solid fa-circle-question me-2"></i>' + title;
+        document.getElementById('confirmModalMessage').innerText = message;
+
+        document.getElementById('modalSuCoId').value = suCoId;
+        document.getElementById('modalTrangThaiMoi').value = trangThaiMoi;
+
+        const submitBtn = document.getElementById('confirmModalSubmitBtn');
+        submitBtn.className = 'btn px-4 fw-bold text-white ' + btnClass;
+        submitBtn.innerText = btnText;
+
+        var myModal = new bootstrap.Modal(document.getElementById('confirmActionModal'));
+        myModal.show();
+    }
+
+    // <-- BỔ SUNG THÊM HÀM NÀY ĐỂ KẾT NỐI DỮ LIỆU TỪ NÚT BẤM VÀO MODAL -->
+    function openConfirmModalFromBtn(btn) {
+        const suCoId = btn.getAttribute('data-suco-id');
+        const trangThaiMoi = btn.getAttribute('data-trang-thai');
+        const title = btn.getAttribute('data-title');
+        const message = btn.getAttribute('data-message');
+        const btnClass = btn.getAttribute('data-btn-class');
+        const btnText = btn.getAttribute('data-btn-text');
+
+        openConfirmModal(suCoId, trangThaiMoi, title, message, btnClass, btnText);
+    }
+</script>
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function filterByPriority(priority) {
+        const rows = document.querySelectorAll('.incident-row');
+        const btnAll = document.getElementById('btnAll');
+        const btnUrgent = document.getElementById('btnUrgent');
+
+        // Cập nhật giao diện nút bấm active
+        if (priority === 'ALL') {
+            btnAll.classList.add('active');
+            btnUrgent.classList.remove('active');
+        } else {
+            btnUrgent.classList.add('active');
+            btnAll.classList.remove('active');
+        }
+
+        // Duyệt qua các dòng và ẩn/hiện dựa theo mức độ
+        rows.forEach(row => {
+            const mucDo = row.getAttribute('data-mucdo');
+            if (priority === 'ALL' || mucDo === priority) {
+                row.style.display = ''; // Hiện dòng
+            } else {
+                row.style.display = 'none'; // Ẩn dòng
+            }
+        });
+    }
+</script>
+
+<!-- VÒNG LẶP TẠO MODAL CHI TIẾT SỰ CỐ CHO TỪNG DÒNG -->
+<%
+    if (listSuCo != null && !listSuCo.isEmpty()) {
+        for (SuCo task : listSuCo) {
+            String badgeMucDo = "KHẨN CẤP".equals(task.getMucDo()) ? "danger" : ("TRUNG BÌNH".equals(task.getMucDo()) ? "warning" : "success");
+            String badgeTrangThai = "Chờ xử lý".equals(task.getTrangThai()) ? "warning" : ("Đang xử lý".equals(task.getTrangThai()) ? "primary" : "success");
+%>
+<div class="modal fade" id="detailModal<%= task.getSuCoId() %>" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info me-2"></i>Chi tiết sự cố #SC0<%= task.getSuCoId() %></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-start">
+                <h6 class="fw-bold text-primary mb-3"><%= task.getTieuDe() %></h6>
+                <div class="mb-2"><strong>Vị trí phòng:</strong> <span class="text-danger"><%= task.getViTriPhong() %></span></div>
+                <div class="mb-2"><strong>Mức độ:</strong> <span class="badge bg-<%= badgeMucDo %>"><%= task.getMucDo() %></span></div>
+                <div class="mb-2"><strong>Trạng thái:</strong> <span class="badge bg-<%= badgeTrangThai %>"><%= task.getTrangThai() %></span></div>
+                <div class="mb-2"><strong>SĐT Sinh viên:</strong> <a href="tel:<%= task.getSoDienThoai() %>" class="text-decoration-none fw-bold"><%= task.getSoDienThoai() %></a></div>
+                <div class="mb-2"><strong>Ngày báo cáo:</strong> <%= task.getNgayGui() %></div>
+                <hr>
+                <div class="mb-1 fw-bold text-dark">Mô tả chi tiết từ sinh viên:</div>
+                <div class="p-3 bg-light rounded border text-muted" style="font-size: 0.95rem;">
+                    <%= task.getMoTa() %>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+<%
+        }
+    }
+%>
 </body>
 </html>
