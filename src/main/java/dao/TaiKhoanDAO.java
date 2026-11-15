@@ -6,6 +6,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class TaiKhoanDAO {
     Connection conn = null;
@@ -96,32 +98,64 @@ public class TaiKhoanDAO {
         return false;
     }
 
-    // 1. Cập nhật thông tin cho SINH VIÊN
+    public Map<String, Object> getStudentProfile(int accountId) {
+        String query = "SELECT tk.ho_ten, tk.so_dien_thoai, tk.email, sv.phong_id, sv.ma_sinh_vien, sv.khoa, sv.lop " +
+                "FROM tai_khoan tk LEFT JOIN sinh_vien sv ON sv.tai_khoan_id = tk.tai_khoan_id " +
+                "WHERE tk.tai_khoan_id = ? AND tk.vai_tro = 'SINH_VIEN'";
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, accountId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    Map<String, Object> profile = new LinkedHashMap<>();
+                    profile.put("fullName", result.getString("ho_ten"));
+                    profile.put("sdt", result.getString("so_dien_thoai"));
+                    profile.put("email", result.getString("email"));
+                    profile.put("phongId", result.getObject("phong_id"));
+                    profile.put("maSV", result.getString("ma_sinh_vien"));
+                    profile.put("khoa", result.getString("khoa"));
+                    profile.put("lop", result.getString("lop"));
+                    return profile;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Map<Integer, String> getProfileRooms() {
+        Map<Integer, String> rooms = new LinkedHashMap<>();
+        String query = "SELECT phong_id, ma_phong, toa_nha FROM phong ORDER BY toa_nha, ma_phong";
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement statement = connection.prepareStatement(query);
+             ResultSet result = statement.executeQuery()) {
+            while (result.next()) {
+                rooms.put(result.getInt("phong_id"), result.getString("ma_phong") + " - " + result.getString("toa_nha"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return rooms;
+    }
+
     public boolean updateProfileStudent(int taiKhoanId, String hoTen, String sdt, String email, int phongId, String maSV, String khoa, String lop) {
-        String queryTK = "UPDATE tai_khoan SET ho_ten = ?, so_dien_thoai = ?, email = ? WHERE tai_khoan_id = ?";
-        String querySV = "UPDATE sinh_vien SET phong_id = ?, ma_sinh_vien = ?, khoa = ?, lop = ? WHERE tai_khoan_id = ?";
-
-        try {
-            Connection conn = new DBContext().getConnection();
-
-            // Cập nhật bảng tai_khoan
-            PreparedStatement psTK = conn.prepareStatement(queryTK);
-            psTK.setString(1, hoTen);
-            psTK.setString(2, sdt);
-            psTK.setString(3, email);
-            psTK.setInt(4, taiKhoanId);
-            psTK.executeUpdate();
-
-            // Cập nhật bảng sinh_vien
-            PreparedStatement psSV = conn.prepareStatement(querySV);
-            psSV.setInt(1, phongId);
-            psSV.setString(2, maSV);
-            psSV.setString(3, khoa);
-            psSV.setString(4, lop);
-            psSV.setInt(5, taiKhoanId);
-            psSV.executeUpdate();
-
-            return true;
+        String query = "UPDATE tai_khoan tk JOIN sinh_vien sv ON sv.tai_khoan_id = tk.tai_khoan_id " +
+                "JOIN phong p ON p.phong_id = ? " +
+                "SET tk.ho_ten = ?, tk.so_dien_thoai = ?, tk.email = ?, " +
+                "sv.phong_id = p.phong_id, sv.ma_sinh_vien = ?, sv.khoa = ?, sv.lop = ? " +
+                "WHERE tk.tai_khoan_id = ? AND tk.vai_tro = 'SINH_VIEN'";
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, phongId);
+            statement.setString(2, hoTen);
+            statement.setString(3, sdt);
+            statement.setString(4, email);
+            statement.setString(5, maSV);
+            statement.setString(6, khoa);
+            statement.setString(7, lop);
+            statement.setInt(8, taiKhoanId);
+            return statement.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
         }

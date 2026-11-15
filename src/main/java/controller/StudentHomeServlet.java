@@ -1,6 +1,7 @@
 package controller;
 
 import dao.SuCoDAO;
+import dao.TaiKhoanDAO;
 import model.SuCo;
 import model.TaiKhoan;
 import jakarta.servlet.ServletException;
@@ -56,6 +57,10 @@ public class StudentHomeServlet extends HttpServlet {
         request.setAttribute("thongKeMap", thongKeMap);
 
         // Chuyển hướng sang giao diện JSP
+        TaiKhoanDAO accountDao = new TaiKhoanDAO();
+        request.setAttribute("studentProfile", accountDao.getStudentProfile(acc.getTaiKhoanId()));
+        request.setAttribute("profileRooms", accountDao.getProfileRooms());
+
         request.getRequestDispatcher("student/student_home.jsp").forward(request, response);
     }
 }

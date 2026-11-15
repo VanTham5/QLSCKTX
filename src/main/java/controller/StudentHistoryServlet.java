@@ -1,6 +1,7 @@
 package controller;
 
 import dao.SuCoDAO;
+import dao.TaiKhoanDAO;
 import model.SuCo;
 import model.TaiKhoan;
 import jakarta.servlet.ServletException;
@@ -41,6 +42,11 @@ public class StudentHistoryServlet extends HttpServlet {
         request.setAttribute("historyList", historyList);
 
         // Trỏ về đúng file giao diện của bạn (Lưu ý: đường dẫn có thể là /student/student_history.jsp tùy cách bạn tổ chức thư mục)
+        TaiKhoanDAO accountDao = new TaiKhoanDAO();
+        request.setAttribute("studentProfile", accountDao.getStudentProfile(acc.getTaiKhoanId()));
+        request.setAttribute("profileRooms", accountDao.getProfileRooms());
+        request.setAttribute("profileFromHistory", true);
+
         request.getRequestDispatcher("student/student_history.jsp").forward(request, response);
     }
 }

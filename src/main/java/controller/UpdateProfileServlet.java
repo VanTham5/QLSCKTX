@@ -35,12 +35,23 @@ public class UpdateProfileServlet extends HttpServlet {
 
         // Phân quyền cập nhật dựa trên Vai trò
         if ("SINH_VIEN".equals(acc.getVaiTro())) {
-            int phongId = Integer.parseInt(request.getParameter("phongId"));
+            int phongId;
+            try {
+                phongId = Integer.parseInt(request.getParameter("phongId"));
+            } catch (NumberFormatException e) {
+                phongId = 0;
+            }
             String maSV = request.getParameter("maSV");
             String khoa = request.getParameter("khoa");
             String lop = request.getParameter("lop");
 
-            isSuccess = dao.updateProfileStudent(acc.getTaiKhoanId(), fullName, sdt, email, phongId, maSV, khoa, lop);
+            if (phongId > 0 && fullName != null && !fullName.trim().isEmpty()
+                    && sdt != null && !sdt.trim().isEmpty()
+                    && maSV != null && !maSV.trim().isEmpty()
+                    && khoa != null && !khoa.trim().isEmpty()
+                    && lop != null && !lop.trim().isEmpty()) {
+                isSuccess = dao.updateProfileStudent(acc.getTaiKhoanId(), fullName, sdt, email, phongId, maSV, khoa, lop);
+            }
         } else {
             // Dành cho ADMIN và NHAN_VIEN
             isSuccess = dao.updateProfileEmployee(acc.getTaiKhoanId(), fullName, sdt, email);
@@ -54,7 +65,10 @@ public class UpdateProfileServlet extends HttpServlet {
 
         // Chuyển hướng về đúng trang của từng vai trò
         if ("SINH_VIEN".equals(acc.getVaiTro())) {
-            response.sendRedirect(request.getContextPath() + "/student-home");
+            String studentPage = "history".equals(request.getParameter("profilePage"))
+                    ? "/student-history" : "/student-home";
+            response.sendRedirect(request.getContextPath() + studentPage
+                    + "?profileUpdate=" + (isSuccess ? "success" : "failed"));
         } else if ("NHAN_VIEN".equals(acc.getVaiTro())) {
             response.sendRedirect(request.getContextPath() + "/employee-home");
         } else {
