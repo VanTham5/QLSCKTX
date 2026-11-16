@@ -102,11 +102,13 @@
     <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#createNoticeModal">
         <i class="fa-solid fa-bullhorn me-2 w-20px"></i> Đăng thông báo
     </a>
-    <a href="#" class="nav-link d-flex justify-content-between align-items-center">
+    <a href="${pageContext.request.contextPath}/admin-incidents" class="nav-link">
         <span><i class="fa-solid fa-triangle-exclamation me-2 w-20px"></i> Quản lý sự cố</span>
         <span class="badge bg-danger rounded-pill">${pending != null ? pending : 0}</span>
     </a>
-    <a href="#" class="nav-link"><i class="fa-solid fa-users me-2 w-20px"></i> Quản lý tài khoản</a>
+    <a href="${pageContext.request.contextPath}/admin-accounts" class="nav-link">
+        <i class="fa-solid fa-users me-2 w-20px"></i> Quản lý tài khoản
+    </a>
     <a href="#" class="nav-link"><i class="fa-solid fa-building me-2 w-20px"></i> Quản lý phòng/tòa</a>
     <a href="#" class="nav-link"><i class="fa-solid fa-list me-2 w-20px"></i> Danh mục loại sự cố</a>
 
@@ -245,11 +247,17 @@
                             <td><span class="badge bg-<%= badgeMucDo %> bg-opacity-10 text-<%= badgeMucDo %> border border-<%= badgeMucDo %>"><%= task.getMucDo() %></span></td>
                             <td><span class="badge bg-<%= badgeTrangThai %> <%= "Chờ xử lý".equals(task.getTrangThai()) ? "text-dark" : "text-white" %>"><%= task.getTrangThai() %></span></td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-light text-primary border" title="Xem chi tiết"><i class="fa-solid fa-eye"></i></button>
+                                <button type="button" class="btn btn-sm btn-light text-primary border"
+                                        data-bs-toggle="modal" data-bs-target="#detailModal<%= task.getSuCoId() %>"
+                                        title="Xem chi tiết">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
                             </td>
                             <td class="pe-4 text-center">
-                                <button class="btn btn-sm btn-outline-primary shadow-sm" title="Phân công / Cập nhật">
-                                    <i class="fa-solid fa-pen-to-square"></i> Cập nhật
+                                <button type="button" class="btn btn-sm btn-primary shadow-sm px-3"
+                                        data-bs-toggle="modal" data-bs-target="#assignModal<%= task.getSuCoId() %>"
+                                        title="Phân công xử lý">
+                                    <i class="fa-solid fa-user-gear me-1"></i> Phân công
                                 </button>
                             </td>
                         </tr>
@@ -297,6 +305,103 @@
         </div>
     </div>
 </div>
+
+<!-- VÒNG LẶP TẠO MODAL CHI TIẾT SỰ CỐ CHO TỪNG DÒNG (DÀNH CHO ADMIN) -->
+<%
+    if (listSuCo != null && !listSuCo.isEmpty()) {
+        for (SuCo task : listSuCo) {
+            String badgeMucDo = "KHẨN CẤP".equals(task.getMucDo()) ? "danger" : ("TRUNG BÌNH".equals(task.getMucDo()) ? "warning" : "success");
+            String badgeTrangThai = "Chờ xử lý".equals(task.getTrangThai()) ? "warning" : ("Đang xử lý".equals(task.getTrangThai()) ? "primary" : "success");
+            String tenNguoiGui = task.getTenNguoiGui() != null ? task.getTenNguoiGui() : "Không rõ";
+            String sdtNguoiGui = task.getSoDienThoai() != null ? task.getSoDienThoai() : "Không có";
+%>
+<div class="modal fade" id="detailModal<%= task.getSuCoId() %>" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info me-2"></i>Chi tiết sự cố #SC0<%= task.getSuCoId() %></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-start">
+                <h6 class="fw-bold text-primary mb-3"><%= task.getTieuDe() %></h6>
+                <div class="mb-2"><strong>Người báo cáo:</strong> <span class="text-dark fw-bold"><%= tenNguoiGui %></span></div>
+                <div class="mb-2">
+                    <strong>SĐT Người báo:</strong>
+                    <a href="tel:<%= sdtNguoiGui %>" class="text-decoration-none fw-bold text-primary">
+                        <i class="fa-solid fa-phone fa-sm me-1"></i> <%= sdtNguoiGui %>
+                    </a>
+                </div>
+                <div class="mb-2"><strong>Vị trí phòng:</strong> <span class="text-danger fw-medium"><%= task.getViTriPhong() %></span></div>
+                <div class="mb-2"><strong>Mức độ:</strong> <span class="badge bg-<%= badgeMucDo %>"><%= task.getMucDo() %></span></div>
+                <div class="mb-2"><strong>Trạng thái:</strong> <span class="badge bg-<%= badgeTrangThai %> <%= "Chờ xử lý".equals(task.getTrangThai()) ? "text-dark" : "text-white" %>"><%= task.getTrangThai() %></span></div>
+                <div class="mb-2"><strong>Ngày báo cáo:</strong> <%= task.getNgayGui() %></div>
+                <hr>
+                <div class="mb-1 fw-bold text-dark">Mô tả chi tiết từ sinh viên:</div>
+                <div class="p-3 bg-light rounded border text-muted" style="font-size: 0.95rem;">
+                    <%= task.getMoTa() != null ? task.getMoTa() : "Không có mô tả chi tiết." %>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+<%
+        }
+    }
+%>
+
+<!-- VÒNG LẶP TẠO MODAL PHÂN CÔNG CHO TỪNG SỰ CỐ -->
+<%
+    if (listSuCo != null && !listSuCo.isEmpty()) {
+        for (SuCo task : listSuCo) {
+            dao.SuCoDAO sDao = new dao.SuCoDAO();
+
+            // LẤY ĐÚNG MÃ TỔ CỦA SỰ CỐ THAY VÌ FIX CỨNG SỐ 1
+            java.util.List<model.TaiKhoan> listStaff = sDao.getStaffByTeam(task.getToId());
+%>
+<div class="modal fade" id="assignModal<%= task.getSuCoId() %>" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-gear me-2"></i>Phân công xử lý sự cố #SC0<%= task.getSuCoId() %></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="${pageContext.request.contextPath}/assign-task" method="POST">
+                <div class="modal-body p-4 text-start">
+                    <input type="hidden" name="suCoId" value="<%= task.getSuCoId() %>">
+                    <h6 class="fw-bold text-primary mb-3"><%= task.getTieuDe() %></h6>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chọn nhân viên kỹ thuật phụ trách <span class="text-danger">*</span></label>
+                        <select class="form-select" name="nhanVienId" required>
+                            <option value="" selected disabled>-- Chọn nhân viên thuộc tổ --</option>
+                            <%
+                                if (listStaff != null && !listStaff.isEmpty()) {
+                                    for (model.TaiKhoan staff : listStaff) {
+                            %>
+                            <option value="<%= staff.getTaiKhoanId() %>"><%= staff.getHoTen() %> (SĐT: <%= staff.getSoDienThoai() %>)</option>
+                            <%
+                                }
+                            } else {
+                            %>
+                            <option value="" disabled>Không có nhân viên nào trong tổ này</option>
+                            <% } %>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4">Xác nhận phân công</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<%
+        }
+    }
+%>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

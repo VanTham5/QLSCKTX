@@ -30,24 +30,25 @@ public class EmployeeHomeServlet extends HttpServlet {
 
         SuCoDAO dao = new SuCoDAO();
 
-        // 1. Lấy danh sách sự cố cho nhân viên
-        List<SuCo> listSuCo = dao.getAllSuCoForStaff();
+        // 1. Lấy danh sách sự cố (chỉ lấy Chờ xử lý và Đang xử lý để hiện bảng bên dưới)
+        List<SuCo> listSuCo = dao.getAllSuCoForStaff(acc.getTaiKhoanId());
 
-        // 2. Tính toán số liệu thống kê (Đếm số lượng theo từng trạng thái)
-        int pending = 0, processing = 0, done = 0;
+        // 2. Đếm số lượng chờ xử lý và đang xử lý từ danh sách
+        int pending = 0, processing = 0;
         if (listSuCo != null) {
             for (SuCo sc : listSuCo) {
                 if ("Chờ xử lý".equals(sc.getTrangThai())) {
                     pending++;
                 } else if ("Đang xử lý".equals(sc.getTrangThai())) {
                     processing++;
-                } else if ("Đã hoàn thành".equals(sc.getTrangThai())) {
-                    done++;
                 }
             }
         }
 
-        // 3. Đẩy dữ liệu sang trang JSP
+        // 3. Lấy số lượng đã hoàn thành trong tháng từ database bằng hàm riêng
+        int done = dao.countCompletedIssuesThisMonth(acc.getTaiKhoanId());
+
+        // 4. Đẩy sang JSP
         request.setAttribute("listSuCo", listSuCo);
         request.setAttribute("pending", pending);
         request.setAttribute("processing", processing);

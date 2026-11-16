@@ -6,6 +6,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.List;
+import java.util.ArrayList;
+
 
 public class TaiKhoanDAO {
     Connection conn = null;
@@ -29,7 +32,8 @@ public class TaiKhoanDAO {
                         rs.getString("mat_khau"),
                         rs.getString("ho_ten"),
                         rs.getString("vai_tro"),
-                        rs.getBoolean("trang_thai")
+                        rs.getBoolean("trang_thai"),
+                        rs.getString("so_dien_thoai")
                 );
             }
         } catch (Exception e) {
@@ -171,5 +175,71 @@ public class TaiKhoanDAO {
         return false; // Mật khẩu cũ sai hoặc lỗi kết nối
     }
 
+    // Lấy danh sách tài khoản theo vai trò (Loại trừ ADMIN) một cách an toàn
+    public List<TaiKhoan> getAccountsByRole(String role) {
+        List<TaiKhoan> list = new ArrayList<>();
+
+        // Đã sửa 'to_ky_thuat' thành 'to_nhan_vien' khớp với cơ sở dữ liệu của bạn
+        String query = "SELECT tk.tai_khoan_id, tk.ten_dang_nhap, tk.ho_ten, tk.vai_tro, tk.trang_thai, tk.so_dien_thoai, tt.ten_to " +
+                "FROM tai_khoan tk " +
+                "LEFT JOIN nhan_vien nv ON tk.tai_khoan_id = nv.tai_khoan_id " +
+                "LEFT JOIN to_nhan_vien tt ON nv.to_id = tt.to_id " +
+                "WHERE tk.vai_tro != 'ADMIN' ";
+
+        if (role != null && !role.isEmpty() && !role.equals("all")) {
+            query += "AND tk.vai_tro = ? ";
+        }
+        query += "ORDER BY tk.tai_khoan_id DESC";
+
+        try {
+            Connection conn = new DBContext().getConnection();
+            PreparedStatement ps = conn.prepareStatement(query);
+            if (role != null && !role.isEmpty() && !role.equals("all")) {
+                ps.setString(1, role);
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                TaiKhoan tk = new TaiKhoan();
+                tk.setTaiKhoanId(rs.getInt("tai_khoan_id"));
+                tk.setTenDangNhap(rs.getString("ten_dang_nhap"));
+                tk.setHoTen(rs.getString("ho_ten"));
+                tk.setVaiTro(rs.getString("vai_tro"));
+                tk.setTrangThai(rs.getBoolean("trang_thai"));
+                tk.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Chưa cập nhật");
+
+                String tenTo = rs.getString("ten_to");
+                if ("NHAN_VIEN".equals(tk.getVaiTro())) {
+                    tk.setTenTo(tenTo != null ? tenTo : "Chưa phân tổ");
+                } else {
+                    tk.setTenTo("---");
+                }
+
+                list.add(tk);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // Hàm phụ lấy tên tổ của nhân viên (tránh lỗi JOIN toàn cục)
+    private String getTenToByTaiKhoanId(int taiKhoanId, Connection conn) {
+        String tenTo = "Chưa phân tổ";
+        String query = "SELECT tt.ten_to FROM nhan_vien nv " +
+                "JOIN to_ky_thuat tt ON nv.to_id = tt.to_id " +
+                "WHERE nv.tai_khoan_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, taiKhoanId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String t = rs.getString("ten_to");
+                    if (t != null) tenTo = t;
+                }
+            }
+        } catch (Exception e) {
+            // Nếu bảng nhan_vien hoặc to_ky_thuat có tên khác, code vẫn chạy bình thường và trả về "Chưa phân tổ"
+        }
+        return tenTo;
+    }
 
 }

@@ -2,7 +2,7 @@ package dao;
 
 import context.DBContext;
 import model.SuCo;
-
+import model.TaiKhoan;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,7 +16,7 @@ public class SuCoDAO implements ISuCoDAO {
     PreparedStatement ps = null;
     ResultSet rs = null;
 
-    // 1. Lấy danh sách sự cố cho Nhân Viên (Chỉ lấy Chờ xử lý và Đang xử lý, ẩn Đã hoàn thành)
+    // 1. Phiên bản KHÔNG THAM SỐ (Để thỏa mãn ISuCoDAO và các nơi gọi cũ)
     @Override
     public List<SuCo> getAllSuCoForStaff() {
         List<SuCo> list = new ArrayList<>();
@@ -32,6 +32,50 @@ public class SuCoDAO implements ISuCoDAO {
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                SuCo sc = new SuCo();
+                sc.setSuCoId(rs.getInt("su_co_id"));
+                sc.setTieuDe(rs.getString("tieu_de"));
+                sc.setMoTa(rs.getString("mo_ta"));
+                sc.setMucDo(rs.getString("muc_do"));
+                sc.setTrangThai(rs.getString("trang_thai"));
+                sc.setNgayGui(rs.getTimestamp("ngay_gui"));
+
+                String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
+                String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
+                sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+
+                sc.setTenNguoiGui(rs.getString("ho_ten"));
+                sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
+
+                list.add(sc);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // 2. Phiên bản CÓ THAM SỐ (Dùng cho EmployeeHomeServlet lọc theo tổ)
+    @Override
+    public List<SuCo> getAllSuCoForStaff(int taiKhoanId) {
+        List<SuCo> list = new ArrayList<>();
+        String query = "SELECT sc.su_co_id, sc.tieu_de, sc.mo_ta, sc.muc_do, sc.trang_thai, sc.ngay_gui, " +
+                "p.ma_phong, p.toa_nha, " +
+                "tk.ho_ten, tk.so_dien_thoai " +
+                "FROM su_co sc " +
+                "JOIN loai_su_co lsc ON sc.loai_su_co_id = lsc.loai_su_co_id " +
+                "JOIN nhan_vien nv ON lsc.to_id = nv.to_id " +
+                "LEFT JOIN phong p ON sc.phong_id = p.phong_id " +
+                "LEFT JOIN sinh_vien sv ON sc.sinh_vien_id = sv.sinh_vien_id " +
+                "LEFT JOIN tai_khoan tk ON sv.tai_khoan_id = tk.tai_khoan_id " +
+                "WHERE nv.tai_khoan_id = ? AND sc.trang_thai IN ('Chờ xử lý', 'Đang xử lý') " +
+                "ORDER BY FIELD(sc.trang_thai, 'Chờ xử lý', 'Đang xử lý'), sc.ngay_gui DESC";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, taiKhoanId);
             rs = ps.executeQuery();
             while (rs.next()) {
                 SuCo sc = new SuCo();
@@ -277,7 +321,58 @@ public class SuCoDAO implements ISuCoDAO {
     }
 
     // Lấy lịch sử sự cố trang nhân viên
-    public List<SuCo> getAllSuCoHistoryForStaff(String filter) {
+    // Lấy lịch sử sự cố của nhân viên theo đúng tổ và theo trạng thái lọc
+    public List<SuCo> getAllSuCoHistoryForStaff(int taiKhoanId, String filter) {
+        List<SuCo> list = new ArrayList<>();
+        String query = "SELECT sc.su_co_id, sc.tieu_de, sc.mo_ta, sc.muc_do, sc.trang_thai, sc.ngay_gui, " +
+                "p.ma_phong, p.toa_nha, tk.ho_ten, tk.so_dien_thoai " +
+                "FROM su_co sc " +
+                "JOIN loai_su_co lsc ON sc.loai_su_co_id = lsc.loai_su_co_id " +
+                "JOIN nhan_vien nv ON lsc.to_id = nv.to_id " +
+                "LEFT JOIN phong p ON sc.phong_id = p.phong_id " +
+                "LEFT JOIN sinh_vien sv ON sc.sinh_vien_id = sv.sinh_vien_id " +
+                "LEFT JOIN tai_khoan tk ON sv.tai_khoan_id = tk.tai_khoan_id " +
+                "WHERE nv.tai_khoan_id = ? ";
+
+        if ("pending".equals(filter)) {
+            query += "AND sc.trang_thai = 'Chờ xử lý' ";
+        } else if ("processing".equals(filter)) {
+            query += "AND sc.trang_thai = 'Đang xử lý' ";
+        } else if ("done".equals(filter)) {
+            query += "AND sc.trang_thai = 'Đã hoàn thành' ";
+        }
+        query += "ORDER BY sc.ngay_gui DESC";
+
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, taiKhoanId);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                SuCo sc = new SuCo();
+                sc.setSuCoId(rs.getInt("su_co_id"));
+                sc.setTieuDe(rs.getString("tieu_de"));
+                sc.setMoTa(rs.getString("mo_ta"));
+                sc.setMucDo(rs.getString("muc_do"));
+                sc.setTrangThai(rs.getString("trang_thai"));
+                sc.setNgayGui(rs.getTimestamp("ngay_gui"));
+
+                String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
+                String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
+                sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+                sc.setTenNguoiGui(rs.getString("ho_ten") != null ? rs.getString("ho_ten") : "Không rõ");
+                sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
+
+                list.add(sc);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // Lấy toàn bộ danh sách sự cố cho Admin (Có tích hợp bộ lọc trạng thái)
+    public List<SuCo> getAllSuCoForAdmin(String filter) {
         List<SuCo> list = new ArrayList<>();
         String query = "SELECT sc.su_co_id, sc.tieu_de, sc.mo_ta, sc.muc_do, sc.trang_thai, sc.ngay_gui, " +
                 "p.ma_phong, p.toa_nha, tk.ho_ten, tk.so_dien_thoai " +
@@ -311,6 +406,7 @@ public class SuCoDAO implements ISuCoDAO {
                 String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
                 String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
                 sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+                sc.setTenNguoiGui(rs.getString("ho_ten") != null ? rs.getString("ho_ten") : "Không rõ");
                 sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
 
                 list.add(sc);
@@ -319,5 +415,96 @@ public class SuCoDAO implements ISuCoDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    // 1. Chỉ lấy các sự cố "Chờ xử lý" cho trang chủ Admin
+    public List<SuCo> getPendingSuCoForAdmin() {
+        List<SuCo> list = new ArrayList<>();
+        String query = "SELECT sc.su_co_id, sc.tieu_de, sc.mo_ta, sc.muc_do, sc.trang_thai, sc.ngay_gui, " +
+                "p.ma_phong, p.toa_nha, tk.ho_ten, tk.so_dien_thoai, lsc.to_id " +
+                "FROM su_co sc " +
+                "JOIN loai_su_co lsc ON sc.loai_su_co_id = lsc.loai_su_co_id " +
+                "LEFT JOIN phong p ON sc.phong_id = p.phong_id " +
+                "LEFT JOIN sinh_vien sv ON sc.sinh_vien_id = sv.sinh_vien_id " +
+                "LEFT JOIN tai_khoan tk ON sv.tai_khoan_id = tk.tai_khoan_id " +
+                "WHERE sc.trang_thai = 'Chờ xử lý' " +
+                "ORDER BY sc.ngay_gui DESC";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                SuCo sc = new SuCo();
+                sc.setSuCoId(rs.getInt("su_co_id"));
+                sc.setTieuDe(rs.getString("tieu_de"));
+                sc.setMoTa(rs.getString("mo_ta"));
+                sc.setMucDo(rs.getString("muc_do"));
+                sc.setTrangThai(rs.getString("trang_thai"));
+                sc.setNgayGui(rs.getTimestamp("ngay_gui"));
+
+                String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
+                String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
+                sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+                sc.setTenNguoiGui(rs.getString("ho_ten") != null ? rs.getString("ho_ten") : "Không rõ");
+                sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
+
+                // Gán đúng mã tổ từ database vào object SuCo
+                sc.setToId(rs.getInt("to_id"));
+
+                list.add(sc);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // 2. Lấy danh sách nhân viên thuộc đúng tổ kỹ thuật (to_id)
+    public List<TaiKhoan> getStaffByTeam(int toId) {
+        List<TaiKhoan> list = new ArrayList<>();
+        // Giả định bảng tai_khoan hoặc nhân viên có liên kết với to_id của tổ kỹ thuật
+        String query = "SELECT tk.tai_khoan_id, tk.ho_ten, tk.so_dien_thoai FROM tai_khoan tk " +
+                "JOIN nhan_vien nv ON tk.tai_khoan_id = nv.tai_khoan_id " +
+                "WHERE nv.to_id = ?";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, toId);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                TaiKhoan nv = new TaiKhoan();
+                nv.setTaiKhoanId(rs.getInt("tai_khoan_id"));
+                nv.setHoTen(rs.getString("ho_ten"));
+                nv.setSoDienThoai(rs.getString("so_dien_thoai"));
+                list.add(nv);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // Đếm số sự cố đã hoàn thành trong tháng này theo đúng tổ của nhân viên
+    public int countCompletedIssuesThisMonth(int taiKhoanId) {
+        int count = 0;
+        String query = "SELECT COUNT(*) FROM su_co sc " +
+                "JOIN loai_su_co lsc ON sc.loai_su_co_id = lsc.loai_su_co_id " +
+                "JOIN nhan_vien nv ON lsc.to_id = nv.to_id " +
+                "WHERE nv.tai_khoan_id = ? " +
+                "AND sc.trang_thai = 'Đã hoàn thành' " +
+                "AND MONTH(sc.ngay_cap_nhat) = MONTH(CURRENT_DATE()) " +
+                "AND YEAR(sc.ngay_cap_nhat) = YEAR(CURRENT_DATE())";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, taiKhoanId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
     }
 }

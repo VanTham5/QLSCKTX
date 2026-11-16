@@ -7,16 +7,19 @@ public class TaiKhoan {
     private String hoTen;
     private String vaiTro;
     private boolean trangThai;
+    private String soDienThoai;
+    private String tenTo;
 
     public TaiKhoan() {}
 
-    public TaiKhoan(int taiKhoanId, String tenDangNhap, String matKhau, String hoTen, String vaiTro, boolean trangThai) {
+    public TaiKhoan(int taiKhoanId, String tenDangNhap, String matKhau, String hoTen, String vaiTro, boolean trangThai, String soDienThoai) {
         this.taiKhoanId = taiKhoanId;
         this.tenDangNhap = tenDangNhap;
         this.matKhau = matKhau;
         this.hoTen = hoTen;
         this.vaiTro = vaiTro;
         this.trangThai = trangThai;
+        this.soDienThoai = soDienThoai;
     }
 
     public String getMatKhau() {
@@ -66,6 +69,12 @@ public class TaiKhoan {
     public void setTrangThai(boolean trangThai) {
         this.trangThai = trangThai;
     }
-// Bạn hãy nhấn Alt + Insert (hoặc chuột phải chọn Generate)
-    // -> Chọn "Getter and Setter" -> Bôi đen tất cả các biến -> Nhấn OK để IntelliJ tự sinh code.
+
+    public String getSoDienThoai() { return soDienThoai;}
+
+    public void setSoDienThoai(String soDienThoai) { this.soDienThoai = soDienThoai;}
+
+    public String getTenTo() {return tenTo;}
+
+    public void setTenTo(String tenTo) {this.tenTo = tenTo;}
 }

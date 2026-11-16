@@ -27,22 +27,24 @@ public class AdminHomeServlet extends HttpServlet {
         }
 
         SuCoDAO dao = new SuCoDAO();
-        List<SuCo> listSuCo = dao.getAllSuCoForStaff(); // Admin dùng chung hàm lấy danh sách với Nhân viên
 
-        int total = listSuCo.size();
-        int pending = 0, processing = 0;
-        for (SuCo sc : listSuCo) {
-            if ("Chờ xử lý".equals(sc.getTrangThai())) pending++;
-            else if ("Đang xử lý".equals(sc.getTrangThai())) processing++;
-        }
+        // 1. CHỈ LẤY DANH SÁCH SỰ CỐ "CHỜ XỬ LÝ" CHO BẢNG CHÍNH TRANG CHỦ
+        List<SuCo> listSuCo = dao.getPendingSuCoForAdmin();
 
+        // 2. TÍNH TOÁN SỐ LIỆU THỐNG KÊ TỔNG QUAN CHO CÁC THẺ STAT CARD
+        int total = dao.getAllSuCoForAdmin("all").size();       // Tổng số sự cố toàn hệ thống
+        int pending = listSuCo.size();                          // Số lượng đang chờ xử lý
+        int processing = dao.getAllSuCoForAdmin("processing").size(); // Số lượng đang tiến hành sửa chữa
+        int totalStudents = dao.countTotalStudents();           // Tổng sinh viên nội trú
+
+        // 3. ĐẨY DỮ LIỆU SANG JSP
         request.setAttribute("listSuCo", listSuCo);
         request.setAttribute("total", total);
         request.setAttribute("pending", pending);
         request.setAttribute("processing", processing);
-        request.setAttribute("totalStudents", dao.countTotalStudents());
+        request.setAttribute("totalStudents", totalStudents);
 
-        // Đổi đường dẫn admin_home.jsp cho khớp với cấu trúc thư mục của bạn
+        // Điều hướng về giao diện trang chủ Admin
         request.getRequestDispatcher("/admin/admin_home.jsp").forward(request, response);
     }
 }
