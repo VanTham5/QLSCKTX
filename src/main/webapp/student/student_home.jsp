@@ -373,12 +373,16 @@
                             <label for="loaiSuCoId" class="form-label fw-bold">Danh mục <span class="text-danger">*</span></label>
                             <select class="form-select" id="loaiSuCoId" name="loaiSuCoId" required>
                                 <option value="" selected disabled>-- Chọn loại sự cố --</option>
-                                <option value="1">Hệ thống Điện</option>
-                                <option value="2">Hệ thống Nước & Vệ sinh</option>
-                                <option value="3">Cơ sở vật chất (Giường, tủ, cửa...)</option>
-                                <option value="4">Mạng & Internet</option>
-                                <option value="5">An ninh & Trật tự</option>
-
+                                <%
+                                    List<model.LoaiSuCo> listLoaiSuCo = (List<model.LoaiSuCo>) request.getAttribute("listLoaiSuCo");
+                                    if (listLoaiSuCo != null) {
+                                        for (model.LoaiSuCo lsc : listLoaiSuCo) {
+                                %>
+                                <option value="<%= lsc.getLoaiSuCoId() %>"><%= lsc.getTenLoai() %></option>
+                                <%
+                                        }
+                                    }
+                                %>
                             </select>
                             <div class="invalid-feedback">
                                 Bạn chưa chọn danh mục sự cố.

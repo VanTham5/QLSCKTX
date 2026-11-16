@@ -2,6 +2,7 @@ package dao;
 
 import context.DBContext;
 import model.SuCo;
+import model.LoaiSuCo;
 import model.TaiKhoan;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -191,6 +192,26 @@ public class SuCoDAO implements ISuCoDAO {
             e.printStackTrace();
         }
         return count;
+    }
+
+    // Lấy danh sách loại sự cố cho sinh viên chọn khi báo cáo
+    public List<model.LoaiSuCo> getAllLoaiSuCo() {
+        List<model.LoaiSuCo> list = new ArrayList<>();
+        String query = "SELECT * FROM loai_su_co";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                model.LoaiSuCo lsc = new model.LoaiSuCo();
+                lsc.setLoaiSuCoId(rs.getInt("loai_su_co_id"));
+                lsc.setTenLoai(rs.getString("ten_loai"));
+                list.add(lsc);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     @Override
@@ -507,4 +528,5 @@ public class SuCoDAO implements ISuCoDAO {
         }
         return count;
     }
+
 }
