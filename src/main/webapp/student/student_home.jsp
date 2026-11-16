@@ -346,78 +346,6 @@
     </div>
 </div>
 
-<!-- MODAL GỬI BÁO CÁO SỰ CỐ -->
-<div class="modal fade" id="reportIssueModal" tabindex="-1" aria-labelledby="reportIssueModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold" id="reportIssueModalLabel"><i class="fa-solid fa-file-signature me-2"></i>Gửi Báo Cáo Sự Cố Mới</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-
-                <form action="${pageContext.request.contextPath}/report-issue" method="POST" class="needs-validation" novalidate>
-
-                    <div class="mb-3">
-                        <label for="tieuDe" class="form-label fw-bold">Tiêu đề sự cố <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="tieuDe" name="tieuDe"
-                               placeholder="VD: Chập cháy bóng đèn giường số 3..."
-                               minlength="10" maxlength="100" required>
-                        <div class="invalid-feedback">
-                            Vui lòng nhập tiêu đề rõ ràng (ít nhất 10 ký tự).
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="loaiSuCoId" class="form-label fw-bold">Danh mục <span class="text-danger">*</span></label>
-                            <select class="form-select" id="loaiSuCoId" name="loaiSuCoId" required>
-                                <option value="" selected disabled>-- Chọn loại sự cố --</option>
-                                <%
-                                    List<model.LoaiSuCo> listLoaiSuCo = (List<model.LoaiSuCo>) request.getAttribute("listLoaiSuCo");
-                                    if (listLoaiSuCo != null) {
-                                        for (model.LoaiSuCo lsc : listLoaiSuCo) {
-                                %>
-                                <option value="<%= lsc.getLoaiSuCoId() %>"><%= lsc.getTenLoai() %></option>
-                                <%
-                                        }
-                                    }
-                                %>
-                            </select>
-                            <div class="invalid-feedback">
-                                Bạn chưa chọn danh mục sự cố.
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="mucDo" class="form-label fw-bold">Mức độ <span class="text-danger">*</span></label>
-                            <select class="form-select" id="mucDo" name="mucDo" required>
-                                <option value="THẤP">Thấp (Có thể chờ vài ngày)</option>
-                                <option value="TRUNG BÌNH" selected>Trung bình (Cần sửa sớm)</option>
-                                <option value="KHẨN CẤP">Khẩn cấp (Nguy hiểm)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="moTa" class="form-label fw-bold">Mô tả chi tiết <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="moTa" name="moTa" rows="4"
-                                  placeholder="Mô tả chính xác vị trí và tình trạng hư hỏng..."
-                                  minlength="20" required></textarea>
-                        <div class="invalid-feedback">
-                            Vui lòng mô tả chi tiết (ít nhất 20 ký tự) để kỹ thuật viên chuẩn bị đồ nghề.
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-light border me-2 fw-medium" data-bs-dismiss="modal">Hủy bỏ</button>
-                        <button class="btn btn-primary fw-bold px-4" type="submit">Gửi Báo Cáo</button>
-                    </div>
-                </form>
-
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- MODAL THÔNG TIN CÁ NHÂN (SINH VIÊN) -->
 <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
@@ -497,6 +425,82 @@
         </div>
     </div>
 </div>
+
+<!--  MODAL GỬI BÁO CÁO SỰ CỐ  -->
+<div class="modal fade" id="reportIssueModal" tabindex="-1" aria-labelledby="reportIssueModalLabel" aria-hidden="true" >
+    <div class="modal-dialog modal-dialog-centered modal-lg" >
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="reportIssueModalLabel" ><i class="fa-solid fa-file-signature me-2"></i>Gửi Báo Cáo Sự Cố Mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+<!-- -->
+
+                <form action="${pageContext.request.contextPath}/report-issue" method="POST" class="needs-validation" novalidate>
+
+                    <div class="mb-3" >
+                        <label for="tieuDe" class="form-label fw-bold">Tiêu đề sự cố <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="tieuDe" name="tieuDe"
+                               placeholder="VD: Chập cháy bóng đèn giường số 3..."
+                               minlength="10" maxlength="100" required>
+                        <div class="invalid-feedback">
+                            Vui lòng nhập tiêu đề rõ ràng (ít nhất 10 ký tự).
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="loaiSuCoId" class="form-label fw-bold">Danh mục <span class="text-danger">*</span></label>
+                            <select class="form-select" id="loaiSuCoId" name="loaiSuCoId" required>
+                                <option value="" selected disabled>-- Chọn loại sự cố --</option>
+                                <%
+                                    List<model.LoaiSuCo> listLoaiSuCo = (List<model.LoaiSuCo>) request.getAttribute("listLoaiSuCo");
+                                    if (listLoaiSuCo != null) {
+                                        for (model.LoaiSuCo lsc : listLoaiSuCo) {
+                                %>
+                                <option value="<%= lsc.getLoaiSuCoId() %>"><%= lsc.getTenLoai() %></option>
+                                <%
+                                        }
+                                    }
+                                %>
+                            </select>
+                            <div class="invalid-feedback">
+                                Bạn chưa chọn danh mục sự cố.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="mucDo" class="form-label fw-bold">Mức độ <span class="text-danger">*</span></label>
+                            <select class="form-select" id="mucDo" name="mucDo" required>
+                                <option value="THẤP">Thấp (Có thể chờ vài ngày)</option>
+                                <option value="TRUNG BÌNH" selected>Trung bình (Cần sửa sớm)</option>
+                                <option value="KHẨN CẤP">Khẩn cấp (Nguy hiểm)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="moTa" class="form-label fw-bold">Mô tả chi tiết <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="moTa" name="moTa" rows="4"
+                                  placeholder="Mô tả chính xác vị trí và tình trạng hư hỏng..."
+                                  minlength="20" required></textarea>
+                        <div class="invalid-feedback">
+                            Vui lòng mô tả chi tiết (ít nhất 20 ký tự) để kỹ thuật viên chuẩn bị đồ nghề.
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-light border me-2 fw-medium" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button class="btn btn-primary fw-bold px-4" type="submit">Gửi Báo Cáo</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 <!-- MODAL ĐỔI MẬT KHẨU -->
 <div class="modal fade" id="changePassModal" tabindex="-1" aria-hidden="true">
