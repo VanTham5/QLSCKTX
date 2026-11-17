@@ -34,7 +34,7 @@
 
     <div class="sidebar-heading">Tổng quan</div>
     <a href="${pageContext.request.contextPath}/student-home" class="nav-link"><i class="fa-solid fa-house me-2 w-20px"></i> Trang chủ</a>
-    <a href="#" class="nav-link"><i class="fa-solid fa-bell me-2 w-20px"></i> Thông báo từ BQL</a>
+    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#noticeModal"><i class="fa-solid fa-bell me-2 w-20px"></i> Thông báo từ BQL</a>
 
     <div class="sidebar-heading">Dịch vụ KTX</div>
     <a href="${pageContext.request.contextPath}/student-home" class="nav-link"><i class="fa-solid fa-wrench me-2 w-20px"></i> Báo cáo sự cố</a>
@@ -222,6 +222,8 @@
 </div>
 
 <%@ include file="profile_modals.jspf" %>
+
+<%@ include file="notice_modal.jspf" %>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
