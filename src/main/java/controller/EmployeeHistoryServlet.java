@@ -30,8 +30,8 @@ public class EmployeeHistoryServlet extends HttpServlet {
         }
 
         SuCoDAO dao = new SuCoDAO();
-        // Lấy danh sách toàn bộ sự cố cho nhân viên kèm theo điều kiện lọc
-        List<SuCo> historyList = dao.getAllSuCoHistoryForStaff(filter);
+        // Sửa lại đúng tên hàm trong SuCoDAO là getAllSuCoHistoryForStaff
+        List<SuCo> historyList = dao.getAllSuCoHistoryForStaff(acc.getTaiKhoanId(), filter);
         request.setAttribute("historyList", historyList);
 
         request.getRequestDispatcher("employee/employee_history.jsp").forward(request, response);

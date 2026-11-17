@@ -344,19 +344,21 @@
     </div>
 </div>
 
-<!-- MODAL GỬI BÁO CÁO SỰ CỐ -->
-<div class="modal fade" id="reportIssueModal" tabindex="-1" aria-labelledby="reportIssueModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+<!--  MODAL GỬI BÁO CÁO SỰ CỐ  -->
+<div class="modal fade" id="reportIssueModal" tabindex="-1" aria-labelledby="reportIssueModalLabel" aria-hidden="true" >
+    <div class="modal-dialog modal-dialog-centered modal-lg" >
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold" id="reportIssueModalLabel"><i class="fa-solid fa-file-signature me-2"></i>Gửi Báo Cáo Sự Cố Mới</h5>
+                <h5 class="modal-title fw-bold" id="reportIssueModalLabel" ><i class="fa-solid fa-file-signature me-2"></i>Gửi Báo Cáo Sự Cố Mới</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
+<!-- -->
 
                 <form action="${pageContext.request.contextPath}/report-issue" method="POST" class="needs-validation" novalidate>
 
-                    <div class="mb-3">
+                    <div class="mb-3" >
                         <label for="tieuDe" class="form-label fw-bold">Tiêu đề sự cố <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="tieuDe" name="tieuDe"
                                placeholder="VD: Chập cháy bóng đèn giường số 3..."
@@ -371,12 +373,16 @@
                             <label for="loaiSuCoId" class="form-label fw-bold">Danh mục <span class="text-danger">*</span></label>
                             <select class="form-select" id="loaiSuCoId" name="loaiSuCoId" required>
                                 <option value="" selected disabled>-- Chọn loại sự cố --</option>
-                                <option value="1">Hệ thống Điện</option>
-                                <option value="2">Hệ thống Nước & Vệ sinh</option>
-                                <option value="3">Cơ sở vật chất (Giường, tủ, cửa...)</option>
-                                <option value="4">Mạng & Internet</option>
-                                <option value="5">An ninh & Trật tự</option>
-
+                                <%
+                                    List<model.LoaiSuCo> listLoaiSuCo = (List<model.LoaiSuCo>) request.getAttribute("listLoaiSuCo");
+                                    if (listLoaiSuCo != null) {
+                                        for (model.LoaiSuCo lsc : listLoaiSuCo) {
+                                %>
+                                <option value="<%= lsc.getLoaiSuCoId() %>"><%= lsc.getTenLoai() %></option>
+                                <%
+                                        }
+                                    }
+                                %>
                             </select>
                             <div class="invalid-feedback">
                                 Bạn chưa chọn danh mục sự cố.
@@ -412,6 +418,8 @@
         </div>
     </div>
 </div>
+
+
 
 <%@ include file="profile_modals.jspf" %>
 

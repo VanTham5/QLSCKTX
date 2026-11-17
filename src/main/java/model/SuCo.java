@@ -3,6 +3,7 @@ package model;
 import java.sql.Timestamp;
 
 public class SuCo {
+    private int toId;
     private int suCoId;
     private int sinhVienId;
     private int phongId;
@@ -69,4 +70,7 @@ public class SuCo {
 
     public String getTenLoaiSuCo() { return tenLoaiSuCo; }
     public void setTenLoaiSuCo(String tenLoaiSuCo) { this.tenLoaiSuCo = tenLoaiSuCo; }
+
+    public int getToId() {return toId;}
+    public void setToId(int toId) {this.toId = toId;}
 }

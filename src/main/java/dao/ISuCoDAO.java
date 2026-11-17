@@ -8,6 +8,7 @@ public interface ISuCoDAO {
     int countIssueByStatus(int tkId, String status);
     List<SuCo> getTop5RecentIssues(int tkId);
     List<SuCo> getAllSuCoForStaff();
+    List<SuCo> getAllSuCoForStaff(int taiKhoanId);
     int countTotalStudents();
 
     // 2. Nhóm hàm Thêm (Create)

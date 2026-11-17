@@ -3,6 +3,7 @@ package controller;
 import dao.SuCoDAO;
 import dao.TaiKhoanDAO;
 import model.SuCo;
+import model.LoaiSuCo;
 import model.TaiKhoan;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -28,6 +29,9 @@ public class StudentHomeServlet extends HttpServlet {
 
         SuCoDAO dao = new SuCoDAO();
         int tkId = acc.getTaiKhoanId();
+
+        List<LoaiSuCo> listLoaiSuCo = dao.getAllLoaiSuCo();
+        request.setAttribute("listLoaiSuCo", listLoaiSuCo);
 
         // Lấy thống kê
         request.setAttribute("total", dao.countIssueByStatus(tkId, null));
