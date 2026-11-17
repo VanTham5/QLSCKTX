@@ -148,14 +148,17 @@
                             <th class="fw-medium py-3">TÊN LOẠI SỰ CỐ</th>
                             <th class="fw-medium py-3">TỔ PHỤ TRÁCH</th>
                             <th class="fw-medium py-3">MÔ TẢ</th>
+                            <th class="fw-medium py-3 text-center">NHÂN SỰ</th>
                             <th class="pe-4 fw-medium py-3 text-center">THAO TÁC</th>
                         </tr>
                         </thead>
                         <tbody>
                         <%
                             List<LoaiSuCo> list = (List<LoaiSuCo>) request.getAttribute("listLoaiSuCo");
+                            SuCoDAO daoForStaff = new SuCoDAO();
                             if (list != null && !list.isEmpty()) {
                                 for (LoaiSuCo item : list) {
+                                    List<model.TaiKhoan> listStaffOfTeam = daoForStaff.getStaffByTeam(item.getToId());
                         %>
                         <tr>
                             <td class="ps-4"><span class="fw-bold text-secondary">#LSC0<%= item.getLoaiSuCoId() %></span></td>
@@ -166,9 +169,21 @@
                                 </span>
                             </td>
                             <td class="text-muted"><%= item.getMoTota() != null ? item.getMoTota() : "Không có mô tả" %></td>
-                            <td class="pe-4 text-center">
 
-                                <!-- Nút Xóa -->
+                            <!-- Cột icon con mắt xem nhân sự -->
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-light text-primary border"
+                                        data-bs-toggle="modal" data-bs-target="#staffModal<%= item.getLoaiSuCoId() %>"
+                                        title="Xem danh sách nhân sự thuộc tổ">
+                                    <i class="fa-solid fa-eye"></i> <span class="badge bg-primary ms-1"><%= listStaffOfTeam != null ? listStaffOfTeam.size() : 0 %></span>
+                                </button>
+                            </td>
+
+                            <td class="pe-4 text-center">
+                                <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                        data-bs-toggle="modal" data-bs-target="#editModal<%= item.getLoaiSuCoId() %>" title="Sửa">
+                                    <i class="fa-solid fa-pen-to-square"></i> Sửa
+                                </button>
                                 <a href="${pageContext.request.contextPath}/admin-loai-su-co?action=delete&id=<%= item.getLoaiSuCoId() %>"
                                    class="btn btn-sm btn-outline-danger"
                                    onclick="return confirm('Bạn có chắc chắn muốn xóa loại sự cố này không?');" title="Xóa">
@@ -181,7 +196,7 @@
                         } else {
                         %>
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">Chưa có loại sự cố nào trong danh mục.</td>
+                            <td colspan="6" class="text-center py-4 text-muted">Chưa có loại sự cố nào trong danh mục.</td>
                         </tr>
                         <% } %>
                         </tbody>
@@ -216,3 +231,132 @@
                             <option value="2">Tổ Cơ Sở Vật Chất</option>
                             <option value="3">Tổ Mạng & Internet</option>
                             <option value="4">Tổ Bảo An</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mô tả chi tiết</label>
+                        <textarea class="form-control" name="moTa" rows="3" placeholder="Nhập mô tả chi tiết..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4">Thêm mới</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- VÒNG LẶP TẠO MODAL XEM NHÂN SỰ CHO TỪNG TỔ -->
+<%
+    if (list != null && !list.isEmpty()) {
+        for (LoaiSuCo item : list) {
+            SuCoDAO sDaoModal = new SuCoDAO();
+            List<model.TaiKhoan> listStaffModal = sDaoModal.getStaffByTeam(item.getToId());
+%>
+<div class="modal fade" id="staffModal<%= item.getLoaiSuCoId() %>" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-users-gear me-2"></i>Nhân sự thuộc <%= item.getTenTo() %></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-start">
+                <p class="text-muted small mb-3">Danh sách kỹ thuật viên phụ trách tiếp nhận và xử lý mảng: <strong class="text-dark"><%= item.getTenLoai() %></strong></p>
+
+                <% if (listStaffModal != null && !listStaffModal.isEmpty()) { %>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th class="py-2">Họ và Tên</th>
+                            <th class="py-2">Số điện thoại</th>
+                            <th class="py-2 text-center">Trạng thái</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <% for (model.TaiKhoan staff : listStaffModal) { %>
+                        <tr>
+                            <td class="fw-bold text-dark"><%= staff.getHoTen() %></td>
+                            <td>
+                                <a href="tel:<%= staff.getSoDienThoai() %>" class="text-decoration-none">
+                                    <i class="fa-solid fa-phone text-success me-1"></i> <%= staff.getSoDienThoai() != null ? staff.getSoDienThoai() : "Chưa cập nhật" %>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">Đang trực</span>
+                            </td>
+                        </tr>
+                        <% } %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } else { %>
+                <div class="text-center py-4 text-muted bg-light rounded border">
+                    <i class="fa-solid fa-triangle-exclamation fs-4 text-warning mb-2"></i>
+                    <p class="mb-0">Chưa có nhân viên nào được phân công vào tổ này.</p>
+                </div>
+                <% } %>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+<%
+        }
+    }
+%>
+
+<!-- VÒNG LẶP TẠO MODAL SỬA CHO TỪNG DÒNG -->
+<%
+    if (list != null && !list.isEmpty()) {
+        for (LoaiSuCo item : list) {
+%>
+<div class="modal fade" id="editModal<%= item.getLoaiSuCoId() %>" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="${pageContext.request.contextPath}/admin-loai-su-co" method="POST">
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="id" value="<%= item.getLoaiSuCoId() %>">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Cập nhật loại sự cố #LSC0<%= item.getLoaiSuCoId() %></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-start">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên loại sự cố <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="tenLoai" value="<%= item.getTenLoai() %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tổ chuyên môn phụ trách <span class="text-danger">*</span></label>
+                        <select class="form-select" name="toId" required>
+                            <option value="1" <%= item.getToId() == 1 ? "selected" : "" %>>Tổ Điện Nước</option>
+                            <option value="2" <%= item.getToId() == 2 ? "selected" : "" %>>Tổ Cơ Sở Vật Chất</option>
+                            <option value="3" <%= item.getToId() == 3 ? "selected" : "" %>>Tổ Mạng & Internet</option>
+                            <option value="4" <%= item.getToId() == 4 ? "selected" : "" %>>Tổ Bảo An</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mô tả chi tiết</label>
+                        <textarea class="form-control" name="moTa" rows="3"><%= item.getMoTota() != null ? item.getMoTota() : "" %></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<%
+        }
+    }
+%>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
