@@ -1,0 +1,4 @@
+<%@ page pageEncoding="UTF-8" %>
+    <div class="sidebar-heading">Hồ sơ cá nhân</div>
+    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
+    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#changePassModal"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>

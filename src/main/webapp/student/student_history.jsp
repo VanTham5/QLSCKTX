@@ -47,7 +47,7 @@
     </a>
     <a href="tel:0123456789" class="nav-link fw-bold text-success"><i class="fa-solid fa-phone-volume me-2 w-20px"></i> Hotline: 0123.456.789</a>
 
-    <div class="sidebar-heading">Tài khoản</div>
+<%@ include file="profile_menu.jspf" %>
     <a href="${pageContext.request.contextPath}/logout" class="nav-link text-danger mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
 </div>
 
@@ -220,6 +220,8 @@
         </div>
     </div>
 </div>
+
+<%@ include file="profile_modals.jspf" %>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

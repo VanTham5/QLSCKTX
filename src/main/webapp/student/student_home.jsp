@@ -124,9 +124,7 @@
     </a>
     <a href="tel:0123456789" class="nav-link fw-bold text-success"><i class="fa-solid fa-phone-volume me-2 w-20px"></i> Hotline: 0123.456.789</a>
 
-    <div class="sidebar-heading">Hồ sơ cá nhân</div>
-    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
-    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#changePassModal"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
+<%@ include file="profile_menu.jspf" %>
     <a href="${pageContext.request.contextPath}/logout" class="nav-link text-danger mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
 </div>
 
@@ -347,85 +345,6 @@
 </div>
 
 
-<!-- MODAL THÔNG TIN CÁ NHÂN (SINH VIÊN) -->
-<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-pen me-2"></i>Cập nhật thông tin Sinh Viên</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <form action="${pageContext.request.contextPath}/update-profile" method="POST">
-
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Tên Đăng Nhập</label>
-                            <input type="text" class="form-control bg-light" value="${acc.tenDangNhap}" readonly>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Họ và Tên <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="fullName" value="${acc.hoTen}" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Số điện thoại</label>
-                            <input type="text" class="form-control" name="sdt" placeholder="Nhập SĐT..." required>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Email</label>
-                            <input type="email" class="form-control" name="email" placeholder="Nhập Email...">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Mã Sinh Viên <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="maSV" placeholder="VD: SV202160" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Phòng <span class="text-danger">*</span></label>
-                            <select class="form-select" name="phongId" required>
-                                <option value="" selected disabled>-- Chọn phòng --</option>
-                                <optgroup label="Tòa A1 (Nam)">
-                                    <option value="1">Phòng 101 - A1</option>
-                                    <option value="2">Phòng 102 - A1</option>
-                                    <option value="3">Phòng 103 - A1</option>
-                                </optgroup>
-                                <optgroup label="Tòa A2 (Nữ)">
-                                    <option value="4">Phòng 101 - A2</option>
-                                    <option value="5">Phòng 102 - A2</option>
-                                    <option value="6">Phòng 103 - A2</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Khoa</label>
-                            <select class="form-select" name="khoa" required>
-                                <option value="" selected disabled>-- Chọn Khoa --</option>
-                                <option value="CNTT">Công nghệ thông tin</option>
-                                <option value="CK">Cơ khí</option>
-                                <option value="NN">Ngoại ngữ</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Lớp</label>
-                            <input type="text" class="form-control" name="lop" placeholder="VD: KTPM01" required>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal">Đóng</button>
-                        <button type="submit" class="btn btn-primary fw-bold">Lưu thay đổi</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!--  MODAL GỬI BÁO CÁO SỰ CỐ  -->
 <div class="modal fade" id="reportIssueModal" tabindex="-1" aria-labelledby="reportIssueModalLabel" aria-hidden="true" >
     <div class="modal-dialog modal-dialog-centered modal-lg" >
@@ -502,61 +421,7 @@
 
 
 
-<!-- MODAL ĐỔI MẬT KHẨU -->
-<div class="modal fade" id="changePassModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title fw-bold"><i class="fa-solid fa-key me-2"></i>Đổi mật khẩu</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-
-                <!-- HIỂN THỊ THÔNG BÁO THÀNH CÔNG (MÀU XANH) -->
-                <% if ("pass_success".equals(request.getParameter("msg"))) { %>
-                <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
-                    <i class="fa-solid fa-circle-check me-2"></i> Đổi mật khẩu thành công!
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <% } %>
-
-                <!-- Form đổi mật khẩu -->
-                <form action="${pageContext.request.contextPath}/change-password" method="POST">
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Mật khẩu cũ <span class="text-danger">*</span></label>
-                        <!-- Báo đỏ nếu sai mật khẩu cũ -->
-                        <input type="password" class="form-control ${param.error == 'wrong_old_pass' ? 'is-invalid' : ''}" name="oldPass" required>
-                        <div class="invalid-feedback">
-                            Mật khẩu cũ không chính xác. Vui lòng nhập lại!
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Mật khẩu mới <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" name="newPass" required>
-                    </div>
-
-                    <div class="d-flex justify-content-end mt-4">
-                        <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-dark fw-bold">Xác nhận đổi</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Script tự động bật lại Modal khi có thông báo thành công hoặc lỗi -->
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('error') === 'wrong_old_pass' || urlParams.get('msg') === 'pass_success') {
-            var myModal = new bootstrap.Modal(document.getElementById('changePassModal'));
-            myModal.show();
-        }
-    });
-</script>
+<%@ include file="profile_modals.jspf" %>
 
 <!-- VÒNG LẶP TẠO MODAL CHI TIẾT SỰ CỐ (ĐẶT NGOÀI BẢNG ĐỂ KHÔNG BỊ LỖI NHẤP NHÁY) -->
 <%
