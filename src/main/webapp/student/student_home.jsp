@@ -460,41 +460,7 @@
     }
 %>
 
-<!-- MODAL THÔNG BÁO TỪ BQL -->
-<div class="modal fade" id="noticeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title fw-bold"><i class="fa-solid fa-bell me-2"></i>Thông báo từ Ban Quản Lý</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4 bg-light">
-                <%
-                    if (listTB != null && !listTB.isEmpty()) {
-                        for (model.ThongBao tb : listTB) {
-                %>
-                <div class="card mb-3 border-0 shadow-sm">
-                    <div class="card-body">
-                        <h6 class="fw-bold text-primary mb-1"><%= tb.getTieuDe() %></h6>
-                        <div class="text-muted small mb-2"><i class="fa-regular fa-clock me-1"></i> <%= tb.getNgayTao() %></div>
-                        <p class="mb-0 text-dark" style="font-size: 0.95rem;"><%= tb.getNoiDung() %></p>
-                    </div>
-                </div>
-                <%
-                    }
-                } else {
-                %>
-                <p class="text-center text-muted mt-3">Hiện không có thông báo nào từ BQL.</p>
-                <%
-                    }
-                %>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-            </div>
-        </div>
-    </div>
-</div>
+<%@ include file="notice_modal.jspf" %>
 
 <!-- MODAL HƯỚNG DẪN & NỘI QUY -->
 <div class="modal fade" id="guideModal" tabindex="-1" aria-hidden="true">
