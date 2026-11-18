@@ -12,16 +12,83 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
-        .sidebar { width: 260px; background-color: #ffffff; height: 100vh; position: fixed; left: 0; top: 0; border-right: 1px solid #e0e0e0; z-index: 1000; }
-        .main-content { margin-left: 260px; min-height: 100vh; padding-bottom: 30px; }
-        .sidebar .nav-link { color: #4b5563; padding: 12px 20px; font-weight: 500; border-left: 3px solid transparent; }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #f3f4f6; color: #0d6efd; border-left: 3px solid #0d6efd; }
-        .sidebar-heading { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; font-weight: bold; padding: 10px 20px; margin-top: 15px; }
-        .w-20px { width: 22px; text-align: center; }
-        .top-header { background-color: #ffffff; height: 60px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: flex-end; align-items: center; padding: 0 30px; position: sticky; top: 0; z-index: 999; }
-        .filter-btn.active { font-weight: bold; border-color: #0d6efd; color: #0d6efd; background-color: #f8f9fa; }
-    </style>
+            body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
+            .sidebar { width: 260px; background-color: #ffffff; height: 100vh; position: fixed; left: 0; top: 0; border-right: 1px solid #e0e0e0; z-index: 1050; transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease; overflow-x: hidden !important; }
+            .main-content { margin-left: 260px; min-height: 100vh; padding-bottom: 30px; transition: margin-left 0.25s ease; }
+            .sidebar .nav-link { color: #4b5563; padding: 12px 20px; font-weight: 500; border-left: 3px solid transparent; white-space: nowrap; display: flex; align-items: center; }
+            .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #f3f4f6; color: #0d6efd; border-left: 3px solid #0d6efd; }
+            .sidebar-heading { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; font-weight: bold; padding: 10px 20px; margin-top: 15px; white-space: nowrap; }
+            .w-20px { width: 22px; text-align: center; flex-shrink: 0; }
+            .top-header { background-color: #ffffff; height: 60px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: flex-end; align-items: center; padding: 0 30px; position: sticky; top: 0; z-index: 999; }
+            .filter-btn.active { font-weight: bold; border-color: #0d6efd; color: #0d6efd; background-color: #f8f9fa; }
+
+            /* ================= 1. THANH CÔNG CỤ LUÔN NẰM 1 HÀNG NGANG ================= */
+            .toolbar-responsive {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: nowrap !important;
+                width: 100%;
+            }
+
+            .status-btn-group { flex-shrink: 0; }
+            .status-btn-group .btn { font-size: 0.8rem; padding: 5px 9px; white-space: nowrap; }
+
+            .filter-control-group {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                gap: 6px;
+                flex-wrap: nowrap !important;
+                flex: 1;
+                min-width: 0;
+            }
+
+            .filter-control-group .search-box { flex: 1 1 130px; min-width: 100px; max-width: 200px; }
+            .filter-control-group .form-select, .filter-control-group .form-control { font-size: 0.8rem; padding: 5px 24px 5px 8px; min-width: 0; }
+            .filter-control-group .select-type { flex: 1 1 130px; min-width: 105px; max-width: 165px; }
+            .filter-control-group .input-date { flex: 0 1 125px; min-width: 105px; padding-right: 6px; }
+            .filter-control-group .select-sort { flex: 1 1 120px; min-width: 100px; max-width: 145px; }
+
+            /* ================= 2. CHỐNG GÃY CHỮ TRONG BẢNG ================= */
+            .table th, .table td { white-space: nowrap; }
+            .table th:nth-child(2), .table td:nth-child(2) { white-space: normal; min-width: 180px; }
+
+            /* ================= 3. RESPONSIVE & HIỆU ỨNG DI CHUỘT HIỆN CHỮ SIDEBAR ================= */
+            @media (max-width: 1280px) {
+                .sidebar { width: 200px; }
+                .main-content { margin-left: 200px; }
+                .container-fluid.px-4 { padding-left: 14px !important; padding-right: 14px !important; }
+            }
+
+            @media (max-width: 992px) {
+                /* Mặc định khi thu nhỏ: Chỉ hiện cột icon 68px */
+                .sidebar { width: 68px; }
+                .sidebar:not(:hover) h5,
+                .sidebar:not(:hover) .sidebar-heading { display: none; }
+                .sidebar:not(:hover) .nav-link { font-size: 0; justify-content: center; padding: 14px 0; }
+                .sidebar:not(:hover) .nav-link i { font-size: 1.15rem; margin: 0 !important; }
+
+                /* Khi di chuột vào Sidebar: Trượt rộng ra 260px và hiện đầy đủ chữ */
+                .sidebar:hover {
+                    width: 260px;
+                    box-shadow: 6px 0 20px rgba(0, 0, 0, 0.15);
+                }
+
+                /* Giữ cố định lề nội dung 68px để bảng không bị giật khi di chuột */
+                .main-content { margin-left: 68px; }
+
+                .toolbar-responsive { flex-direction: column; align-items: stretch; gap: 10px; }
+                .status-btn-group { width: 100%; display: flex; }
+                .status-btn-group .btn { flex: 1; }
+                .filter-control-group { width: 100%; justify-content: space-between; }
+                .filter-control-group .search-box,
+                .filter-control-group .select-type,
+                .filter-control-group .input-date,
+                .filter-control-group .select-sort { max-width: none; flex: 1; }
+            }
+        </style>
 </head>
 <body>
 
@@ -72,28 +139,28 @@
 
         <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-list-check text-primary me-2"></i>Lịch sử báo cáo sự cố</h4>
 
-        <!-- THANH CÔNG CỤ: TAB TRẠNG THÁI (BÊN TRÁI) & TÌM KIẾM + SẮP XẾP (BÊN PHẢI) -->
+        <!-- THANH CÔNG CỤ RESPONSIVE: LUÔN NẰM TRÊN 1 HÀNG NGANG Ở MỌI MÀN HÌNH LAPTOP -->
         <% String currentFilter = request.getParameter("filter"); %>
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-            <!-- Giữ nguyên cụm nút lọc trạng thái gốc của bạn -->
-            <div class="btn-group shadow-sm" role="group">
+        <div class="toolbar-responsive mb-4">
+            <!-- Cụm nút lọc trạng thái bên trái -->
+            <div class="btn-group shadow-sm status-btn-group bg-white" role="group">
                 <a href="?filter=all" class="btn btn-outline-secondary filter-btn <%= (currentFilter == null || currentFilter.equals("all")) ? "active" : "" %>">Tất cả</a>
                 <a href="?filter=pending" class="btn btn-outline-secondary filter-btn <%= "pending".equals(currentFilter) ? "active text-warning" : "" %>">Chờ xử lý</a>
                 <a href="?filter=processing" class="btn btn-outline-secondary filter-btn <%= "processing".equals(currentFilter) ? "active text-primary" : "" %>">Đang xử lý</a>
                 <a href="?filter=done" class="btn btn-outline-secondary filter-btn <%= "done".equals(currentFilter) ? "active text-success" : "" %>">Đã hoàn thành</a>
             </div>
 
-            <!-- Cụm Tìm kiếm & Sắp xếp thêm mới -->
-            <div class="d-flex align-items-center flex-wrap gap-2">
+            <!-- Cụm Tìm kiếm & Sắp xếp bên phải (tự động co giãn vừa khít màn hình) -->
+            <div class="filter-control-group">
                 <!-- Tìm kiếm theo tên hoặc mã sự cố -->
-                <div class="input-group input-group-sm shadow-sm" style="width: 220px;">
-                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Tìm tên, mã sự cố..." oninput="filterAndSortIssues()">
+                <div class="input-group input-group-sm shadow-sm search-box">
+                    <span class="input-group-text bg-white border-end-0 text-muted px-2"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" id="searchInput" class="form-control border-start-0 px-1" placeholder="Tìm tên, mã..." oninput="filterAndSortIssues()">
                 </div>
 
                 <!-- Lọc theo Loại sự cố -->
-                <select id="typeFilter" class="form-select form-select-sm shadow-sm" style="width: auto;" onchange="filterAndSortIssues()">
-                    <option value="">-- Tất cả loại sự cố --</option>
+                <select id="typeFilter" class="form-select form-select-sm shadow-sm select-type" onchange="filterAndSortIssues()">
+                    <option value="">Tất cả loại sự cố</option>
                     <option value="Hệ thống Điện">Hệ thống Điện</option>
                     <option value="Hệ thống Nước & Vệ sinh">Hệ thống Nước & Vệ sinh</option>
                     <option value="Cơ sở vật chất">Cơ sở vật chất</option>
@@ -102,19 +169,19 @@
                 </select>
 
                 <!-- Lọc theo Ngày tháng -->
-                <input type="date" id="dateFilter" class="form-control form-control-sm shadow-sm" style="width: auto;" title="Lọc theo ngày gửi" onchange="filterAndSortIssues()">
+                <input type="date" id="dateFilter" class="form-control form-control-sm shadow-sm input-date" title="Lọc theo ngày gửi" onchange="filterAndSortIssues()">
 
                 <!-- Sắp xếp theo tên, loại sự cố, ngày tháng -->
-                <select id="sortSelect" class="form-select form-select-sm shadow-sm" style="width: auto;" onchange="filterAndSortIssues()">
-                    <option value="date_desc">Ngày gửi: Mới nhất</option>
-                    <option value="date_asc">Ngày gửi: Cũ nhất</option>
-                    <option value="name_asc">Tên sự cố: A → Z</option>
-                    <option value="name_desc">Tên sự cố: Z → A</option>
-                    <option value="type_asc">Loại sự cố: A → Z</option>
+                <select id="sortSelect" class="form-select form-select-sm shadow-sm select-sort" onchange="filterAndSortIssues()">
+                    <option value="date_desc">Ngày: Mới nhất</option>
+                    <option value="date_asc">Ngày: Cũ nhất</option>
+                    <option value="name_asc">Tên: A → Z</option>
+                    <option value="name_desc">Tên: Z → A</option>
+                    <option value="type_asc">Loại: A → Z</option>
                 </select>
 
                 <!-- Nút Đặt lại -->
-                <button type="button" class="btn btn-sm btn-light border shadow-sm text-secondary" onclick="resetSearchAndSort()" title="Đặt lại">
+                <button type="button" class="btn btn-sm btn-light border shadow-sm text-secondary flex-shrink-0" onclick="resetSearchAndSort()" title="Đặt lại">
                     <i class="fa-solid fa-rotate-left"></i>
                 </button>
             </div>
@@ -186,7 +253,7 @@
     </div>
 </div>
 
-<!-- VÒNG LẶP MODAL CHI TIẾT LỊCH SỬ (GIỮ NGUYÊN 100%) -->
+<!-- VÒNG LẶP MODAL CHI TIẾT LỊCH SỬ -->
 <%
     if (historyList != null && !historyList.isEmpty()) {
         for (SuCo task : historyList) {
@@ -222,7 +289,7 @@
     }
 %>
 
-<!-- MODAL HƯỚNG DẪN & NỘI QUY (GIỮ NGUYÊN 100%) -->
+<!-- MODAL HƯỚNG DẪN & NỘI QUY -->
 <div class="modal fade" id="guideModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content">

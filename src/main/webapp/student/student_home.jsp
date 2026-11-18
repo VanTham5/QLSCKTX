@@ -18,7 +18,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
         }
-        /* Sidebar Styles */
+        /* ================= SIDEBAR & LAYOUT ĐỒNG BỘ RESPONSIVE ================= */
         .sidebar {
             width: 260px;
             background-color: #ffffff;
@@ -27,18 +27,24 @@
             left: 0;
             top: 0;
             border-right: 1px solid #e0e0e0;
-            z-index: 1000;
+            z-index: 1050;
+            transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+            overflow-x: hidden !important;
         }
         .main-content {
             margin-left: 260px;
             min-height: 100vh;
             padding-bottom: 30px;
+            transition: margin-left 0.25s ease;
         }
         .sidebar .nav-link {
             color: #4b5563;
             padding: 12px 20px;
             font-weight: 500;
             border-left: 3px solid transparent;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
         }
         .sidebar .nav-link:hover, .sidebar .nav-link.active {
             background-color: #f3f4f6;
@@ -52,10 +58,12 @@
             font-weight: bold;
             padding: 10px 20px;
             margin-top: 15px;
+            white-space: nowrap;
         }
         .w-20px {
             width: 22px;
             text-align: center;
+            flex-shrink: 0;
         }
         /* Top Header */
         .top-header {
@@ -95,6 +103,41 @@
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        /* Chống gãy chữ trong bảng */
+        .table th, .table td {
+            white-space: nowrap;
+        }
+        .table th:nth-child(2), .table td:nth-child(2) {
+            white-space: normal;
+            min-width: 180px;
+        }
+
+        /* ================= TỰ ĐỘNG THU GỌN SIDEBAR & DI CHUỘT HIỆN CHỮ ================= */
+        @media (max-width: 1280px) {
+            .sidebar { width: 200px; }
+            .main-content { margin-left: 200px; }
+            .container-fluid.px-4 { padding-left: 14px !important; padding-right: 14px !important; }
+        }
+
+        @media (max-width: 992px) {
+            /* Mặc định khi màn hình nhỏ: Thu gọn Sidebar còn 68px chỉ hiện icon */
+            .sidebar { width: 68px; }
+            .sidebar:not(:hover) h5,
+            .sidebar:not(:hover) .sidebar-heading { display: none; }
+            .sidebar:not(:hover) .nav-link { font-size: 0; justify-content: center; padding: 14px 0; }
+            .sidebar:not(:hover) .nav-link i { font-size: 1.15rem; margin: 0 !important; }
+
+            /* Khi di chuột vào Sidebar: Trượt rộng ra 260px và hiện đầy đủ tên các mục */
+            .sidebar:hover {
+                width: 260px;
+                box-shadow: 6px 0 20px rgba(0, 0, 0, 0.15);
+            }
+
+            /* Giữ cố định lề nội dung chính 68px */
+            .main-content { margin-left: 68px; }
         }
     </style>
 </head>
@@ -157,7 +200,7 @@
         %>
         <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm rounded-3 mt-4 mb-3" role="alert" style="border-left: 5px solid #ffc107 !important;">
             <div class="d-flex align-items-center">
-                <div class="bg-warning bg-opacity-25 p-3 rounded-circle me-3">
+                <div class="bg-warning bg-opacity-25 p-3 rounded-circle me-3 flex-shrink-0">
                     <i class="fa-solid fa-bullhorn fs-4 text-warning"></i>
                 </div>
                 <div>
@@ -176,10 +219,10 @@
             </button>
         </div>
 
-        <!-- THỐNG KÊ NHANH -->
-        <div class="row g-4 mt-1">
+        <!-- THỐNG KÊ NHANH (Tự động chia 2 cột đẹp mắt khi thu nhỏ và 4 cột khi mở rộng) -->
+        <div class="row g-3 g-md-4 mt-1">
             <!-- Thẻ 1: Tổng sự cố đã gửi -->
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-xl-3">
                 <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center">
                     <div class="icon-box bg-danger bg-opacity-10 text-danger me-3">
                         <i class="fa-solid fa-file-invoice"></i>
@@ -192,7 +235,7 @@
             </div>
 
             <!-- Thẻ 2: Sự cố chờ xử lý -->
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-xl-3">
                 <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center">
                     <div class="icon-box bg-warning bg-opacity-10 text-warning me-3">
                         <i class="fa-solid fa-hourglass-half"></i>
@@ -205,7 +248,7 @@
             </div>
 
             <!-- Thẻ 3: Sự cố đang xử lý -->
-            <div class="col-md-3" >
+            <div class="col-12 col-sm-6 col-xl-3">
                 <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center">
                     <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
                         <i class="fa-solid fa-screwdriver-wrench"></i>
@@ -218,7 +261,7 @@
             </div>
 
             <!-- Thẻ 4: Sự cố đã hoàn thành -->
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-xl-3">
                 <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center">
                     <div class="icon-box bg-success bg-opacity-10 text-success me-3">
                         <i class="fa-solid fa-check-double"></i>
@@ -354,7 +397,6 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
-<!-- -->
 
                 <form action="${pageContext.request.contextPath}/report-issue" method="POST" class="needs-validation" novalidate>
 
@@ -419,11 +461,9 @@
     </div>
 </div>
 
-
-
 <%@ include file="profile_modals.jspf" %>
 
-<!-- VÒNG LẶP TẠO MODAL CHI TIẾT SỰ CỐ (ĐẶT NGOÀI BẢNG ĐỂ KHÔNG BỊ LỖI NHẤP NHÁY) -->
+<!-- VÒNG LẶP TẠO MODAL CHI TIẾT SỰ CỐ -->
 <%
     if (recentList != null && !recentList.isEmpty()) {
         for (SuCo task : recentList) {
