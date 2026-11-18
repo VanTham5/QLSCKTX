@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
+@SuppressWarnings({"SqlNoDataSourceInspection", "SqlResolve", "SpellCheckingInspection", "CallToPrintStackTrace"})
 public class SuCoDAO implements ISuCoDAO {
     Connection conn = null;
     PreparedStatement ps = null;
@@ -121,7 +122,6 @@ public class SuCoDAO implements ISuCoDAO {
     // 3. Đếm số lượng sự cố theo trạng thái (hoặc đếm tất cả nếu status = null)
     public int countIssueByStatus(int tkId, String status) {
         int count = 0;
-        // Kết nối bảng su_co với sinh_vien để lọc theo tai_khoan_id
         String query = "SELECT COUNT(*) FROM su_co sc " +
                 "JOIN sinh_vien sv ON sc.sinh_vien_id = sv.sinh_vien_id " +
                 "WHERE sv.tai_khoan_id = ?";
@@ -164,7 +164,7 @@ public class SuCoDAO implements ISuCoDAO {
                 SuCo sc = new SuCo();
                 sc.setSuCoId(rs.getInt("su_co_id"));
                 sc.setTieuDe(rs.getString("tieu_de"));
-                sc.setMoTa(rs.getString("mo_ta")); // <--- Bổ sung dòng này để lấy mô tả chi tiết
+                sc.setMoTa(rs.getString("mo_ta"));
                 sc.setMucDo(rs.getString("muc_do"));
                 sc.setTrangThai(rs.getString("trang_thai"));
                 sc.setNgayGui(rs.getTimestamp("ngay_gui"));
@@ -195,15 +195,15 @@ public class SuCoDAO implements ISuCoDAO {
     }
 
     // Lấy danh sách loại sự cố cho sinh viên chọn khi báo cáo
-    public List<model.LoaiSuCo> getAllLoaiSuCo() {
-        List<model.LoaiSuCo> list = new ArrayList<>();
+    public List<LoaiSuCo> getAllLoaiSuCo() {
+        List<LoaiSuCo> list = new ArrayList<>();
         String query = "SELECT * FROM loai_su_co";
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
             rs = ps.executeQuery();
             while (rs.next()) {
-                model.LoaiSuCo lsc = new model.LoaiSuCo();
+                LoaiSuCo lsc = new LoaiSuCo();
                 lsc.setLoaiSuCoId(rs.getInt("loai_su_co_id"));
                 lsc.setTenLoai(rs.getString("ten_loai"));
                 list.add(lsc);
@@ -216,7 +216,6 @@ public class SuCoDAO implements ISuCoDAO {
 
     @Override
     public boolean insertSuCo(SuCo sc) {
-        // Lấy thời gian hiện tại và mặc định trạng thái là 'Chờ xử lý'
         String query = "INSERT INTO su_co (sinh_vien_id, phong_id, loai_su_co_id, tieu_de, mo_ta, muc_do, trang_thai, ngay_gui) " +
                 "VALUES (?, ?, ?, ?, ?, ?, 'Chờ xử lý', CURRENT_TIMESTAMP)";
         try {
@@ -230,7 +229,7 @@ public class SuCoDAO implements ISuCoDAO {
             ps.setString(6, sc.getMucDo());
 
             int result = ps.executeUpdate();
-            return result > 0; // Trả về true nếu thêm thành công
+            return result > 0;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -247,25 +246,25 @@ public class SuCoDAO implements ISuCoDAO {
             ps.setInt(1, suCoId);
 
             int result = ps.executeUpdate();
-            return result > 0; // Trả về true nếu xóa thành công
+            return result > 0;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
     }
 
-
     // Lấy toàn bộ lịch sử báo cáo của Sinh viên (Có kèm bộ lọc trạng thái)
     public List<SuCo> getHistoryIssues(int tkId, String filter) {
         List<SuCo> list = new ArrayList<>();
 
-        // Câu lệnh gốc mặc định lấy tất cả
-        String query = "SELECT sc.su_co_id, sc.tieu_de, sc.mo_ta, sc.muc_do, sc.trang_thai, sc.ngay_gui " +
+        // Chỉ bổ sung lấy thêm lsc.ten_loai từ bảng loai_su_co, giữ nguyên câu lệnh gốc
+        String query = "SELECT sc.su_co_id, sc.tieu_de, sc.mo_ta, sc.muc_do, sc.trang_thai, sc.ngay_gui, lsc.ten_loai " +
                 "FROM su_co sc " +
                 "JOIN sinh_vien sv ON sc.sinh_vien_id = sv.sinh_vien_id " +
+                "LEFT JOIN loai_su_co lsc ON sc.loai_su_co_id = lsc.loai_su_co_id " +
                 "WHERE sv.tai_khoan_id = ? ";
 
-        // Kiểm tra bộ lọc và nối thêm điều kiện vào SQL
+        // Kiểm tra bộ lọc và nối thêm điều kiện vào SQL (Giữ nguyên 100%)
         if ("pending".equals(filter)) {
             query += "AND sc.trang_thai = 'Chờ xử lý' ";
         } else if ("processing".equals(filter)) {
@@ -291,6 +290,7 @@ public class SuCoDAO implements ISuCoDAO {
                 sc.setMucDo(rs.getString("muc_do"));
                 sc.setTrangThai(rs.getString("trang_thai"));
                 sc.setNgayGui(rs.getTimestamp("ngay_gui"));
+                sc.setTenLoaiSuCo(rs.getString("ten_loai")); // <--- Chỉ thêm đúng dòng này
                 list.add(sc);
             }
         } catch (Exception e) {
@@ -298,7 +298,6 @@ public class SuCoDAO implements ISuCoDAO {
         }
         return list;
     }
-
     public Map<String, Integer> getThongKeTheoLoai() {
         Map<String, Integer> map = new LinkedHashMap<>();
         String query = "SELECT lsc.ten_loai, COUNT(sc.su_co_id) as so_luong " +
@@ -317,9 +316,10 @@ public class SuCoDAO implements ISuCoDAO {
         }
         return map;
     }
+
     // Lấy danh sách 3 hoạt động cập nhật sự cố mới nhất
-    public List<model.SuCo> getTop3CapNhat() {
-        List<model.SuCo> list = new ArrayList<>();
+    public List<SuCo> getTop3CapNhat() {
+        List<SuCo> list = new ArrayList<>();
         String query = "SELECT sc.* " +
                 "FROM su_co sc " +
                 "ORDER BY sc.ngay_gui DESC LIMIT 3";
@@ -328,7 +328,7 @@ public class SuCoDAO implements ISuCoDAO {
             PreparedStatement ps = conn.prepareStatement(query);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                model.SuCo sc = new model.SuCo();
+                SuCo sc = new SuCo();
                 sc.setSuCoId(rs.getInt("su_co_id"));
                 sc.setTieuDe(rs.getString("tieu_de"));
                 sc.setTrangThai(rs.getString("trang_thai"));
@@ -341,7 +341,6 @@ public class SuCoDAO implements ISuCoDAO {
         return list;
     }
 
-    // Lấy lịch sử sự cố trang nhân viên
     // Lấy lịch sử sự cố của nhân viên theo đúng tổ và theo trạng thái lọc
     public List<SuCo> getAllSuCoHistoryForStaff(int taiKhoanId, String filter) {
         List<SuCo> list = new ArrayList<>();
@@ -469,7 +468,6 @@ public class SuCoDAO implements ISuCoDAO {
                 sc.setTenNguoiGui(rs.getString("ho_ten") != null ? rs.getString("ho_ten") : "Không rõ");
                 sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
 
-                // Gán đúng mã tổ từ database vào object SuCo
                 sc.setToId(rs.getInt("to_id"));
 
                 list.add(sc);
@@ -483,7 +481,6 @@ public class SuCoDAO implements ISuCoDAO {
     // 2. Lấy danh sách nhân viên thuộc đúng tổ kỹ thuật (to_id)
     public List<TaiKhoan> getStaffByTeam(int toId) {
         List<TaiKhoan> list = new ArrayList<>();
-        // Giả định bảng tai_khoan hoặc nhân viên có liên kết với to_id của tổ kỹ thuật
         String query = "SELECT tk.tai_khoan_id, tk.ho_ten, tk.so_dien_thoai FROM tai_khoan tk " +
                 "JOIN nhan_vien nv ON tk.tai_khoan_id = nv.tai_khoan_id " +
                 "WHERE nv.to_id = ?";
@@ -528,5 +525,4 @@ public class SuCoDAO implements ISuCoDAO {
         }
         return count;
     }
-
 }

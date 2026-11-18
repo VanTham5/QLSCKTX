@@ -72,13 +72,52 @@
 
         <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-list-check text-primary me-2"></i>Lịch sử báo cáo sự cố</h4>
 
-        <!-- TÙY CHỈNH LỌC TRẠNG THÁI -->
+        <!-- THANH CÔNG CỤ: TAB TRẠNG THÁI (BÊN TRÁI) & TÌM KIẾM + SẮP XẾP (BÊN PHẢI) -->
         <% String currentFilter = request.getParameter("filter"); %>
-        <div class="btn-group mb-4 shadow-sm" role="group">
-            <a href="?filter=all" class="btn btn-outline-secondary filter-btn <%= (currentFilter == null || currentFilter.equals("all")) ? "active" : "" %>">Tất cả</a>
-            <a href="?filter=pending" class="btn btn-outline-secondary filter-btn <%= "pending".equals(currentFilter) ? "active text-warning" : "" %>">Chờ xử lý</a>
-            <a href="?filter=processing" class="btn btn-outline-secondary filter-btn <%= "processing".equals(currentFilter) ? "active text-primary" : "" %>">Đang xử lý</a>
-            <a href="?filter=done" class="btn btn-outline-secondary filter-btn <%= "done".equals(currentFilter) ? "active text-success" : "" %>">Đã hoàn thành</a>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+            <!-- Giữ nguyên cụm nút lọc trạng thái gốc của bạn -->
+            <div class="btn-group shadow-sm" role="group">
+                <a href="?filter=all" class="btn btn-outline-secondary filter-btn <%= (currentFilter == null || currentFilter.equals("all")) ? "active" : "" %>">Tất cả</a>
+                <a href="?filter=pending" class="btn btn-outline-secondary filter-btn <%= "pending".equals(currentFilter) ? "active text-warning" : "" %>">Chờ xử lý</a>
+                <a href="?filter=processing" class="btn btn-outline-secondary filter-btn <%= "processing".equals(currentFilter) ? "active text-primary" : "" %>">Đang xử lý</a>
+                <a href="?filter=done" class="btn btn-outline-secondary filter-btn <%= "done".equals(currentFilter) ? "active text-success" : "" %>">Đã hoàn thành</a>
+            </div>
+
+            <!-- Cụm Tìm kiếm & Sắp xếp thêm mới -->
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <!-- Tìm kiếm theo tên hoặc mã sự cố -->
+                <div class="input-group input-group-sm shadow-sm" style="width: 220px;">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Tìm tên, mã sự cố..." oninput="filterAndSortIssues()">
+                </div>
+
+                <!-- Lọc theo Loại sự cố -->
+                <select id="typeFilter" class="form-select form-select-sm shadow-sm" style="width: auto;" onchange="filterAndSortIssues()">
+                    <option value="">-- Tất cả loại sự cố --</option>
+                    <option value="Hệ thống Điện">Hệ thống Điện</option>
+                    <option value="Hệ thống Nước & Vệ sinh">Hệ thống Nước & Vệ sinh</option>
+                    <option value="Cơ sở vật chất">Cơ sở vật chất</option>
+                    <option value="Mạng & Internet">Mạng & Internet</option>
+                    <option value="An ninh & Trật tự">An ninh & Trật tự</option>
+                </select>
+
+                <!-- Lọc theo Ngày tháng -->
+                <input type="date" id="dateFilter" class="form-control form-control-sm shadow-sm" style="width: auto;" title="Lọc theo ngày gửi" onchange="filterAndSortIssues()">
+
+                <!-- Sắp xếp theo tên, loại sự cố, ngày tháng -->
+                <select id="sortSelect" class="form-select form-select-sm shadow-sm" style="width: auto;" onchange="filterAndSortIssues()">
+                    <option value="date_desc">Ngày gửi: Mới nhất</option>
+                    <option value="date_asc">Ngày gửi: Cũ nhất</option>
+                    <option value="name_asc">Tên sự cố: A → Z</option>
+                    <option value="name_desc">Tên sự cố: Z → A</option>
+                    <option value="type_asc">Loại sự cố: A → Z</option>
+                </select>
+
+                <!-- Nút Đặt lại -->
+                <button type="button" class="btn btn-sm btn-light border shadow-sm text-secondary" onclick="resetSearchAndSort()" title="Đặt lại">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
         </div>
 
         <!-- BẢNG LỊCH SỬ -->
@@ -90,24 +129,35 @@
                         <tr>
                             <th class="ps-4 fw-medium py-3">MÃ SC</th>
                             <th class="fw-medium py-3">TIÊU ĐỀ SỰ CỐ</th>
+                            <th class="fw-medium py-3">LOẠI SỰ CỐ</th>
                             <th class="fw-medium py-3">MỨC ĐỘ</th>
                             <th class="fw-medium py-3">NGÀY GỬI</th>
                             <th class="fw-medium py-3">TRẠNG THÁI</th>
                             <th class="pe-4 fw-medium py-3 text-center">CHI TIẾT</th>
                         </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="issueTableBody">
                         <%
                             List<SuCo> historyList = (List<SuCo>) request.getAttribute("historyList");
                             if (historyList != null && !historyList.isEmpty()) {
                                 for (SuCo task : historyList) {
                                     String badgeMucDo = "KHẨN CẤP".equals(task.getMucDo()) ? "danger" : ("TRUNG BÌNH".equals(task.getMucDo()) ? "warning" : "success");
                                     String badgeTrangThai = "Chờ xử lý".equals(task.getTrangThai()) ? "warning" : ("Đang xử lý".equals(task.getTrangThai()) ? "primary" : "success");
+                                    String tenLoai = task.getTenLoaiSuCo() != null ? task.getTenLoaiSuCo() : "Chưa phân loại";
+                                    String ngayStr = task.getNgayGui() != null ? task.getNgayGui().toString() : "";
                         %>
-                        <tr>
+                        <tr class="issue-row"
+                            data-code="#SC0<%= task.getSuCoId() %>"
+                            data-title="<%= task.getTieuDe() != null ? task.getTieuDe().toLowerCase() : "" %>"
+                            data-type="<%= tenLoai %>"
+                            data-date="<%= ngayStr.length() >= 10 ? ngayStr.substring(0, 10) : ngayStr %>"
+                            data-fulltime="<%= ngayStr %>">
                             <td class="ps-4"><span class="fw-bold text-secondary">#SC0<%= task.getSuCoId() %></span></td>
                             <td>
                                 <div class="fw-bold text-dark"><%= task.getTieuDe() %></div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-secondary border"><%= tenLoai %></span>
                             </td>
                             <td><span class="badge bg-<%= badgeMucDo %> bg-opacity-10 text-<%= badgeMucDo %> border border-<%= badgeMucDo %>"><%= task.getMucDo() %></span></td>
                             <td class="text-muted" style="font-size: 0.9rem;"><%= task.getNgayGui() %></td>
@@ -124,7 +174,7 @@
                         } else {
                         %>
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">Không tìm thấy báo cáo nào trong mục này.</td>
+                            <td colspan="7" class="text-center py-5 text-muted">Không tìm thấy báo cáo nào trong mục này.</td>
                         </tr>
                         <% } %>
                         </tbody>
@@ -136,7 +186,7 @@
     </div>
 </div>
 
-<!-- VÒNG LẶP MODAL CHI TIẾT LỊCH SỬ -->
+<!-- VÒNG LẶP MODAL CHI TIẾT LỊCH SỬ (GIỮ NGUYÊN 100%) -->
 <%
     if (historyList != null && !historyList.isEmpty()) {
         for (SuCo task : historyList) {
@@ -172,7 +222,7 @@
     }
 %>
 
-<!-- MODAL HƯỚNG DẪN & NỘI QUY -->
+<!-- MODAL HƯỚNG DẪN & NỘI QUY (GIỮ NGUYÊN 100%) -->
 <div class="modal fade" id="guideModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -227,5 +277,78 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- SCRIPT TÌM KIẾM & SẮP XẾP SỰ CỐ -->
+<script>
+    function filterAndSortIssues() {
+        const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+        const typeFilter = document.getElementById("typeFilter").value.toLowerCase();
+        const dateFilter = document.getElementById("dateFilter").value;
+        const sortBy = document.getElementById("sortSelect").value;
+
+        const tbody = document.getElementById("issueTableBody");
+        const rows = Array.from(tbody.querySelectorAll("tr.issue-row"));
+        if (rows.length === 0) return;
+
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const code = (row.getAttribute("data-code") || "").toLowerCase();
+            const title = (row.getAttribute("data-title") || "").toLowerCase();
+            const type = (row.getAttribute("data-type") || "").toLowerCase();
+            const date = row.getAttribute("data-date") || "";
+
+            const matchKeyword = !keyword || title.includes(keyword) || code.includes(keyword);
+            const matchType = !typeFilter || type.includes(typeFilter);
+            const matchDate = !dateFilter || date === dateFilter;
+
+            if (matchKeyword && matchType && matchDate) {
+                row.style.display = "";
+                visibleCount++;
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        rows.sort((a, b) => {
+            const titleA = (a.getAttribute("data-title") || "").toLowerCase();
+            const titleB = (b.getAttribute("data-title") || "").toLowerCase();
+            const typeA = (a.getAttribute("data-type") || "").toLowerCase();
+            const typeB = (b.getAttribute("data-type") || "").toLowerCase();
+            const timeA = a.getAttribute("data-fulltime") || "";
+            const timeB = b.getAttribute("data-fulltime") || "";
+
+            if (sortBy === "date_desc") return timeB.localeCompare(timeA);
+            if (sortBy === "date_asc") return timeA.localeCompare(timeB);
+            if (sortBy === "name_asc") return titleA.localeCompare(titleB, "vi");
+            if (sortBy === "name_desc") return titleB.localeCompare(titleA, "vi");
+            if (sortBy === "type_asc") return typeA.localeCompare(typeB, "vi");
+            return 0;
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+
+        let emptyRow = document.getElementById("noFilterResultRow");
+        if (visibleCount === 0) {
+            if (!emptyRow) {
+                emptyRow = document.createElement("tr");
+                emptyRow.id = "noFilterResultRow";
+                emptyRow.innerHTML = '<td colspan="7" class="text-center py-5 text-muted">Không tìm thấy báo cáo nào phù hợp.</td>';
+                tbody.appendChild(emptyRow);
+            }
+            emptyRow.style.display = "";
+        } else if (emptyRow) {
+            emptyRow.style.display = "none";
+        }
+    }
+
+    function resetSearchAndSort() {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("typeFilter").value = "";
+        document.getElementById("dateFilter").value = "";
+        document.getElementById("sortSelect").value = "date_desc";
+        filterAndSortIssues();
+    }
+</script>
 </body>
 </html>
