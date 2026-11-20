@@ -275,4 +275,18 @@ public class TaiKhoanDAO {
         return tenTo;
     }
 
+    // Cập nhật trạng thái tài khoản (1: Hoạt động, 0: Ngừng hoạt động)
+    public boolean updateAccountStatus(int taiKhoanId, int trangThaiMoi) {
+        String query = "UPDATE tai_khoan SET trang_thai = ? WHERE tai_khoan_id = ?";
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, trangThaiMoi);
+            statement.setInt(2, taiKhoanId);
+            return statement.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 }

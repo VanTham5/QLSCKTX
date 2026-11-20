@@ -97,8 +97,7 @@
     <a href="${pageContext.request.contextPath}/admin-accounts" class="nav-link">
         <i class="fa-solid fa-users me-2 w-20px"></i> Quản lý tài khoản
     </a>
-    <a href="#" class="nav-link"><i class="fa-solid fa-building me-2 w-20px"></i> Quản lý phòng/tòa</a>
-    <a href="${pageContext.request.contextPath}/admin-loai-su-co" class="nav-link active"><i class="fa-solid fa-list me-2 w-20px"></i> Danh mục loại sự cố</a>
+    <a href="${pageContext.request.contextPath}/admin-phong" class="nav-link"><i class="fa-solid fa-building me-2 w-20px"></i> Quản lý phòng/tòa</a>    <a href="${pageContext.request.contextPath}/admin-loai-su-co" class="nav-link active"><i class="fa-solid fa-list me-2 w-20px"></i> Danh mục loại sự cố</a>
 
     <div class="sidebar-heading">Hệ thống</div>
     <a href="#" class="nav-link"><i class="fa-solid fa-gear me-2 w-20px"></i> Cài đặt</a>
@@ -355,6 +354,34 @@
         }
     }
 %>
+
+<!-- MODAL ĐĂNG THÔNG BÁO TỪ ADMIN -->
+<div class="modal fade" id="createNoticeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-bullhorn me-2"></i>Đăng Thông Báo Mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="${pageContext.request.contextPath}/create-thongbao" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tiêu đề thông báo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="tieuDe" placeholder="VD: Lịch phun muỗi toàn KTX..." required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Nội dung chi tiết <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="noiDung" rows="5" placeholder="Nhập nội dung thông báo gửi đến sinh viên..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Phát hành ngay</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
