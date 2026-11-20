@@ -37,9 +37,10 @@ public class TaiKhoanDAO {
                         rs.getString("so_dien_thoai")
                 );
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        }  catch (Exception e) {
+        System.out.println("LỖI ĐĂNG NHẬP AIVEN: " + e.getMessage());
+        e.printStackTrace();
+    }
         return null; // Trả về null nếu sai tài khoản/mật khẩu
     }
 

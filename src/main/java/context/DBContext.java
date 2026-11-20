@@ -4,14 +4,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 
 public class DBContext {
-    private final String serverName = "localhost";
-    private final String dbName = "qlsucoktx"; // Tên database chuẩn của bạn
-    private final String portNumber = "3306";
-    private final String userID = "root";
-    private final String password = "123456"; // Đổi lại pass MySQL của bạn ở đây nếu cần
+    private final String serverName = "mysql-qlscktx05-qlscktx-05.h.aivencloud.com";
+    private final String dbName = "defaultdb";
+    private final String portNumber = "25275";
+    private final String userID = "avnadmin";
+    private final String password = "";
 
     public Connection getConnection() throws Exception {
-        String url = "jdbc:mysql://" + serverName + ":" + portNumber + "/" + dbName + "?useUnicode=true&characterEncoding=UTF-8";
+        String url = "jdbc:mysql://" + serverName + ":" + portNumber + "/" + dbName
+                + "?useUnicode=true&characterEncoding=UTF-8&useSSL=true&requireSSL=true&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh";
         Class.forName("com.mysql.cj.jdbc.Driver");
         return DriverManager.getConnection(url, userID, password);
     }
