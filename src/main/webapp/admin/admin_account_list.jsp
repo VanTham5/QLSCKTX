@@ -46,8 +46,7 @@
     <a href="${pageContext.request.contextPath}/admin-accounts" class="nav-link active">
         <i class="fa-solid fa-users me-2 w-20px"></i> Quản lý tài khoản
     </a>
-    <a href="#" class="nav-link"><i class="fa-solid fa-building me-2 w-20px"></i> Quản lý phòng/tòa</a>
-    <a href="#" class="nav-link"><i class="fa-solid fa-list me-2 w-20px"></i> Danh mục loại sự cố</a>
+    <a href="${pageContext.request.contextPath}/admin-phong" class="nav-link"><i class="fa-solid fa-building me-2 w-20px"></i> Quản lý phòng/tòa</a>    <a href="${pageContext.request.contextPath}/admin-loai-su-co" class="nav-link"><i class="fa-solid fa-list me-2 w-20px"></i> Danh mục loại sự cố</a>
 
     <div class="sidebar-heading">Hệ thống</div>
     <a href="#" class="nav-link"><i class="fa-solid fa-gear me-2 w-20px"></i> Cài đặt</a>
@@ -136,13 +135,30 @@
                                 <% if (tk.isTrangThai()) { %>
                                 <span class="badge bg-success">Hoạt động</span>
                                 <% } else { %>
-                                <span class="badge bg-secondary">Đã khóa</span>
+                                <span class="badge bg-secondary">Ngừng hoạt động</span>
                                 <% } %>
                             </td>
                             <td class="pe-4 text-center">
-                                <button class="btn btn-sm btn-outline-primary shadow-sm" title="Chỉnh sửa tài khoản">
-                                    <i class="fa-solid fa-pen-to-square"></i> Sửa
-                                </button>
+                                <form action="${pageContext.request.contextPath}/admin-accounts" method="POST" style="display:inline;">
+                                    <input type="hidden" name="action" value="updateStatus">
+                                    <input type="hidden" name="taiKhoanId" value="<%= tk.getTaiKhoanId() %>">
+                                    <input type="hidden" name="role" value="<%= currentRole %>">
+                                    <% if (tk.isTrangThai()) { %>
+                                    <input type="hidden" name="trangThaiMoi" value="0">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger shadow-sm"
+                                            onclick="return confirm('Chuyển tài khoản <%= tk.getTenDangNhap() %> sang Ngừng hoạt động (0)?');"
+                                            title="Ngừng hoạt động">
+                                        <i class="fa-solid fa-ban me-1"></i> Ngừng hoạt động
+                                    </button>
+                                    <% } else { %>
+                                    <input type="hidden" name="trangThaiMoi" value="1">
+                                    <button type="submit" class="btn btn-sm btn-outline-success shadow-sm"
+                                            onclick="return confirm('Kích hoạt lại tài khoản <%= tk.getTenDangNhap() %> (1)?');"
+                                            title="Kích hoạt">
+                                        <i class="fa-solid fa-check me-1"></i> Hoạt động
+                                    </button>
+                                    <% } %>
+                                </form>
                             </td>
                         </tr>
                         <%
