@@ -46,7 +46,7 @@ public class SuCoDAO implements ISuCoDAO {
 
                 String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
                 String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
-                sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+                sc.setViTriPhong("Ph\u00f2ng " + phong + " - T\u00f2a " + toa);
 
                 sc.setTenNguoiGui(rs.getString("ho_ten"));
                 sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
@@ -90,7 +90,7 @@ public class SuCoDAO implements ISuCoDAO {
 
                 String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
                 String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
-                sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+                sc.setViTriPhong("Ph\u00f2ng " + phong + " - T\u00f2a " + toa);
 
                 sc.setTenNguoiGui(rs.getString("ho_ten"));
                 sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
@@ -171,7 +171,7 @@ public class SuCoDAO implements ISuCoDAO {
 
                 String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
                 String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
-                sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+                sc.setViTriPhong("Ph\u00f2ng " + phong + " - T\u00f2a " + toa);
 
                 list.add(sc);
             }
@@ -217,7 +217,7 @@ public class SuCoDAO implements ISuCoDAO {
     @Override
     public boolean insertSuCo(SuCo sc) {
         String query = "INSERT INTO su_co (sinh_vien_id, phong_id, loai_su_co_id, tieu_de, mo_ta, muc_do, trang_thai, ngay_gui) " +
-                "VALUES (?, ?, ?, ?, ?, ?, 'Chờ xử lý', CURRENT_TIMESTAMP)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
         try {
             conn = new context.DBContext().getConnection();
             ps = conn.prepareStatement(query);
@@ -227,6 +227,7 @@ public class SuCoDAO implements ISuCoDAO {
             ps.setString(4, sc.getTieuDe());
             ps.setString(5, sc.getMoTa());
             ps.setString(6, sc.getMucDo());
+            ps.setString(7, "Chờ xử lý");
 
             int result = ps.executeUpdate();
             return result > 0;
@@ -379,7 +380,7 @@ public class SuCoDAO implements ISuCoDAO {
 
                 String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
                 String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
-                sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+                sc.setViTriPhong("Ph\u00f2ng " + phong + " - T\u00f2a " + toa);
                 sc.setTenNguoiGui(rs.getString("ho_ten") != null ? rs.getString("ho_ten") : "Không rõ");
                 sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
 
@@ -425,7 +426,7 @@ public class SuCoDAO implements ISuCoDAO {
 
                 String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
                 String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
-                sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+                sc.setViTriPhong("Ph\u00f2ng " + phong + " - T\u00f2a " + toa);
                 sc.setTenNguoiGui(rs.getString("ho_ten") != null ? rs.getString("ho_ten") : "Không rõ");
                 sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
 
@@ -464,7 +465,7 @@ public class SuCoDAO implements ISuCoDAO {
 
                 String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
                 String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
-                sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+                sc.setViTriPhong("Ph\u00f2ng " + phong + " - T\u00f2a " + toa);
                 sc.setTenNguoiGui(rs.getString("ho_ten") != null ? rs.getString("ho_ten") : "Không rõ");
                 sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
 

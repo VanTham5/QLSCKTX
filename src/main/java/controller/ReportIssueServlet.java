@@ -68,8 +68,10 @@ public class ReportIssueServlet extends HttpServlet {
         SuCoDAO dao = new SuCoDAO();
         boolean isSuccess = dao.insertSuCo(sc);
 
-        // 7. Chuyển hướng về lại trang chủ của Sinh viên
-        // (Thực tế nên truyền thêm thông báo thành công, nhưng tạm thời redirect thẳng để chạy luồng)
+        // 7. Chuyển hướng về lại trang chủ của Sinh viên, kèm cờ thành công để hiện toast popup
+        if (isSuccess) {
+            request.getSession().setAttribute("reportSuccess", true);
+        }
         response.sendRedirect(request.getContextPath() + "/student-home");
     }
 }

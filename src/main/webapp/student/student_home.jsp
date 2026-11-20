@@ -1,7 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%
+    // Khởi tạo formatter ngày tháng dùng chung
+    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -192,25 +197,38 @@
 
     <div class="container-fluid px-4">
 
-        <!-- THÔNG BÁO QUAN TRỌNG TỪ BQL -->
-        <%
-            List<model.ThongBao> listTB = (List<model.ThongBao>) request.getAttribute("listTB");
-            if (listTB != null && !listTB.isEmpty()) {
-                model.ThongBao tbMoiNhat = listTB.get(0);
-        %>
-        <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm rounded-3 mt-4 mb-3" role="alert" style="border-left: 5px solid #ffc107 !important;">
-            <div class="d-flex align-items-center">
-                <div class="bg-warning bg-opacity-25 p-3 rounded-circle me-3 flex-shrink-0">
-                    <i class="fa-solid fa-bullhorn fs-4 text-warning"></i>
-                </div>
-                <div>
-                    <h6 class="alert-heading fw-bold mb-1 text-dark">Thông báo: <%= tbMoiNhat.getTieuDe() %></h6>
-                    <p class="mb-0 text-muted" style="font-size: 0.85rem;"><%= tbMoiNhat.getNoiDung() %></p>
+        <!-- THÔNG BÁO TỪ BQL (ẩn, chuyển sang trang Thông báo riêng) -->
+
+        <!-- TOAST POPUP: BÁO CÁO SỰ CỐ THÀNH CÔNG -->
+<%
+    Boolean reportSuccess = (Boolean) session.getAttribute("reportSuccess");
+    if (Boolean.TRUE.equals(reportSuccess)) {
+        session.removeAttribute("reportSuccess");
+%>
+        <div id="successToast" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div class="toast show align-items-center text-bg-success border-0 shadow-lg" role="alert" id="toastMsg" style="min-width: 320px;">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-circle-check fs-4"></i>
+                        <div>
+                            <div class="fw-bold">Gửi báo cáo thành công!</div>
+                            <div style="font-size: 0.85rem;">Sự cố của bạn đã được ghi nhận. BQL sẽ xử lý sớm nhất.</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="top: 10px;"></button>
         </div>
-        <% } %>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var toastEl = document.getElementById('toastMsg');
+                if (toastEl) {
+                    var toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+                    toast.show();
+                }
+            });
+        </script>
+<% } %>
 
         <!-- NÚT BÁO CÁO SỰ CỐ -->
         <div class="d-flex justify-content-start mb-4">
@@ -311,7 +329,7 @@
                             </td>
                             <td><span class="fw-medium text-secondary">Kỹ thuật</span></td>
                             <td><span class="badge bg-<%= badgeMucDo %> bg-opacity-10 text-<%= badgeMucDo %> border border-<%= badgeMucDo %>"><%= task.getMucDo() %></span></td>
-                            <td class="text-muted" style="font-size: 0.9rem;"><%= task.getNgayGui() %></td>
+                            <td class="text-muted" style="font-size: 0.9rem;"><%= task.getNgayGui() != null ? sdf.format(task.getNgayGui()) : "" %></td>
                             <td><span class="badge bg-<%= badgeTrangThai %> <%= "Chờ xử lý".equals(task.getTrangThai()) ? "text-dark" : "text-white" %>"><%= task.getTrangThai() %></span></td>
                             <td class="pe-4 text-center">
                                 <button type="button" class="btn btn-sm btn-light text-primary border"
@@ -371,7 +389,7 @@
                         <div>
                             <div class="fw-bold text-dark" style="font-size: 0.9rem;">#SC0<%= moiNhat.getSuCoId() %> - <%= moiNhat.getTieuDe() %></div>
                             <div class="text-muted small mt-1">Trạng thái: <span class="badge bg-<%= badgeColor %> <%= "Chờ xử lý".equals(moiNhat.getTrangThai()) ? "text-dark" : "text-white" %>"><%= moiNhat.getTrangThai() %></span></div>
-                            <div class="text-muted mt-1" style="font-size: 0.75rem;"><i class="fa-regular fa-clock me-1"></i> Gửi lúc: <%= moiNhat.getNgayGui() %></div>
+                            <div class="text-muted mt-1" style="font-size: 0.75rem;"><i class="fa-regular fa-clock me-1"></i> Gửi lúc: <%= moiNhat.getNgayGui() != null ? sdf.format(moiNhat.getNgayGui()) : "" %></div>
                         </div>
                     </div>
                     <%      }
@@ -481,7 +499,7 @@
                 <h6 class="fw-bold text-primary mb-3"><%= task.getTieuDe() %></h6>
                 <div class="mb-2"><strong>Mức độ:</strong> <span class="badge bg-<%= badgeMucDo %>"><%= task.getMucDo() %></span></div>
                 <div class="mb-2"><strong>Trạng thái:</strong> <span class="badge bg-<%= badgeTrangThai %>"><%= task.getTrangThai() %></span></div>
-                <div class="mb-2"><strong>Ngày báo cáo:</strong> <%= task.getNgayGui() %></div>
+                <div class="mb-2"><strong>Ngày báo cáo:</strong> <%= task.getNgayGui() != null ? sdf.format(task.getNgayGui()) : "" %></div>
                 <div class="mb-2"><strong>Vị trí:</strong> <%= task.getViTriPhong() %></div>
                 <hr>
                 <div class="mb-1 fw-bold">Mô tả chi tiết:</div>
