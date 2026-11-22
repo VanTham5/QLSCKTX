@@ -35,7 +35,14 @@ public class ReportIssueServlet extends HttpServlet {
 
         // 3. Lấy dữ liệu người dùng nhập từ Form
         String tieuDe = request.getParameter("tieuDe");
-        int loaiSuCoId = Integer.parseInt(request.getParameter("loaiSuCoId"));
+        int loaiSuCoId;
+        try {
+            loaiSuCoId = Integer.parseInt(request.getParameter("loaiSuCoId"));
+        } catch (NumberFormatException e) {
+            session.setAttribute("reportSuccess", false);
+            response.sendRedirect(request.getContextPath() + "/student-home");
+            return;
+        }
         String mucDo = request.getParameter("mucDo");
         String moTa = request.getParameter("moTa");
 
@@ -64,14 +71,8 @@ public class ReportIssueServlet extends HttpServlet {
         sc.setMoTa(moTa);
         sc.setMucDo(mucDo);
 
-        // 6. Gọi DAO để thêm vào Database
-        SuCoDAO dao = new SuCoDAO();
-        boolean isSuccess = dao.insertSuCo(sc);
-
-        // 7. Chuyển hướng về lại trang chủ của Sinh viên, kèm cờ thành công để hiện toast popup
-        if (isSuccess) {
-            request.getSession().setAttribute("reportSuccess", true);
-        }
+        boolean isSuccess = sinhVienId > 0 && phongId > 0 && new SuCoDAO().insertSuCo(sc);
+        session.setAttribute("reportSuccess", isSuccess);
         response.sendRedirect(request.getContextPath() + "/student-home");
     }
 }

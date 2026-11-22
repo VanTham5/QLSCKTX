@@ -26,19 +26,37 @@ public class UpdateStatusServlet extends HttpServlet {
             return;
         }
 
-        try {
-            int suCoId = Integer.parseInt(request.getParameter("suCoId"));
-            String trangThaiMoi = request.getParameter("trangThaiMoi");
-
-            SuCoDAO dao = new SuCoDAO();
-            // Gọi hàm update trạng thái
-            dao.updateTrangThaiSuCo(suCoId, trangThaiMoi);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (!"NHAN_VIEN".equals(acc.getVaiTro())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
         }
 
-        // Chuyển hướng về trang chủ nhân viên để load lại danh sách mới
-        response.sendRedirect(request.getContextPath() + "/employee-home");
+        String filter = request.getParameter("workFilter");
+        String returnUrl = request.getContextPath() + "/employee-home?";
+        if ("pending".equals(filter) || "processing".equals(filter)) {
+            returnUrl += "filter=" + filter + "&";
+        }
+
+        String status = request.getParameter("trangThaiMoi");
+        boolean completed = "Đã hoàn thành".equals(status);
+        String note = request.getParameter("ghiChuKyThuat");
+        if (completed && (note == null || note.trim().isEmpty() || note.trim().length() > 2000)) {
+            response.sendRedirect(returnUrl + "statusUpdate=note");
+            return;
+        }
+
+        boolean updated = false;
+        try {
+            int issueId = Integer.parseInt(request.getParameter("suCoId"));
+            if (completed || "Đang xử lý".equals(status)) {
+                updated = new SuCoDAO().updateStaffIssue(acc.getTaiKhoanId(), issueId,
+                        completed, completed ? note.trim() : null);
+            }
+        } catch (NumberFormatException | java.sql.SQLException e) {
+            log("Không thể cập nhật trạng thái sự cố", e);
+        }
+
+        response.sendRedirect(returnUrl + "statusUpdate="
+                + (updated ? "success" : "failed"));
     }
 }

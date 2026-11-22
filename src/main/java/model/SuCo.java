@@ -73,4 +73,13 @@ public class SuCo {
 
     public int getToId() {return toId;}
     public void setToId(int toId) {this.toId = toId;}
+    private String ghiChuKyThuat;
+
+    public String getGhiChuKyThuat() {
+        return ghiChuKyThuat;
+    }
+
+    public void setGhiChuKyThuat(String ghiChuKyThuat) {
+        this.ghiChuKyThuat = ghiChuKyThuat;
+    }
 }

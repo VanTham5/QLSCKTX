@@ -25,24 +25,16 @@ public class AssignTaskServlet extends HttpServlet {
             return;
         }
 
+        boolean assigned = false;
         try {
-            // Lấy mã sự cố và mã nhân viên được chọn từ Modal phân công
-            int suCoId = Integer.parseInt(request.getParameter("suCoId"));
-            int nhanVienId = Integer.parseInt(request.getParameter("nhanVienId"));
-
-            SuCoDAO dao = new SuCoDAO();
-
-            // 1. Cập nhật trạng thái sự cố thành "Đang xử lý"
-            dao.updateTrangThaiSuCo(suCoId, "Đang xử lý");
-
-            // (Tùy chọn) Nếu database của bạn có cột lưu nhân viên nhận việc, bạn có thể gọi hàm gán nhân viên ở đây:
-            // dao.assignStaffToIssue(suCoId, nhanVienId);
-
+            int issueId = Integer.parseInt(request.getParameter("suCoId"));
+            int staffAccountId = Integer.parseInt(request.getParameter("nhanVienId"));
+            assigned = new SuCoDAO().assignStaffToIssue(issueId, staffAccountId);
         } catch (Exception e) {
-            e.printStackTrace();
+            log("Không thể phân công sự cố", e);
         }
 
-        // Sau khi phân công thành công, load lại trang chủ Admin
-        response.sendRedirect(request.getContextPath() + "/admin-home");
+        response.sendRedirect(request.getContextPath() + "/admin-home?assignment="
+                + (assigned ? "success" : "failed"));
     }
 }

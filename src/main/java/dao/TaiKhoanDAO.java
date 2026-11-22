@@ -290,4 +290,36 @@ public class TaiKhoanDAO {
         return false;
     }
 
+    public Map<String, Object> getStaffTeam(int accountId) throws java.sql.SQLException {
+        String sql = "SELECT t.ten_to, tk.ho_ten, tk.so_dien_thoai "
+                + "FROM nhan_vien nv JOIN to_nhan_vien t ON t.to_id = nv.to_id "
+                + "LEFT JOIN nhan_vien colleague ON colleague.to_id = nv.to_id "
+                + "AND colleague.tai_khoan_id <> nv.tai_khoan_id "
+                + "LEFT JOIN tai_khoan tk ON tk.tai_khoan_id = colleague.tai_khoan_id AND tk.trang_thai = 1 "
+                + "WHERE nv.tai_khoan_id = ? ORDER BY tk.ho_ten";
+        Map<String, Object> team = new LinkedHashMap<>();
+        List<Map<String, String>> members = new ArrayList<>();
+        team.put("members", members);
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, accountId);
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    team.put("name", result.getString("ten_to"));
+                    String name = result.getString("ho_ten");
+                    if (name != null) {
+                        Map<String, String> member = new LinkedHashMap<>();
+                        member.put("name", name);
+                        member.put("phone", result.getString("so_dien_thoai"));
+                        members.add(member);
+                    }
+                }
+            }
+        } catch (java.sql.SQLException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new java.sql.SQLException("Không thể kết nối cơ sở dữ liệu", e);
+        }
+        return team;
+    }
 }

@@ -1,3 +1,4 @@
+<%@ taglib prefix="staff" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
@@ -100,15 +101,15 @@
     </div>
 
     <div class="sidebar-heading">Tổng quan</div>
-    <a href="${pageContext.request.contextPath}/employee-home" class="nav-link active">
+    <a href="${pageContext.request.contextPath}/employee-home" class="nav-link ${empty workFilter ? 'active' : ''}">
         <i class="fa-solid fa-chart-pie me-2 w-20px"></i> Bảng điều khiển
     </a>
     <div class="sidebar-heading">Quản lý công việc</div>
-    <a href="${pageContext.request.contextPath}/employee-history?filter=pending" class="nav-link">
+    <a href="${pageContext.request.contextPath}/employee-home?filter=pending#work-list" class="nav-link ${workFilter == 'pending' ? 'active' : ''}">
         <span><i class="fa-solid fa-clipboard-list me-2 w-20px"></i> Chờ xử lý</span>
         <span class="badge bg-danger rounded-pill">${pending}</span>
     </a>
-    <a href="${pageContext.request.contextPath}/employee-history?filter=processing" class="nav-link"><i class="fa-solid fa-person-digging me-2 w-20px"></i> Đang xử lý</a>
+    <a href="${pageContext.request.contextPath}/employee-home?filter=processing#work-list" class="nav-link ${workFilter == 'processing' ? 'active' : ''}"><i class="fa-solid fa-person-digging me-2 w-20px"></i> Đang xử lý</a>
     <a href="${pageContext.request.contextPath}/employee-history" class="nav-link">
         <i class="fa-solid fa-clock-rotate-left me-2 w-20px"></i> Lịch sử công việc
     </a>
@@ -137,62 +138,114 @@
         </div>
     </div>
 
-    <div class="container-fluid px-4">
+    <div class="container-fluid px-4 ${empty workFilter ? '' : 'pt-4'}">
 
-        <!-- PAGE HEADER -->
-        <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
-            <div>
-                <h4 class="fw-bold text-dark mb-1">Bảng điều khiển công việc</h4>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">
-                    Xin chào KTV <strong class="text-primary">${not empty sessionScope.acc ? sessionScope.acc.hoTen : 'Trần Văn Kỹ Thuật'}</strong>. Khu vực phụ trách: <strong>Tòa A1, A2</strong>.
-                </p>
+        <staff:if test="${empty workFilter}">
+            <!-- PAGE HEADER -->
+            <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
+                <div>
+                    <h4 class="fw-bold text-dark mb-1">Bảng điều khiển công việc</h4>
+                    <p class="text-muted mb-0" style="font-size: 0.9rem;">
+                        Xin chào KTV <strong class="text-primary">${not empty sessionScope.acc ? sessionScope.acc.hoTen : 'Trần Văn Kỹ Thuật'}</strong>. Khu vực phụ trách: <strong>Tòa A1, A2</strong>.
+                    </p>
+                </div>
+                <button class="btn btn-outline-primary fw-medium shadow-sm rounded-pill px-4">
+                    <i class="fa-solid fa-print me-2"></i> In báo cáo ngày
+                </button>
             </div>
-            <button class="btn btn-outline-primary fw-medium shadow-sm rounded-pill px-4">
-                <i class="fa-solid fa-print me-2"></i> In báo cáo ngày
-            </button>
-        </div>
 
-        <!-- THỐNG KÊ NHANH CỦA NHÂN VIÊN -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center" style="border-left: 4px solid #ffc107;">
-                    <div class="icon-box bg-warning bg-opacity-10 text-warning me-3">
-                        <i class="fa-solid fa-clipboard-question"></i>
+            <!-- THỐNG KÊ NHANH CỦA NHÂN VIÊN -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center" style="border-left: 4px solid #ffc107;">
+                        <div class="icon-box bg-warning bg-opacity-10 text-warning me-3">
+                            <i class="fa-solid fa-clipboard-question"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">${pending != null ? pending : 0}</h4>
+                            <span class="text-muted small">Sự cố chờ tiếp nhận</span>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="fw-bold mb-0">${pending != null ? pending : 0}</h4>
-                        <span class="text-muted small">Sự cố chờ tiếp nhận</span>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center" style="border-left: 4px solid #0d6efd;">
+                        <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
+                            <i class="fa-solid fa-person-digging"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">${processing != null ? processing : 0}</h4>
+                            <span class="text-muted small">Công việc đang xử lý</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center" style="border-left: 4px solid #198754;">
+                        <div class="icon-box bg-success bg-opacity-10 text-success me-3">
+                            <i class="fa-solid fa-check-double"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">${done != null ? done : 0}</h4>
+                            <span class="text-muted small">Đã hoàn thành (Tháng này)</span>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center" style="border-left: 4px solid #0d6efd;">
-                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
-                        <i class="fa-solid fa-person-digging"></i>
-                    </div>
-                    <div>
-                        <h4 class="fw-bold mb-0">${processing != null ? processing : 0}</h4>
-                        <span class="text-muted small">Công việc đang xử lý</span>
-                    </div>
-                </div>
+        </staff:if>
+
+        <staff:choose>
+            <staff:when test="${param.statusUpdate == 'success'}">
+                <div class="alert alert-success" role="status">Đã cập nhật sự cố.</div>
+            </staff:when>
+            <staff:when test="${param.statusUpdate == 'note'}">
+                <div class="alert alert-warning" role="alert">Nhập ghi chú sửa chữa từ 1 đến 2.000 ký tự.</div>
+            </staff:when>
+            <staff:when test="${param.statusUpdate == 'failed'}">
+                <div class="alert alert-danger" role="alert">Không thể cập nhật sự cố. Hãy kiểm tra trạng thái hiện tại và thử lại.</div>
+            </staff:when>
+        </staff:choose>
+
+        <staff:if test="${empty workFilter}">
+            <div class="mb-3">
+                <h5 id="staffTeamHeading" class="fw-bold mb-0"><i class="fa-solid fa-users text-primary me-2" aria-hidden="true"></i>Đồng nghiệp cùng tổ</h5>
+                <staff:if test="${not empty staffTeam.name}">
+                    <p class="text-muted small mb-0 mt-1"><staff:out value="${staffTeam.name}"/></p>
+                </staff:if>
             </div>
-            <div class="col-md-4">
-                <div class="card stat-card h-100 p-3 d-flex flex-row align-items-center" style="border-left: 4px solid #198754;">
-                    <div class="icon-box bg-success bg-opacity-10 text-success me-3">
-                        <i class="fa-solid fa-check-double"></i>
-                    </div>
-                    <div>
-                        <h4 class="fw-bold mb-0">${done != null ? done : 0}</h4>
-                        <span class="text-muted small">Đã hoàn thành (Tháng này)</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <section aria-labelledby="staffTeamHeading" class="card border-0 shadow-sm rounded-3 mb-4">
+                <staff:choose>
+                    <staff:when test="${staffTeamError}"><p class="p-3 mb-0 text-muted">Không tải được thông tin tổ chuyên môn.</p></staff:when>
+                    <staff:when test="${empty staffTeam.name}"><p class="p-3 mb-0 text-muted">Bạn chưa được phân tổ.</p></staff:when>
+                    <staff:when test="${empty staffTeam.members}"><p class="p-3 mb-0 text-muted">Chưa có đồng nghiệp cùng tổ.</p></staff:when>
+                    <staff:otherwise>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" aria-labelledby="staffTeamHeading">
+                                <thead class="table-light text-muted" style="font-size: 0.85rem;">
+                                    <tr>
+                                        <th scope="col" class="ps-4 fw-medium py-3">HỌ VÀ TÊN</th>
+                                        <th scope="col" class="pe-4 fw-medium py-3">SỐ ĐIỆN THOẠI</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <staff:forEach var="member" items="${staffTeam.members}">
+                                        <tr>
+                                            <td class="ps-4 fw-medium"><staff:out value="${member.name}"/></td>
+                                            <td class="pe-4"><staff:if test="${not empty member.phone}"><i class="fa-solid fa-phone text-muted small me-2" aria-hidden="true"></i></staff:if><staff:out value="${empty member.phone ? 'Chưa có số điện thoại' : member.phone}"/></td>
+                                        </tr>
+                                    </staff:forEach>
+                                </tbody>
+                            </table>
+                        </div>
+                    </staff:otherwise>
+                </staff:choose>
+            </section>
+        </staff:if>
 
 
         <!-- BẢNG CÔNG VIỆC CẦN XỬ LÝ NGAY -->
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold mb-0">Danh sách việc cần làm</h5>
+            <h5 id="work-list" class="fw-bold mb-0">${empty workListTitle ? 'Danh sách việc cần làm' : workListTitle}</h5>
+            <input type="search" id="incidentSearch" class="form-control form-control-sm w-auto ms-auto me-2"
+                   aria-label="Tìm theo phòng, mã sự cố" placeholder="Tìm theo phòng, mã SC...">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-sm btn-outline-secondary active" id="btnAll" onclick="filterByPriority('ALL')">Tất cả</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="btnUrgent" onclick="filterByPriority('KHẨN CẤP')">Khẩn cấp</button>
@@ -285,10 +338,13 @@
                         } else {
                         %>
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">Không có sự cố nào đang chờ xử lý.</td>
+                            <td colspan="8" class="text-center py-4 text-muted">Không có sự cố trong danh sách này.</td>
                         </tr>
                         <% } %>
-                        </tbody>
+                    <tr id="noIncidentMatches" hidden>
+                        <td colspan="8" class="text-center py-4 text-muted">Không có sự cố phù hợp với bộ lọc.</td>
+                    </tr>
+                </tbody>
                     </table>
                 </div>
             </div>
@@ -342,11 +398,17 @@
             </div>
             <div class="modal-body p-4">
                 <p id="confirmModalMessage" class="fs-6 text-dark mb-0 fw-medium">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+                <div id="repairNoteField" class="mt-3" hidden>
+                    <label for="repairNote" class="form-label">Kết quả sửa chữa và vật tư thay thế</label>
+                    <textarea id="repairNote" name="ghiChuKyThuat" form="confirmActionForm"
+                              class="form-control" rows="4" maxlength="2000" disabled></textarea>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Hủy bỏ</button>
                 <!-- Form gửi dữ liệu ngầm lên UpdateStatusServlet -->
                 <form id="confirmActionForm" action="${pageContext.request.contextPath}/update-status" method="post" style="display:inline;">
+                    <input type="hidden" name="workFilter" value="${workFilter}">
                     <input type="hidden" id="modalSuCoId" name="suCoId" value="">
                     <input type="hidden" id="modalTrangThaiMoi" name="trangThaiMoi" value="">
                     <button type="submit" id="confirmModalSubmitBtn" class="btn btn-primary px-4 fw-bold">Đồng ý</button>
@@ -364,6 +426,13 @@
 
         document.getElementById('modalSuCoId').value = suCoId;
         document.getElementById('modalTrangThaiMoi').value = trangThaiMoi;
+
+        const completed = trangThaiMoi === 'Đã hoàn thành';
+        const note = document.getElementById('repairNote');
+        document.getElementById('repairNoteField').hidden = !completed;
+        note.value = '';
+        note.disabled = !completed;
+        note.required = completed;
 
         const submitBtn = document.getElementById('confirmModalSubmitBtn');
         submitBtn.className = 'btn px-4 fw-bold text-white ' + btnClass;
@@ -389,30 +458,34 @@
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function filterByPriority(priority) {
-        const rows = document.querySelectorAll('.incident-row');
-        const btnAll = document.getElementById('btnAll');
-        const btnUrgent = document.getElementById('btnUrgent');
+    let selectedPriority = 'ALL';
+    const incidentSearch = document.getElementById('incidentSearch');
 
-        // Cập nhật giao diện nút bấm active
-        if (priority === 'ALL') {
-            btnAll.classList.add('active');
-            btnUrgent.classList.remove('active');
-        } else {
-            btnUrgent.classList.add('active');
-            btnAll.classList.remove('active');
-        }
-
-        // Duyệt qua các dòng và ẩn/hiện dựa theo mức độ
-        rows.forEach(row => {
-            const mucDo = row.getAttribute('data-mucdo');
-            if (priority === 'ALL' || mucDo === priority) {
-                row.style.display = ''; // Hiện dòng
-            } else {
-                row.style.display = 'none'; // Ẩn dòng
-            }
-        });
+    function normalizeIncidentSearch(text) {
+        return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
     }
+
+    function filterByPriority(priority) {
+        selectedPriority = priority;
+        document.getElementById('btnAll').classList.toggle('active', priority === 'ALL');
+        document.getElementById('btnUrgent').classList.toggle('active', priority !== 'ALL');
+
+        const rows = document.querySelectorAll('.incident-row');
+        const query = normalizeIncidentSearch(incidentSearch.value.trim());
+        let visible = 0;
+        rows.forEach(row => {
+            const code = normalizeIncidentSearch(row.cells[0].textContent);
+            const location = normalizeIncidentSearch(row.cells[2].textContent);
+            const roomQuery = query.replace(/^p(?=\d)/, '');
+            const matches = (priority === 'ALL' || row.dataset.mucdo === priority)
+                && (code.includes(query) || location.includes(roomQuery));
+            row.hidden = !matches;
+            if (matches) visible++;
+        });
+        document.getElementById('noIncidentMatches').hidden = rows.length === 0 || visible > 0;
+    }
+
+    incidentSearch.addEventListener('input', () => filterByPriority(selectedPriority));
 </script>
 
 <!-- VÒNG LẶP TẠO MODAL CHI TIẾT SỰ CỐ CHO TỪNG DÒNG -->

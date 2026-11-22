@@ -1,3 +1,4 @@
+<%@ taglib prefix="repair" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
@@ -198,6 +199,13 @@
         </div>
 
         <!-- BẢNG THEO DÕI SỰ CỐ TOÀN HỆ THỐNG -->
+        <repair:if test="${param.assignment == 'success'}">
+            <div class="alert alert-success" role="status">Đã phân công. Đang chờ nhân viên nhận việc.</div>
+        </repair:if>
+        <repair:if test="${param.assignment == 'failed'}">
+            <div class="alert alert-danger" role="alert">Không thể phân công. Kiểm tra trạng thái sự cố và nhân viên được chọn.</div>
+        </repair:if>
+
         <div class="d-flex justify-content-between align-items-center mb-3 mt-5">
             <h5 class="fw-bold mb-0">Sự cố chờ điều phối & Phân công</h5>
             <div class="input-group" style="width: 300px;">
@@ -339,6 +347,11 @@
                 <div class="mb-1 fw-bold text-dark">Mô tả chi tiết từ sinh viên:</div>
                 <div class="p-3 bg-light rounded border text-muted" style="font-size: 0.95rem;">
                     <%= task.getMoTa() != null ? task.getMoTa() : "Không có mô tả chi tiết." %>
+                    <% pageContext.setAttribute("repairNote", task.getGhiChuKyThuat()); %>
+                    <repair:if test="${not empty repairNote}">
+                        <div class="mt-3"><strong>Kết quả sửa chữa và vật tư thay thế</strong></div>
+                        <div style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
+                    </repair:if>
                 </div>
             </div>
             <div class="modal-footer">
