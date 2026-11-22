@@ -98,9 +98,12 @@
     <!-- Active state cho trang lịch sử công việc nhân viên -->
     <a href="${pageContext.request.contextPath}/employee-history" class="nav-link active"><i class="fa-solid fa-clock-rotate-left me-2 w-20px"></i> Lịch sử công việc</a>
 
+    <a href="${pageContext.request.contextPath}/employee-home?view=team" class="nav-link ${teamView ? 'active' : ''}">
+        <i class="fa-solid fa-users me-2 w-20px" aria-hidden="true"></i> Đồng nghiệp cùng tổ
+    </a>
     <div class="sidebar-heading">Hồ sơ cá nhân</div>
     <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
-    <a href="#" class="nav-link"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
+    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#changePassModal"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
     <a href="${pageContext.request.contextPath}/logout" class="nav-link text-danger mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
 </div>
 
@@ -116,7 +119,7 @@
                 <i class="fa-solid fa-chevron-down ms-2" style="font-size: 12px;"></i>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#">Hồ sơ nhân viên</a></li>
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">Hồ sơ nhân viên</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout">Đăng xuất</a></li>
             </ul>
@@ -224,12 +227,12 @@
                 <div class="mb-1 fw-bold text-dark">Mô tả chi tiết từ sinh viên:</div>
                 <div class="p-3 bg-light rounded border text-muted" style="font-size: 0.95rem;">
                     <%= task.getMoTa() %>
-                    <% pageContext.setAttribute("repairNote", task.getGhiChuKyThuat()); %>
-                    <repair:if test="${not empty repairNote}">
-                        <div class="mt-3"><strong>Kết quả sửa chữa và vật tư thay thế</strong></div>
-                        <div style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
-                    </repair:if>
                 </div>
+                <% pageContext.setAttribute("repairNote", task.getGhiChuKyThuat()); %>
+                <repair:if test="${not empty repairNote}">
+                    <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
+                    <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
+                </repair:if>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
@@ -241,6 +244,8 @@
         }
     }
 %>
+
+<%@ include file="/WEB-INF/employee_account_modals.jspf" %>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

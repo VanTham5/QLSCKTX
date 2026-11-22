@@ -34,11 +34,18 @@ public class EmployeeHomeServlet extends HttpServlet {
             return;
         }
 
-        try {
-            request.setAttribute("staffTeam", new TaiKhoanDAO().getStaffTeam(acc.getTaiKhoanId()));
-        } catch (java.sql.SQLException e) {
-            log("Không tải được thông tin tổ kỹ thuật", e);
-            request.setAttribute("staffTeamError", true);
+        request.setAttribute("employeeProfile", new TaiKhoanDAO().getEmployeeProfile(acc.getTaiKhoanId()));
+
+        if ("team".equals(request.getParameter("view"))) {
+            request.setAttribute("teamView", true);
+            try {
+                request.setAttribute("staffTeam", new TaiKhoanDAO().getStaffTeam(acc.getTaiKhoanId()));
+            } catch (java.sql.SQLException e) {
+                log("Không tải được thông tin tổ kỹ thuật", e);
+                request.setAttribute("staffTeamError", true);
+            }
+            request.getRequestDispatcher("/employee/employee_home.jsp").forward(request, response);
+            return;
         }
 
         SuCoDAO dao = new SuCoDAO();

@@ -183,30 +183,38 @@ public class TaiKhoanDAO {
         return false;
     }
 
-    // Hàm Đổi mật khẩu
-    public boolean changePassword(int taiKhoanId, String oldPass, String newPass) {
-        // 1. Kiểm tra xem mật khẩu cũ có đúng không
-        String checkQuery = "SELECT * FROM tai_khoan WHERE tai_khoan_id = ? AND mat_khau = ?";
-        String updateQuery = "UPDATE tai_khoan SET mat_khau = ? WHERE tai_khoan_id = ?";
-        try {
-            Connection conn = new DBContext().getConnection();
-            PreparedStatement psCheck = conn.prepareStatement(checkQuery);
-            psCheck.setInt(1, taiKhoanId);
-            psCheck.setString(2, oldPass);
-            ResultSet rs = psCheck.executeQuery();
-
-            // Nếu tìm thấy tài khoản khớp với mật khẩu cũ
-            if (rs.next()) {
-                PreparedStatement psUpdate = conn.prepareStatement(updateQuery);
-                psUpdate.setString(1, newPass);
-                psUpdate.setInt(2, taiKhoanId);
-                int result = psUpdate.executeUpdate();
-                return result > 0; // Đổi thành công
+    public Map<String, String> getEmployeeProfile(int accountId) {
+        String sql = "SELECT ho_ten, so_dien_thoai, email FROM tai_khoan WHERE tai_khoan_id = ?";
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, accountId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    Map<String, String> profile = new LinkedHashMap<>();
+                    profile.put("fullName", result.getString("ho_ten"));
+                    profile.put("phone", result.getString("so_dien_thoai"));
+                    profile.put("email", result.getString("email"));
+                    return profile;
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false; // Mật khẩu cũ sai hoặc lỗi kết nối
+        return null;
+    }
+
+    public boolean changePassword(int taiKhoanId, String oldPass, String newPass) {
+        String sql = "UPDATE tai_khoan SET mat_khau = ? WHERE tai_khoan_id = ? AND mat_khau = ?";
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, newPass);
+            statement.setInt(2, taiKhoanId);
+            statement.setString(3, oldPass);
+            return statement.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     // Lấy danh sách tài khoản theo vai trò (Loại trừ ADMIN) một cách an toàn

@@ -386,12 +386,12 @@
                 <div class="fw-bold mb-1">Mô tả chi tiết:</div>
                 <div class="p-2 bg-light rounded border text-muted">
                     <%= sc.getMoTa() != null ? sc.getMoTa() : "Không có mô tả chi tiết." %>
-                    <% pageContext.setAttribute("repairNote", sc.getGhiChuKyThuat()); %>
-                    <repair:if test="${not empty repairNote}">
-                        <div class="mt-3"><strong>Kết quả sửa chữa và vật tư thay thế</strong></div>
-                        <div style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
-                    </repair:if>
                 </div>
+                <% pageContext.setAttribute("repairNote", sc.getGhiChuKyThuat()); %>
+                <repair:if test="${not empty repairNote}">
+                    <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
+                    <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
+                </repair:if>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button>

@@ -1,6 +1,7 @@
 package controller;
 
 import dao.SuCoDAO;
+import dao.TaiKhoanDAO;
 import model.TaiKhoan;
 import model.SuCo;
 import jakarta.servlet.ServletException;
@@ -23,6 +24,14 @@ public class EmployeeHistoryServlet extends HttpServlet {
             response.sendRedirect("login.jsp");
             return;
         }
+
+        if (!"NHAN_VIEN".equals(acc.getVaiTro())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
+        request.setAttribute("employeeProfile", new TaiKhoanDAO().getEmployeeProfile(acc.getTaiKhoanId()));
+        request.setAttribute("employeeHistoryView", true);
 
         String filter = request.getParameter("filter");
         if (filter == null) {

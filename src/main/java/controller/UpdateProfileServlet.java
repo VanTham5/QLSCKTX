@@ -52,8 +52,13 @@ public class UpdateProfileServlet extends HttpServlet {
                     && lop != null && !lop.trim().isEmpty()) {
                 isSuccess = dao.updateProfileStudent(acc.getTaiKhoanId(), fullName, sdt, email, phongId, maSV, khoa, lop);
             }
+        } else if ("NHAN_VIEN".equals(acc.getVaiTro())) {
+            if (fullName != null && !fullName.trim().isEmpty()) {
+                fullName = fullName.trim();
+                isSuccess = dao.updateProfileEmployee(acc.getTaiKhoanId(), fullName, sdt, email);
+            }
         } else {
-            // Dành cho ADMIN và NHAN_VIEN
+            // Dành cho ADMIN
             isSuccess = dao.updateProfileEmployee(acc.getTaiKhoanId(), fullName, sdt, email);
         }
 
@@ -70,7 +75,10 @@ public class UpdateProfileServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + studentPage
                     + "?profileUpdate=" + (isSuccess ? "success" : "failed"));
         } else if ("NHAN_VIEN".equals(acc.getVaiTro())) {
-            response.sendRedirect(request.getContextPath() + "/employee-home");
+            String page = "history".equals(request.getParameter("profilePage"))
+                    ? "/employee-history" : "/employee-home";
+            response.sendRedirect(request.getContextPath() + page
+                    + "?profileUpdate=" + (isSuccess ? "success" : "failed"));
         } else {
             response.sendRedirect(request.getContextPath() + "/admin-home");
         }
