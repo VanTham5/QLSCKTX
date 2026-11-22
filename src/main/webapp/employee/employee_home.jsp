@@ -89,15 +89,43 @@
             justify-content: center;
             font-size: 1.2rem;
         }
+        .work-search {
+            flex: 0 1 20rem;
+            min-width: min(100%, 16rem);
+        }
+        @media (max-width: 991.98px) {
+            .work-search {
+                flex-basis: 100%;
+            }
+        }
+        .sidebar.offcanvas-lg {
+            background-color: #fff !important;
+        }
+        @media (max-width: 991.98px) {
+            .sidebar.offcanvas-lg {
+                --bs-offcanvas-width: min(260px, 90vw);
+                height: 100dvh;
+                z-index: var(--bs-offcanvas-zindex);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .top-header {
+                justify-content: space-between;
+                padding: 0 1rem;
+            }
+        }
     </style>
 </head>
 <body>
 
 <!-- SIDEBAR NHÂN VIÊN -->
-<div class="sidebar d-flex flex-column" style="overflow-y: auto;">
+<div class="sidebar offcanvas-lg offcanvas-start d-flex flex-column" id="employeeSidebar" tabindex="-1" aria-labelledby="employeeSidebarTitle" style="overflow-y: auto;">
     <div class="d-flex align-items-center p-3" style="height: 60px; border-bottom: 1px solid #e0e0e0;">
         <i class="fa-solid fa-screwdriver-wrench fs-4 text-primary me-2"></i>
-        <h5 class="mb-0 fw-bold text-dark" style="font-size: 1.1rem;">TỔ KỸ THUẬT</h5>
+        <h5 id="employeeSidebarTitle" class="mb-0 fw-bold text-dark" style="font-size: 1.1rem;">TỔ KỸ THUẬT</h5>
+        <button type="button" class="btn-close d-lg-none ms-auto" data-bs-dismiss="offcanvas"
+                data-bs-target="#employeeSidebar" aria-label="Đóng menu"></button>
     </div>
 
     <div class="sidebar-heading">Tổng quan</div>
@@ -116,9 +144,12 @@
     <a href="${pageContext.request.contextPath}/employee-home?view=team" class="nav-link ${teamView ? 'active' : ''}">
         <i class="fa-solid fa-users me-2 w-20px" aria-hidden="true"></i> Đồng nghiệp cùng tổ
     </a>
+    <a href="#" class="nav-link" data-employee-modal="#maintenanceNoticeModal">
+        <i class="fa-solid fa-bullhorn me-2 w-20px" aria-hidden="true"></i> Thông báo bảo trì
+    </a>
     <div class="sidebar-heading">Hồ sơ cá nhân</div>
-    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
-    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#changePassModal"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
+    <a href="#" class="nav-link" data-employee-modal="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
+    <a href="#" class="nav-link" data-employee-modal="#changePassModal"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
     <a href="${pageContext.request.contextPath}/logout" class="nav-link text-danger mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
 </div>
 
@@ -127,6 +158,11 @@
 
     <!-- HEADER TOP -->
     <div class="top-header">
+        <button type="button" id="employeeMenuButton" class="btn btn-outline-primary d-lg-none"
+                data-bs-toggle="offcanvas" data-bs-target="#employeeSidebar"
+                aria-controls="employeeSidebar" aria-label="Mở menu nhân viên">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        </button>
         <div class="dropdown">
             <a href="#" class="d-flex align-items-center text-decoration-none text-dark" data-bs-toggle="dropdown">
                 <img src="https://ui-avatars.com/api/?name=${not empty sessionScope.acc ? sessionScope.acc.hoTen : 'NV'}&background=random" alt="Avatar" width="32" height="32" class="rounded-circle me-2">
@@ -142,6 +178,9 @@
     </div>
 
     <div class="container-fluid px-4 ${empty workFilter and not teamView ? '' : 'pt-4'}">
+        <staff:if test="${param.maintenanceNotice == 'success'}">
+            <div class="alert alert-success mt-3" role="status">Đã đăng thông báo bảo trì cho sinh viên.</div>
+        </staff:if>
 
         <staff:if test="${empty workFilter and not teamView}">
             <!-- PAGE HEADER -->
@@ -247,10 +286,17 @@
         <% List<SuCo> listSuCo = (List<SuCo>) request.getAttribute("listSuCo"); %>
         <staff:if test="${not teamView}">
         <!-- BẢNG CÔNG VIỆC CẦN XỬ LÝ NGAY -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <h5 id="work-list" class="fw-bold mb-0">${empty workListTitle ? 'Danh sách việc cần làm' : workListTitle}</h5>
-            <input type="search" id="incidentSearch" class="form-control form-control-sm w-auto ms-auto me-2"
-                   aria-label="Tìm theo phòng, mã sự cố" placeholder="Tìm theo phòng, mã SC...">
+            <div class="position-relative work-search ms-auto">
+                <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3 text-primary pe-none" aria-hidden="true"></i>
+                <input type="search" id="incidentSearch" class="form-control rounded-pill ps-5 pe-3 shadow-sm"
+                       aria-label="Tìm theo mã sự cố, tiêu đề hoặc phòng" placeholder="Tìm theo mã, tiêu đề, phòng...">
+            </div>
+            <div class="position-relative">
+                <label for="incidentDate" class="position-absolute top-50 start-0 translate-middle-y ms-3 text-primary mb-0 pe-none" title="Lọc theo ngày gửi"><i class="fa-regular fa-calendar" aria-hidden="true"></i><span class="visually-hidden">Lọc theo ngày gửi</span></label>
+                <input type="date" id="incidentDate" class="form-control w-auto rounded-pill ps-5 pe-3 shadow-sm">
+            </div>
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-sm btn-outline-secondary active" id="btnAll" onclick="filterByPriority('ALL')">Tất cả</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="btnUrgent" onclick="filterByPriority('KHẨN CẤP')">Khẩn cấp</button>
@@ -284,7 +330,7 @@
                                     String badgeTrangThai = task.getTrangThai().equals("Chờ xử lý") ? "warning" : (task.getTrangThai().equals("Đang xử lý") ? "primary" : "success");
                         %>
                         <!-- Mỗi dòng <tr> nằm bên trong vòng lặp for nên biến task được nhận diện bình thường -->
-                        <tr class="incident-row" data-mucdo="<%= task.getMucDo() %>">
+                        <tr class="incident-row" data-report-date="<%= task.getNgayGui() == null ? "" : task.getNgayGui().toLocalDateTime().toLocalDate() %>" data-mucdo="<%= task.getMucDo() %>">
                             <td class="ps-4"><span class="fw-bold text-secondary">#SC0<%= task.getSuCoId() %></span></td>
                             <td>
                                 <div class="fw-bold text-dark"><%= task.getTieuDe() %></div>
@@ -425,12 +471,14 @@
 </script>
 
 <%@ include file="/WEB-INF/employee_account_modals.jspf" %>
+<%@ include file="/WEB-INF/employee_maintenance_notice.jspf" %>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let selectedPriority = 'ALL';
     const incidentSearch = document.getElementById('incidentSearch');
+    const incidentDate = document.getElementById('incidentDate');
 
     function normalizeIncidentSearch(text) {
         return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
@@ -443,13 +491,16 @@
 
         const rows = document.querySelectorAll('.incident-row');
         const query = normalizeIncidentSearch(incidentSearch.value.trim());
+        const date = incidentDate.value;
         let visible = 0;
         rows.forEach(row => {
             const code = normalizeIncidentSearch(row.cells[0].textContent);
+            const title = normalizeIncidentSearch(row.cells[1].querySelector(".fw-bold").textContent);
             const location = normalizeIncidentSearch(row.cells[2].textContent);
             const roomQuery = query.replace(/^p(?=\d)/, '');
-            const matches = (priority === 'ALL' || row.dataset.mucdo === priority)
-                && (code.includes(query) || location.includes(roomQuery));
+            const matches = (!date || row.dataset.reportDate === date)
+                && (priority === 'ALL' || row.dataset.mucdo === priority)
+                && (code.includes(query) || title.includes(query) || location.includes(roomQuery));
             row.hidden = !matches;
             if (matches) visible++;
         });
@@ -457,6 +508,7 @@
     }
 
     incidentSearch?.addEventListener('input', () => filterByPriority(selectedPriority));
+    incidentDate?.addEventListener('input', () => filterByPriority(selectedPriority));
 </script>
 
 <!-- VÒNG LẶP TẠO MODAL CHI TIẾT SỰ CỐ CHO TỪNG DÒNG -->
@@ -496,5 +548,6 @@
         }
     }
 %>
+<%@ include file="/WEB-INF/employee_sidebar_script.jspf" %>
 </body>
 </html>

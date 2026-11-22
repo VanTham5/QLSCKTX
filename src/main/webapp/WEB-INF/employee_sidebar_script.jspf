@@ -1,0 +1,27 @@
+<script>
+    document.getElementById('employeeSidebar').addEventListener('click', function (event) {
+        const trigger = event.target.closest('[data-employee-modal]');
+        if (!trigger) return;
+
+        event.preventDefault();
+        const modal = document.querySelector(trigger.dataset.employeeModal);
+        const openModal = () => {
+            modal.addEventListener('hidden.bs.modal', () => {
+                const menuButton = document.getElementById('employeeMenuButton');
+                (getComputedStyle(trigger).visibility === 'visible' ? trigger : menuButton).focus();
+            }, { once: true });
+            bootstrap.Modal.getOrCreateInstance(modal).show();
+        };
+        if (this.classList.contains('show')) {
+            this.addEventListener('hidden.bs.offcanvas', openModal, { once: true });
+            bootstrap.Offcanvas.getOrCreateInstance(this).hide();
+        } else {
+            openModal();
+        }
+    });
+
+    const maintenanceResult = new URLSearchParams(location.search).get('maintenanceNotice');
+    if (maintenanceResult === 'invalid' || maintenanceResult === 'failed') {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('maintenanceNoticeModal')).show();
+    }
+</script>

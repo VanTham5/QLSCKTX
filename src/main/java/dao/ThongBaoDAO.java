@@ -30,18 +30,25 @@ public class ThongBaoDAO {
         return list;
     }
 
-    // Hàm dành riêng cho Admin: Thêm thông báo mới vào CSDL
     public boolean insertThongBao(String tieuDe, String noiDung) {
-        String query = "INSERT INTO thong_bao (tieu_de, noi_dung) VALUES (?, ?)";
-        try {
-            java.sql.Connection conn = new context.DBContext().getConnection();
-            java.sql.PreparedStatement ps = conn.prepareStatement(query);
-            ps.setString(1, tieuDe);
-            ps.setString(2, noiDung);
-            return ps.executeUpdate() > 0;
+        return insertThongBao(tieuDe, noiDung, null);
+    }
+
+    public boolean insertThongBao(String tieuDe, String noiDung, Integer nguoiTaoId) {
+        String query = nguoiTaoId == null
+                ? "INSERT INTO thong_bao (tieu_de, noi_dung) VALUES (?, ?)"
+                : "INSERT INTO thong_bao (tieu_de, noi_dung, nguoi_tao_id) VALUES (?, ?, ?)";
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, tieuDe);
+            statement.setString(2, noiDung);
+            if (nguoiTaoId != null) {
+                statement.setInt(3, nguoiTaoId);
+            }
+            return statement.executeUpdate() == 1;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-        return false;
     }
 }

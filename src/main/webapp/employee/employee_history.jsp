@@ -76,15 +76,43 @@
             color: #0d6efd;
             background-color: #f8f9fa;
         }
+        .history-search {
+            flex: 0 1 20rem;
+            min-width: min(100%, 16rem);
+        }
+        @media (max-width: 991.98px) {
+            .history-search {
+                flex-basis: 100%;
+            }
+        }
+        .sidebar.offcanvas-lg {
+            background-color: #fff !important;
+        }
+        @media (max-width: 991.98px) {
+            .sidebar.offcanvas-lg {
+                --bs-offcanvas-width: min(260px, 90vw);
+                height: 100dvh;
+                z-index: var(--bs-offcanvas-zindex);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .top-header {
+                justify-content: space-between;
+                padding: 0 1rem;
+            }
+        }
     </style>
 </head>
 <body>
 
 <!-- SIDEBAR NHÂN VIÊN -->
-<div class="sidebar d-flex flex-column" style="overflow-y: auto;">
+<div class="sidebar offcanvas-lg offcanvas-start d-flex flex-column" id="employeeSidebar" tabindex="-1" aria-labelledby="employeeSidebarTitle" style="overflow-y: auto;">
     <div class="d-flex align-items-center p-3" style="height: 60px; border-bottom: 1px solid #e0e0e0;">
         <i class="fa-solid fa-screwdriver-wrench fs-4 text-primary me-2"></i>
-        <h5 class="mb-0 fw-bold text-dark" style="font-size: 1.1rem;">TỔ KỸ THUẬT</h5>
+        <h5 id="employeeSidebarTitle" class="mb-0 fw-bold text-dark" style="font-size: 1.1rem;">TỔ KỸ THUẬT</h5>
+        <button type="button" class="btn-close d-lg-none ms-auto" data-bs-dismiss="offcanvas"
+                data-bs-target="#employeeSidebar" aria-label="Đóng menu"></button>
     </div>
 
     <div class="sidebar-heading">Tổng quan</div>
@@ -101,9 +129,12 @@
     <a href="${pageContext.request.contextPath}/employee-home?view=team" class="nav-link ${teamView ? 'active' : ''}">
         <i class="fa-solid fa-users me-2 w-20px" aria-hidden="true"></i> Đồng nghiệp cùng tổ
     </a>
+    <a href="#" class="nav-link" data-employee-modal="#maintenanceNoticeModal">
+        <i class="fa-solid fa-bullhorn me-2 w-20px" aria-hidden="true"></i> Thông báo bảo trì
+    </a>
     <div class="sidebar-heading">Hồ sơ cá nhân</div>
-    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
-    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#changePassModal"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
+    <a href="#" class="nav-link" data-employee-modal="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
+    <a href="#" class="nav-link" data-employee-modal="#changePassModal"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
     <a href="${pageContext.request.contextPath}/logout" class="nav-link text-danger mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
 </div>
 
@@ -112,6 +143,11 @@
 
     <!-- HEADER TOP -->
     <div class="top-header">
+        <button type="button" id="employeeMenuButton" class="btn btn-outline-primary d-lg-none"
+                data-bs-toggle="offcanvas" data-bs-target="#employeeSidebar"
+                aria-controls="employeeSidebar" aria-label="Mở menu nhân viên">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        </button>
         <div class="dropdown">
             <a href="#" class="d-flex align-items-center text-decoration-none text-dark" data-bs-toggle="dropdown">
                 <img src="https://ui-avatars.com/api/?name=${not empty sessionScope.acc ? sessionScope.acc.hoTen : 'NV'}&background=random" alt="Avatar" width="32" height="32" class="rounded-circle me-2">
@@ -127,17 +163,33 @@
     </div>
 
     <div class="container-fluid px-4 mt-4">
+        <repair:if test="${param.maintenanceNotice == 'success'}">
+            <div class="alert alert-success mt-3" role="status">Đã đăng thông báo bảo trì cho sinh viên.</div>
+        </repair:if>
 
         <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Lịch sử công việc kỹ thuật</h4>
 
         <!-- TÙY CHỈNH LỌC TRẠNG THÁI -->
         <% String currentFilter = request.getParameter("filter"); %>
-        <div class="btn-group mb-4 shadow-sm" role="group">
-            <a href="?filter=all" class="btn btn-outline-secondary filter-btn <%= (currentFilter == null || currentFilter.equals("all")) ? "active" : "" %>">Tất cả</a>
-            <a href="?filter=pending" class="btn btn-outline-secondary filter-btn <%= "pending".equals(currentFilter) ? "active text-warning" : "" %>">Chờ xử lý</a>
-            <a href="?filter=processing" class="btn btn-outline-secondary filter-btn <%= "processing".equals(currentFilter) ? "active text-primary" : "" %>">Đang xử lý</a>
-            <a href="?filter=done" class="btn btn-outline-secondary filter-btn <%= "done".equals(currentFilter) ? "active text-success" : "" %>">Đã hoàn thành</a>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+            <div class="btn-group flex-wrap shadow-sm" role="group" aria-label="Lọc theo trạng thái">
+                <a href="?filter=all" class="btn btn-outline-secondary filter-btn <%= (currentFilter == null || currentFilter.equals("all")) ? "active" : "" %>">Tất cả</a>
+                <a href="?filter=pending" class="btn btn-outline-secondary filter-btn <%= "pending".equals(currentFilter) ? "active text-warning" : "" %>">Chờ xử lý</a>
+                <a href="?filter=processing" class="btn btn-outline-secondary filter-btn <%= "processing".equals(currentFilter) ? "active text-primary" : "" %>">Đang xử lý</a>
+                <a href="?filter=done" class="btn btn-outline-secondary filter-btn <%= "done".equals(currentFilter) ? "active text-success" : "" %>">Đã hoàn thành</a>
+            </div>
+            <div class="position-relative history-search ms-auto">
+                <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3 text-primary pe-none" aria-hidden="true"></i>
+                <input type="search" id="historySearch" class="form-control rounded-pill ps-5 pe-3 shadow-sm"
+                       aria-label="Tìm theo mã sự cố, tiêu đề hoặc vị trí"
+                       placeholder="Tìm theo mã, tiêu đề, phòng..." maxlength="100">
+            </div>
+            <div class="position-relative">
+                <label for="historyDate" class="position-absolute top-50 start-0 translate-middle-y ms-3 text-primary mb-0 pe-none" title="Lọc theo ngày gửi"><i class="fa-regular fa-calendar" aria-hidden="true"></i><span class="visually-hidden">Lọc theo ngày gửi</span></label>
+                <input type="date" id="historyDate" class="form-control w-auto rounded-pill ps-5 pe-3 shadow-sm">
+            </div>
         </div>
+        <p id="historySearchStatus" class="visually-hidden" role="status"></p>
 
         <!-- BẢNG LỊCH SỬ CÔNG VIỆC -->
         <div class="card border-0 shadow-sm rounded-3 mb-4">
@@ -164,7 +216,7 @@
                                     String badgeMucDo = "KHẨN CẤP".equals(task.getMucDo()) ? "danger" : ("TRUNG BÌNH".equals(task.getMucDo()) ? "warning" : "success");
                                     String badgeTrangThai = "Chờ xử lý".equals(task.getTrangThai()) ? "warning" : ("Đang xử lý".equals(task.getTrangThai()) ? "primary" : "success");
                         %>
-                        <tr>
+                        <tr class="history-incident" data-report-date="<%= task.getNgayGui() == null ? "" : task.getNgayGui().toLocalDateTime().toLocalDate() %>">
                             <td class="ps-4"><span class="fw-bold text-secondary">#SC0<%= task.getSuCoId() %></span></td>
                             <td>
                                 <div class="fw-bold text-dark"><%= task.getTieuDe() %></div>
@@ -193,6 +245,9 @@
                             <td colspan="8" class="text-center py-5 text-muted">Không tìm thấy công việc nào trong mục này.</td>
                         </tr>
                         <% } %>
+                        <tr id="historyNoMatches" hidden>
+                            <td colspan="8" class="text-center py-5 text-muted">Không có sự cố phù hợp với bộ lọc.</td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
@@ -246,8 +301,50 @@
 %>
 
 <%@ include file="/WEB-INF/employee_account_modals.jspf" %>
+<%@ include file="/WEB-INF/employee_maintenance_notice.jspf" %>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const historySearch = document.getElementById('historySearch');
+    const historyDate = document.getElementById('historyDate');
+    const historyRows = Array.from(document.querySelectorAll('.history-incident'));
+    const historyStatusLinks = document.querySelectorAll('.filter-btn');
+
+    function normalizeHistorySearch(text) {
+        return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+    }
+
+    function updateHistorySearch() {
+        const value = historySearch.value.trim();
+        const date = historyDate.value;
+        const terms = normalizeHistorySearch(value).split(/\s+/).filter(Boolean);
+        let matches = 0;
+        historyRows.forEach(row => {
+            const searchable = normalizeHistorySearch(Array.from(row.cells).slice(0, 3)
+                .map(cell => cell.textContent.trim()).join(' '));
+            row.hidden = (date && row.dataset.reportDate !== date) || !terms.every(term => searchable.includes(term));
+            if (!row.hidden) matches++;
+        });
+        document.getElementById('historyNoMatches').hidden = !historyRows.length || matches > 0;
+        document.getElementById('historySearchStatus').textContent = value || date ? matches + ' sự cố phù hợp.' : '';
+        historyStatusLinks.forEach(link => {
+            const url = new URL(link.href);
+            if (value) url.searchParams.set('q', value);
+            else url.searchParams.delete('q');
+            if (date) url.searchParams.set('date', date);
+            else url.searchParams.delete('date');
+            link.href = url.href;
+        });
+    }
+
+    const historySearchParams = new URLSearchParams(location.search);
+    historySearch.value = (historySearchParams.get('q') || '').slice(0, 100);
+    historyDate.value = historySearchParams.get('date') || '';
+    historySearch.addEventListener('input', updateHistorySearch);
+    historyDate.addEventListener('input', updateHistorySearch);
+    updateHistorySearch();
+</script>
+<%@ include file="/WEB-INF/employee_sidebar_script.jspf" %>
 </body>
 </html>
