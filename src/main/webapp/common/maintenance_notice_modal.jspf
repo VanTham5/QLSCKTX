@@ -1,0 +1,43 @@
+<%@ page pageEncoding="UTF-8" %>
+<div class="modal fade" id="maintenanceNoticeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-bullhorn me-2"></i>Thông báo bảo trì</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body p-4">
+                <% if ("success".equals(request.getParameter("maintenanceNotice"))) { %>
+                <div class="alert alert-success" role="status">Đã đăng thông báo bảo trì cho sinh viên.</div>
+                <% } else if ("failed".equals(request.getParameter("maintenanceNotice"))) { %>
+                <div class="alert alert-danger" role="alert">Không thể đăng thông báo. Vui lòng kiểm tra nội dung và thử lại.</div>
+                <% } %>
+                <form action="${pageContext.request.contextPath}/create-maintenance-notice" method="POST">
+                    <input type="hidden" name="returnTo" value="${maintenanceNoticeReturnTo}">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tiêu đề <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="tieuDe" maxlength="190"
+                               placeholder="VD: Bảo trì hệ thống cấp nước..." required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Nội dung chi tiết <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="noiDung" rows="5" maxlength="10000"
+                                  placeholder="Nhập thời gian, khu vực và nội dung bảo trì..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Phát hành</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const status = new URLSearchParams(window.location.search).get("maintenanceNotice");
+        if (status === "success" || status === "failed") {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("maintenanceNoticeModal")).show();
+        }
+    });
+</script>

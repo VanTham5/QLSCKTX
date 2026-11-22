@@ -2,6 +2,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
+<%@ taglib prefix="repair" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -322,6 +323,8 @@
             String badgeTrangThai = "Chờ xử lý".equals(task.getTrangThai()) ? "warning" : ("Đang xử lý".equals(task.getTrangThai()) ? "primary" : "success");
             String tenNguoiGui = task.getTenNguoiGui() != null ? task.getTenNguoiGui() : "Không rõ";
             String sdtNguoiGui = task.getSoDienThoai() != null ? task.getSoDienThoai() : "Không có";
+            pageContext.setAttribute("repairNote", task.getGhiChuXuLy());
+            pageContext.setAttribute("replacementMaterials", task.getVatTuThayThe());
 %>
 <div class="modal fade" id="detailModal<%= task.getSuCoId() %>" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -353,6 +356,16 @@
                         <div style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
                     </repair:if>
                 </div>
+                <repair:if test="${not empty repairNote}">
+                    <div class="mt-3 fw-bold">Kết quả sửa chữa:</div>
+                    <div class="p-3 bg-success bg-opacity-10 rounded border"><repair:out value="${repairNote}"/></div>
+                    <div class="mt-2"><strong>Vật tư thay thế:</strong>
+                        <repair:choose>
+                            <repair:when test="${not empty replacementMaterials}"><repair:out value="${replacementMaterials}"/></repair:when>
+                            <repair:otherwise>Không sử dụng</repair:otherwise>
+                        </repair:choose>
+                    </div>
+                </repair:if>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>

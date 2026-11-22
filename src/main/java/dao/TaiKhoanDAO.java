@@ -128,6 +128,27 @@ public class TaiKhoanDAO {
         return null;
     }
 
+    public Map<String, Object> getEmployeeProfile(int accountId) {
+        String query = "SELECT ho_ten, so_dien_thoai, email FROM tai_khoan " +
+                "WHERE tai_khoan_id = ? AND vai_tro = 'NHAN_VIEN'";
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, accountId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    Map<String, Object> profile = new LinkedHashMap<>();
+                    profile.put("fullName", result.getString("ho_ten"));
+                    profile.put("sdt", result.getString("so_dien_thoai"));
+                    profile.put("email", result.getString("email"));
+                    return profile;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public Map<Integer, String> getProfileRooms() {
         Map<Integer, String> rooms = new LinkedHashMap<>();
         String query = "SELECT phong_id, ma_phong, toa_nha FROM phong ORDER BY toa_nha, ma_phong";
@@ -169,14 +190,13 @@ public class TaiKhoanDAO {
     // 2. Cập nhật thông tin cho NHÂN VIÊN / ADMIN
     public boolean updateProfileEmployee(int taiKhoanId, String hoTen, String sdt, String email) {
         String queryTK = "UPDATE tai_khoan SET ho_ten = ?, so_dien_thoai = ?, email = ? WHERE tai_khoan_id = ?";
-        try {
-            Connection conn = new DBContext().getConnection();
-            PreparedStatement psTK = conn.prepareStatement(queryTK);
-            psTK.setString(1, hoTen);
-            psTK.setString(2, sdt);
-            psTK.setString(3, email);
-            psTK.setInt(4, taiKhoanId);
-            return psTK.executeUpdate() > 0;
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement statement = connection.prepareStatement(queryTK)) {
+            statement.setString(1, hoTen);
+            statement.setString(2, sdt);
+            statement.setString(3, email);
+            statement.setInt(4, taiKhoanId);
+            return statement.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
         }

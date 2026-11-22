@@ -2,6 +2,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
+<%@ taglib prefix="repair" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -109,6 +110,8 @@
                                 for (SuCo task : listSuCo) {
                                     String badgeMucDo = "KHẨN CẤP".equals(task.getMucDo()) ? "danger" : ("TRUNG BÌNH".equals(task.getMucDo()) ? "warning" : "success");
                                     String badgeTrangThai = "Chờ xử lý".equals(task.getTrangThai()) ? "warning" : ("Đang xử lý".equals(task.getTrangThai()) ? "primary" : "success");
+                                    pageContext.setAttribute("repairNote", task.getGhiChuXuLy());
+                                    pageContext.setAttribute("replacementMaterials", task.getVatTuThayThe());
                                     String tenNguoiGui = task.getTenNguoiGui();
                                     String sdtNguoiGui = task.getSoDienThoai();
                         %>
@@ -221,6 +224,16 @@
                         <div style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
                     </repair:if>
                 </div>
+                <repair:if test="${not empty repairNote}">
+                    <div class="mt-3 fw-bold">Kết quả sửa chữa:</div>
+                    <div class="p-3 bg-success bg-opacity-10 rounded border"><repair:out value="${repairNote}"/></div>
+                    <div class="mt-2"><strong>Vật tư thay thế:</strong>
+                        <repair:choose>
+                            <repair:when test="${not empty replacementMaterials}"><repair:out value="${replacementMaterials}"/></repair:when>
+                            <repair:otherwise>Không sử dụng</repair:otherwise>
+                        </repair:choose>
+                    </div>
+                </repair:if>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>

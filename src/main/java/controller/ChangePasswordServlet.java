@@ -22,27 +22,31 @@ public class ChangePasswordServlet extends HttpServlet {
         TaiKhoan acc = (TaiKhoan) session.getAttribute("acc");
 
         if (acc == null) {
-            response.sendRedirect("login.jsp");
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
 
         String oldPass = request.getParameter("oldPass");
         String newPass = request.getParameter("newPass");
+        String returnTo = request.getParameter("returnTo");
 
-        TaiKhoanDAO dao = new TaiKhoanDAO();
-        boolean success = dao.changePassword(acc.getTaiKhoanId(), oldPass, newPass);
-
-        // Lấy đường dẫn trang hiện tại để redirect ngược lại
-        String referer = request.getHeader("referer");
-        if (referer == null) referer = request.getContextPath() + "/student-home";
-
-        if (success) {
-            // Đổi thành công -> Chuyển hướng kèm param thông báo thành công
-            response.sendRedirect(referer.split("\\?")[0] + "?msg=pass_success");
+        boolean success = newPass != null && newPass.length() >= 6
+                && new TaiKhoanDAO().changePassword(acc.getTaiKhoanId(), oldPass, newPass);
+        String target;
+        if ("SINH_VIEN".equals(acc.getVaiTro())) {
+            target = "/student-history".equals(returnTo) ? "/student-history" : "/student-home";
+        } else if ("NHAN_VIEN".equals(acc.getVaiTro())) {
+            target = "/employee-history".equals(returnTo) ? "/employee-history" : "/employee-home";
+        } else if ("ADMIN".equals(acc.getVaiTro())) {
+            target = "/admin-home";
         } else {
-            // Sai mật khẩu cũ -> Điều hướng kèm param lỗi để hiện khung báo đỏ
-            response.sendRedirect(referer.split("\\?")[0] + "?error=wrong_old_pass");
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
         }
+
+        String result = success ? "?msg=pass_success" : "?error="
+                + (newPass != null && newPass.length() < 6 ? "weak_new_pass" : "wrong_old_pass");
+        response.sendRedirect(request.getContextPath() + target + result);
     }
 }
 //okokokokokok

@@ -1,6 +1,7 @@
 package controller;
 
 import dao.SuCoDAO;
+import dao.TaiKhoanDAO;
 import model.TaiKhoan;
 import model.SuCo;
 import jakarta.servlet.ServletException;
@@ -33,6 +34,10 @@ public class EmployeeHistoryServlet extends HttpServlet {
         // Sửa lại đúng tên hàm trong SuCoDAO là getAllSuCoHistoryForStaff
         List<SuCo> historyList = dao.getAllSuCoHistoryForStaff(acc.getTaiKhoanId(), filter);
         request.setAttribute("historyList", historyList);
+        request.setAttribute("employeeProfile", new TaiKhoanDAO().getEmployeeProfile(acc.getTaiKhoanId()));
+        request.setAttribute("employeeProfileReturnTo", "history");
+        request.setAttribute("changePasswordReturnTo", "/employee-history");
+        request.setAttribute("maintenanceNoticeReturnTo", "history");
 
         request.getRequestDispatcher("employee/employee_history.jsp").forward(request, response);
     }
