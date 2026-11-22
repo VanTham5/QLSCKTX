@@ -202,7 +202,7 @@
         <%
             List<model.ThongBao> listTB = (List<model.ThongBao>) request.getAttribute("listTB");
             if (listTB != null && !listTB.isEmpty()) {
-                model.ThongBao tbMoiNhat = listTB.get(0);
+                pageContext.setAttribute("latestNotice", listTB.get(0));
         %>
         <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm rounded-3 mt-4 mb-3" role="alert" style="border-left: 5px solid #ffc107 !important;">
             <div class="d-flex align-items-center">
@@ -210,8 +210,8 @@
                     <i class="fa-solid fa-bullhorn fs-4 text-warning"></i>
                 </div>
                 <div>
-                    <h6 class="alert-heading fw-bold mb-1 text-dark">Thông báo: <%= tbMoiNhat.getTieuDe() %></h6>
-                    <p class="mb-0 text-muted" style="font-size: 0.85rem;"><%= tbMoiNhat.getNoiDung() %></p>
+                    <h6 class="alert-heading fw-bold mb-1 text-dark">Thông báo: <c:out value="${latestNotice.tieuDe}"/></h6>
+                    <p class="mb-0 text-muted" style="font-size: 0.85rem;"><c:out value="${latestNotice.noiDung}"/></p>
                 </div>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="top: 10px;"></button>
