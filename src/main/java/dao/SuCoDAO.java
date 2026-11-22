@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
+import java.sql.Timestamp;
 
 @SuppressWarnings({"SqlNoDataSourceInspection", "SqlResolve", "SpellCheckingInspection", "CallToPrintStackTrace"})
 public class SuCoDAO implements ISuCoDAO {
@@ -526,4 +527,162 @@ public class SuCoDAO implements ISuCoDAO {
         }
         return count;
     }
+
+    public Map<String, Integer> getCountByLoaiSuCo() {
+        Map<String, Integer> result = new LinkedHashMap<>();
+        String sql = "SELECT lsc.ten_loai AS ten_loai, COUNT(sc.su_co_id) AS so_luong "
+                + "FROM loai_su_co lsc "
+                + "LEFT JOIN su_co sc ON lsc.loai_su_co_id = sc.loai_su_co_id "
+                + "GROUP BY lsc.loai_su_co_id, lsc.ten_loai "
+                + "ORDER BY so_luong DESC, lsc.ten_loai ASC";
+
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                String loai = rs.getString("ten_loai");
+                result.put(loai != null ? loai : "Khác", rs.getInt("so_luong"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public Map<String, Integer> getCountByTrangThai() {
+        Map<String, Integer> result = new LinkedHashMap<>();
+        String sql = "SELECT trang_thai, COUNT(*) AS so_luong "
+                + "FROM su_co "
+                + "GROUP BY trang_thai "
+                + "ORDER BY so_luong DESC";
+
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                String rawStatus = rs.getString("trang_thai");
+                String label = mapTrangThaiLabel(rawStatus);
+                result.put(label, rs.getInt("so_luong"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    private String mapTrangThaiLabel(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            return "Không xác định";
+        }
+        String normalized = status.trim().toUpperCase();
+        if ("CHO_XU_LY".equals(normalized) || "CHỜ XỬ LÝ".equals(normalized)) {
+            return "Chờ xử lý";
+        }
+        if ("DANG_XU_LY".equals(normalized) || "ĐANG XỬ LÝ".equals(normalized)) {
+            return "Đang xử lý";
+        }
+        if ("HOAN_THANH".equals(normalized) || "HOÀN THÀNH".equals(normalized) || "ĐÃ HOÀN THÀNH".equals(normalized)) {
+            return "Hoàn thành";
+        }
+        if ("HUY".equals(normalized) || "ĐÃ HỦY".equals(normalized)) {
+            return "Đã hủy";
+        }
+        return status;
+    }
+
+    // 1. Đếm số lượng sự cố theo loại trong khoảng thời gian [from, to)
+    public Map<String, Integer> getCountByLoaiSuCo(java.sql.Timestamp from, java.sql.Timestamp to) {
+        Map<String, Integer> result = new LinkedHashMap<>();
+        String sql = "SELECT lsc.ten_loai AS ten_loai, COUNT(sc.su_co_id) AS so_luong "
+                + "FROM loai_su_co lsc "
+                + "LEFT JOIN su_co sc ON lsc.loai_su_co_id = sc.loai_su_co_id "
+                + "AND sc.ngay_gui >= ? AND sc.ngay_gui < ? "
+                + "GROUP BY lsc.loai_su_co_id, lsc.ten_loai "
+                + "ORDER BY so_luong DESC, lsc.ten_loai ASC";
+
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, from);
+            ps.setTimestamp(2, to);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String loai = rs.getString("ten_loai");
+                    result.put(loai != null ? loai : "Khác", rs.getInt("so_luong"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    // 2. Đếm số lượng sự cố theo trạng thái trong khoảng thời gian [from, to)
+    public Map<String, Integer> getCountByTrangThai(java.sql.Timestamp from, java.sql.Timestamp to) {
+        Map<String, Integer> result = new LinkedHashMap<>();
+        String sql = "SELECT trang_thai, COUNT(*) AS so_luong "
+                + "FROM su_co "
+                + "WHERE ngay_gui >= ? AND ngay_gui < ? "
+                + "GROUP BY trang_thai";
+
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, from);
+            ps.setTimestamp(2, to);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String label = mapTrangThaiLabel(rs.getString("trang_thai"));
+                    result.put(label, result.getOrDefault(label, 0) + rs.getInt("so_luong"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    // 3. Lấy danh sách sự cố gần đây trong khoảng thời gian [from, to) (có kèm loại sự cố & thông tin chi tiết)
+    public List<SuCo> getRecentSuCoForAdmin(java.sql.Timestamp from, java.sql.Timestamp to, int limit) {
+        List<SuCo> list = new ArrayList<>();
+        String sql = "SELECT sc.su_co_id, sc.tieu_de, sc.mo_ta, sc.muc_do, sc.trang_thai, sc.ngay_gui, "
+                + "lsc.ten_loai, p.ma_phong, p.toa_nha, tk.ho_ten, tk.so_dien_thoai "
+                + "FROM su_co sc "
+                + "LEFT JOIN loai_su_co lsc ON sc.loai_su_co_id = lsc.loai_su_co_id "
+                + "LEFT JOIN phong p ON sc.phong_id = p.phong_id "
+                + "LEFT JOIN sinh_vien sv ON sc.sinh_vien_id = sv.sinh_vien_id "
+                + "LEFT JOIN tai_khoan tk ON sv.tai_khoan_id = tk.tai_khoan_id "
+                + "WHERE sc.ngay_gui >= ? AND sc.ngay_gui < ? "
+                + "ORDER BY sc.ngay_gui DESC LIMIT ?";
+
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, from);
+            ps.setTimestamp(2, to);
+            ps.setInt(3, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    SuCo sc = new SuCo();
+                    sc.setSuCoId(rs.getInt("su_co_id"));
+                    sc.setTieuDe(rs.getString("tieu_de"));
+                    sc.setMoTa(rs.getString("mo_ta"));
+                    sc.setMucDo(rs.getString("muc_do"));
+                    sc.setTrangThai(rs.getString("trang_thai"));
+                    sc.setNgayGui(rs.getTimestamp("ngay_gui"));
+                    sc.setTenLoaiSuCo(rs.getString("ten_loai") != null ? rs.getString("ten_loai") : "Khác");
+
+                    String phong = rs.getString("ma_phong") != null ? rs.getString("ma_phong") : "N/A";
+                    String toa = rs.getString("toa_nha") != null ? rs.getString("toa_nha") : "N/A";
+                    sc.setViTriPhong("Phòng " + phong + " - Tòa " + toa);
+                    sc.setTenNguoiGui(rs.getString("ho_ten") != null ? rs.getString("ho_ten") : "Không rõ");
+                    sc.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Không có");
+                    list.add(sc);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
 }

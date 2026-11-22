@@ -98,7 +98,7 @@
         <i class="fa-solid fa-users me-2 w-20px"></i> Quản lý tài khoản
     </a>
     <a href="${pageContext.request.contextPath}/admin-phong" class="nav-link"><i class="fa-solid fa-building me-2 w-20px"></i> Quản lý phòng/tòa</a>    <a href="${pageContext.request.contextPath}/admin-loai-su-co" class="nav-link active"><i class="fa-solid fa-list me-2 w-20px"></i> Danh mục loại sự cố</a>
-
+    <a href="${pageContext.request.contextPath}/admin-statistics" class="nav-link"><i class="fa-solid fa-chart-pie me-2 w-20px"></i> Thống kê</a>
     <div class="sidebar-heading">Hệ thống</div>
     <a href="#" class="nav-link"><i class="fa-solid fa-gear me-2 w-20px"></i> Cài đặt</a>
     <a href="${pageContext.request.contextPath}/logout" class="nav-link text-danger mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>

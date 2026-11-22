@@ -113,6 +113,7 @@
     <a href="${pageContext.request.contextPath}/admin-loai-su-co" class="nav-link">
         <i class="fa-solid fa-list me-2 w-20px"></i> Danh mục loại sự cố
     </a>
+    <a href="${pageContext.request.contextPath}/admin-statistics" class="nav-link"><i class="fa-solid fa-chart-pie me-2 w-20px"></i> Thống kê</a>
 
     <div class="sidebar-heading">Hệ thống</div>
     <a href="#" class="nav-link"><i class="fa-solid fa-gear me-2 w-20px"></i> Cài đặt</a>
@@ -291,8 +292,6 @@
                         <input type="text" class="form-control" name="toaNha" list="buildingSuggestions"
                                placeholder="Chọn hoặc nhập tên tòa (VD: Tòa A1, Tòa B1)..." required>
                         <datalist id="buildingSuggestions">
-                            <option value="Tòa A1">
-                            <option value="Tòa A2">
                                     <% if (listToaNha != null) {
                                 for (String b : listToaNha) { %>
                             <option value="<%= b %>">
