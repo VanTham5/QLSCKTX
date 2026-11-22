@@ -30,27 +30,8 @@ public class ThongBaoDAO {
         return list;
     }
 
-    // Hàm dành riêng cho Admin: Thêm thông báo mới vào CSDL (không có người tạo)
+    // Hàm dành riêng cho Admin: Thêm thông báo mới vào CSDL
     public boolean insertThongBao(String tieuDe, String noiDung) {
-        String query = "INSERT INTO thong_bao (tieu_de, noi_dung) VALUES (?, ?)";
-        try {
-            java.sql.Connection conn = new context.DBContext().getConnection();
-            java.sql.PreparedStatement ps = conn.prepareStatement(query);
-            ps.setString(1, tieuDe);
-            ps.setString(2, noiDung);
-            return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    // Hàm dành riêng cho Nhân viên: Thêm thông báo bảo trì kèm người tạo vào CSDL
-    public boolean insertThongBao(String tieuDe, String noiDung, int taiKhoanId) {
-        // Nếu bảng thong_bao có cột nguoi_tao_id, dùng câu lệnh sau:
-        //   "INSERT INTO thong_bao (tieu_de, noi_dung, nguoi_tao_id) VALUES (?, ?, ?)"
-        // Hiện tại model ThongBao chưa có trường nguoi_tao_id nên bỏ qua tham số này,
-        // chỉ insert tiêu đề và nội dung để tránh lỗi compile.
         String query = "INSERT INTO thong_bao (tieu_de, noi_dung) VALUES (?, ?)";
         try {
             java.sql.Connection conn = new context.DBContext().getConnection();

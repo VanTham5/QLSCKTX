@@ -48,7 +48,6 @@ public class StudentHistoryServlet extends HttpServlet {
         request.setAttribute("studentProfile", accountDao.getStudentProfile(acc.getTaiKhoanId()));
         request.setAttribute("profileRooms", accountDao.getProfileRooms());
         request.setAttribute("profileFromHistory", true);
-        request.setAttribute("changePasswordReturnTo", "/student-history");
 
         request.getRequestDispatcher("student/student_history.jsp").forward(request, response);
     }

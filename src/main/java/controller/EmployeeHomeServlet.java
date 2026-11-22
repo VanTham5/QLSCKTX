@@ -76,10 +76,6 @@ public class EmployeeHomeServlet extends HttpServlet {
         request.setAttribute("pending", pending);
         request.setAttribute("processing", processing);
         request.setAttribute("done", done);
-        request.setAttribute("employeeProfile", new TaiKhoanDAO().getEmployeeProfile(acc.getTaiKhoanId()));
-        request.setAttribute("employeeProfileReturnTo", "home");
-        request.setAttribute("changePasswordReturnTo", "/employee-home");
-        request.setAttribute("maintenanceNoticeReturnTo", "home");
 
         request.getRequestDispatcher("/employee/employee_home.jsp").forward(request, response);
     }

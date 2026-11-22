@@ -369,7 +369,7 @@ public class SuCoDAO implements ISuCoDAO {
     // Lấy danh sách 3 hoạt động cập nhật sự cố mới nhất
     public List<SuCo> getTop3CapNhat() {
         List<SuCo> list = new ArrayList<>();
-        String query = "SELECT sc.su_co_id, sc.tieu_de, sc.trang_thai, sc.ngay_gui " +
+        String query = "SELECT sc.* " +
                 "FROM su_co sc " +
                 "ORDER BY sc.ngay_gui DESC LIMIT 3";
         try {
