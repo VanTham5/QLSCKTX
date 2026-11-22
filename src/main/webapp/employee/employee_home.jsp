@@ -101,7 +101,7 @@
     </div>
 
     <div class="sidebar-heading">Tổng quan</div>
-    <a href="${pageContext.request.contextPath}/employee-home" class="nav-link ${empty workFilter ? 'active' : ''}">
+    <a href="${pageContext.request.contextPath}/employee-home" class="nav-link ${empty workFilter and not teamView ? 'active' : ''}">
         <i class="fa-solid fa-chart-pie me-2 w-20px"></i> Bảng điều khiển
     </a>
     <div class="sidebar-heading">Quản lý công việc</div>
@@ -113,9 +113,12 @@
     <a href="${pageContext.request.contextPath}/employee-history" class="nav-link">
         <i class="fa-solid fa-clock-rotate-left me-2 w-20px"></i> Lịch sử công việc
     </a>
+    <a href="${pageContext.request.contextPath}/employee-home?view=team" class="nav-link ${teamView ? 'active' : ''}">
+        <i class="fa-solid fa-users me-2 w-20px" aria-hidden="true"></i> Đồng nghiệp cùng tổ
+    </a>
     <div class="sidebar-heading">Hồ sơ cá nhân</div>
     <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
-    <a href="#" class="nav-link"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
+    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#changePassModal"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
     <a href="${pageContext.request.contextPath}/logout" class="nav-link text-danger mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
 </div>
 
@@ -131,16 +134,16 @@
                 <i class="fa-solid fa-chevron-down ms-2" style="font-size: 12px;"></i>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#">Hồ sơ nhân viên</a></li>
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">Hồ sơ nhân viên</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout">Đăng xuất</a></li>
             </ul>
         </div>
     </div>
 
-    <div class="container-fluid px-4 ${empty workFilter ? '' : 'pt-4'}">
+    <div class="container-fluid px-4 ${empty workFilter and not teamView ? '' : 'pt-4'}">
 
-        <staff:if test="${empty workFilter}">
+        <staff:if test="${empty workFilter and not teamView}">
             <!-- PAGE HEADER -->
             <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
                 <div>
@@ -204,7 +207,7 @@
             </staff:when>
         </staff:choose>
 
-        <staff:if test="${empty workFilter}">
+        <staff:if test="${teamView}">
             <div class="mb-3">
                 <h5 id="staffTeamHeading" class="fw-bold mb-0"><i class="fa-solid fa-users text-primary me-2" aria-hidden="true"></i>Đồng nghiệp cùng tổ</h5>
                 <staff:if test="${not empty staffTeam.name}">
@@ -241,6 +244,8 @@
         </staff:if>
 
 
+        <% List<SuCo> listSuCo = (List<SuCo>) request.getAttribute("listSuCo"); %>
+        <staff:if test="${not teamView}">
         <!-- BẢNG CÔNG VIỆC CẦN XỬ LÝ NGAY -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 id="work-list" class="fw-bold mb-0">${empty workListTitle ? 'Danh sách việc cần làm' : workListTitle}</h5>
@@ -271,7 +276,6 @@
                         <tbody>
                         <%
                             // Hứng danh sách từ Servlet gửi sang
-                            List<SuCo> listSuCo = (List<SuCo>) request.getAttribute("listSuCo");
 
                             if (listSuCo != null && !listSuCo.isEmpty()) {
                                 // Bắt đầu vòng lặp for
@@ -349,44 +353,9 @@
                 </div>
             </div>
         </div>
+        </staff:if>
     </div> <!-- End container-fluid -->
 </div> <!-- End main-content -->
-
-<!-- MODAL THÔNG TIN CÁ NHÂN (NHÂN VIÊN) -->
-<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-pen me-2"></i>Cập nhật thông tin</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <form action="${pageContext.request.contextPath}/update-profile" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Tên đăng nhập</label>
-                        <input type="text" class="form-control bg-light" value="${acc.tenDangNhap}" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Họ và Tên <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="fullName" value="${acc.hoTen}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="sdt" placeholder="Nhập SĐT..." required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Email</label>
-                        <input type="email" class="form-control" name="email" placeholder="Nhập Email...">
-                    </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal">Đóng</button>
-                        <button type="submit" class="btn btn-primary fw-bold">Lưu thay đổi</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- MODAL XÁC NHẬN THAO TÁC CHUNG -->
 <div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true">
@@ -455,6 +424,8 @@
     }
 </script>
 
+<%@ include file="/WEB-INF/employee_account_modals.jspf" %>
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -485,7 +456,7 @@
         document.getElementById('noIncidentMatches').hidden = rows.length === 0 || visible > 0;
     }
 
-    incidentSearch.addEventListener('input', () => filterByPriority(selectedPriority));
+    incidentSearch?.addEventListener('input', () => filterByPriority(selectedPriority));
 </script>
 
 <!-- VÒNG LẶP TẠO MODAL CHI TIẾT SỰ CỐ CHO TỪNG DÒNG -->

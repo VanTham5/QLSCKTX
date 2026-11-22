@@ -29,6 +29,21 @@ public class ChangePasswordServlet extends HttpServlet {
         String oldPass = request.getParameter("oldPass");
         String newPass = request.getParameter("newPass");
 
+        if ("NHAN_VIEN".equals(acc.getVaiTro())) {
+            String page = "history".equals(request.getParameter("profilePage"))
+                    ? "/employee-history" : "/employee-home";
+            String result;
+            if (oldPass == null || oldPass.isEmpty() || newPass == null || newPass.trim().isEmpty()
+                    || !newPass.equals(request.getParameter("confirmPass"))) {
+                result = "invalid";
+            } else {
+                result = new TaiKhoanDAO().changePassword(acc.getTaiKhoanId(), oldPass, newPass)
+                        ? "success" : "failed";
+            }
+            response.sendRedirect(request.getContextPath() + page + "?passwordUpdate=" + result);
+            return;
+        }
+
         TaiKhoanDAO dao = new TaiKhoanDAO();
         boolean success = dao.changePassword(acc.getTaiKhoanId(), oldPass, newPass);
 
