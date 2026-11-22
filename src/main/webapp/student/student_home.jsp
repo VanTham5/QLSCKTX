@@ -1,3 +1,4 @@
+<%@ taglib prefix="repair" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
@@ -217,36 +218,20 @@
         </div>
         <% } %>
 
-        <!-- TOAST POPUP: BÁO CÁO SỰ CỐ THÀNH CÔNG -->
-<%
-    Boolean reportSuccess = (Boolean) session.getAttribute("reportSuccess");
-    if (Boolean.TRUE.equals(reportSuccess)) {
-        session.removeAttribute("reportSuccess");
-%>
-        <div id="successToast" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-            <div class="toast show align-items-center text-bg-success border-0 shadow-lg" role="alert" id="toastMsg" style="min-width: 320px;">
-                <div class="d-flex">
-                    <div class="toast-body d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-circle-check fs-4"></i>
-                        <div>
-                            <div class="fw-bold">Gửi báo cáo thành công!</div>
-                            <div style="font-size: 0.85rem;">Sự cố của bạn đã được ghi nhận. BQL sẽ xử lý sớm nhất.</div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
+        <c:if test="${sessionScope.reportSuccess ne null}">
+            <c:set var="reportSaved" value="${sessionScope.reportSuccess}"/>
+            <c:remove var="reportSuccess" scope="session"/>
+            <div class="alert ${reportSaved ? 'alert-success' : 'alert-danger'} alert-dismissible fade show"
+                 role="${reportSaved ? 'status' : 'alert'}">
+                <c:choose>
+                    <c:when test="${reportSaved}">
+                        <i class="fa-solid fa-circle-check me-2" aria-hidden="true"></i>Đã gửi báo cáo sự cố.
+                    </c:when>
+                    <c:otherwise>Không thể gửi báo cáo sự cố. Vui lòng kiểm tra thông tin và thử lại.</c:otherwise>
+                </c:choose>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng thông báo"></button>
             </div>
-        </div>
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                var toastEl = document.getElementById('toastMsg');
-                if (toastEl) {
-                    var toast = new bootstrap.Toast(toastEl, { delay: 4000 });
-                    toast.show();
-                }
-            });
-        </script>
-<% } %>
+        </c:if>
 
         <!-- NÚT BÁO CÁO SỰ CỐ -->
         <div class="d-flex justify-content-start mb-4">
@@ -523,6 +508,11 @@
                 <div class="mb-1 fw-bold">Mô tả chi tiết:</div>
                 <div class="p-3 bg-light rounded border">
                     <%= task.getMoTa() %>
+                    <% pageContext.setAttribute("repairNote", task.getGhiChuKyThuat()); %>
+                    <repair:if test="${not empty repairNote}">
+                        <div class="mt-3"><strong>Kết quả sửa chữa và vật tư thay thế</strong></div>
+                        <div style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
+                    </repair:if>
                 </div>
             </div>
             <div class="modal-footer">

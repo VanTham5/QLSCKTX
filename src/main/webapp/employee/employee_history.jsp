@@ -1,3 +1,4 @@
+<%@ taglib prefix="repair" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
@@ -90,10 +91,10 @@
     <a href="${pageContext.request.contextPath}/employee-home" class="nav-link"><i class="fa-solid fa-chart-pie me-2 w-20px"></i> Bảng điều khiển</a>
 
     <div class="sidebar-heading">Quản lý công việc</div>
-    <a href="${pageContext.request.contextPath}/employee-home" class="nav-link">
-        <span><i class="fa-solid fa-clipboard-list me-2 w-20px"></i> Chờ tiếp nhận</span>
+    <a href="${pageContext.request.contextPath}/employee-home?filter=pending#work-list" class="nav-link">
+        <span><i class="fa-solid fa-clipboard-list me-2 w-20px"></i> Chờ xử lý</span>
     </a>
-    <a href="${pageContext.request.contextPath}/employee-home" class="nav-link"><i class="fa-solid fa-person-digging me-2 w-20px"></i> Đang xử lý</a>
+    <a href="${pageContext.request.contextPath}/employee-home?filter=processing#work-list" class="nav-link"><i class="fa-solid fa-person-digging me-2 w-20px"></i> Đang xử lý</a>
     <!-- Active state cho trang lịch sử công việc nhân viên -->
     <a href="${pageContext.request.contextPath}/employee-history" class="nav-link active"><i class="fa-solid fa-clock-rotate-left me-2 w-20px"></i> Lịch sử công việc</a>
 
@@ -223,6 +224,11 @@
                 <div class="mb-1 fw-bold text-dark">Mô tả chi tiết từ sinh viên:</div>
                 <div class="p-3 bg-light rounded border text-muted" style="font-size: 0.95rem;">
                     <%= task.getMoTa() %>
+                    <% pageContext.setAttribute("repairNote", task.getGhiChuKyThuat()); %>
+                    <repair:if test="${not empty repairNote}">
+                        <div class="mt-3"><strong>Kết quả sửa chữa và vật tư thay thế</strong></div>
+                        <div style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
+                    </repair:if>
                 </div>
             </div>
             <div class="modal-footer">

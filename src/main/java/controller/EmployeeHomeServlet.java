@@ -1,6 +1,7 @@
 package controller;
 
 import dao.SuCoDAO;
+import dao.TaiKhoanDAO;
 import model.SuCo;
 import model.TaiKhoan;
 
@@ -28,6 +29,18 @@ public class EmployeeHomeServlet extends HttpServlet {
             return;
         }
 
+        if (!"NHAN_VIEN".equals(acc.getVaiTro())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
+        try {
+            request.setAttribute("staffTeam", new TaiKhoanDAO().getStaffTeam(acc.getTaiKhoanId()));
+        } catch (java.sql.SQLException e) {
+            log("Không tải được thông tin tổ kỹ thuật", e);
+            request.setAttribute("staffTeamError", true);
+        }
+
         SuCoDAO dao = new SuCoDAO();
 
         // 1. Lấy danh sách sự cố (chỉ lấy Chờ xử lý và Đang xử lý để hiện bảng bên dưới)
@@ -49,6 +62,16 @@ public class EmployeeHomeServlet extends HttpServlet {
         int done = dao.countCompletedIssuesThisMonth(acc.getTaiKhoanId());
 
         // 4. Đẩy sang JSP
+        String filter = request.getParameter("filter");
+        if ("pending".equals(filter) || "processing".equals(filter)) {
+            String status = "pending".equals(filter) ? "Chờ xử lý" : "Đang xử lý";
+            listSuCo = listSuCo.stream()
+                    .filter(issue -> status.equals(issue.getTrangThai()))
+                    .collect(java.util.stream.Collectors.toList());
+            request.setAttribute("workFilter", filter);
+            request.setAttribute("workListTitle", status);
+        }
+
         request.setAttribute("listSuCo", listSuCo);
         request.setAttribute("pending", pending);
         request.setAttribute("processing", processing);

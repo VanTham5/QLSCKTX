@@ -1,3 +1,4 @@
+<%@ taglib prefix="repair" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
@@ -214,6 +215,11 @@
                 <div class="mb-1 fw-bold text-dark">Mô tả chi tiết từ sinh viên:</div>
                 <div class="p-3 bg-light rounded border text-muted" style="font-size: 0.95rem;">
                     <%= task.getMoTa() != null ? task.getMoTa() : "Không có mô tả chi tiết." %>
+                    <% pageContext.setAttribute("repairNote", task.getGhiChuKyThuat()); %>
+                    <repair:if test="${not empty repairNote}">
+                        <div class="mt-3"><strong>Kết quả sửa chữa và vật tư thay thế</strong></div>
+                        <div style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
+                    </repair:if>
                 </div>
             </div>
             <div class="modal-footer">
