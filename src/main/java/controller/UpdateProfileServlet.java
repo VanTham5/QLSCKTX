@@ -54,19 +54,12 @@ public class UpdateProfileServlet extends HttpServlet {
             }
         } else {
             // Dành cho ADMIN và NHAN_VIEN
-            if (fullName != null && !fullName.trim().isEmpty()
-                    && sdt != null && !sdt.trim().isEmpty()) {
-                fullName = fullName.trim();
-                sdt = sdt.trim();
-                email = email == null ? null : email.trim();
-                isSuccess = dao.updateProfileEmployee(acc.getTaiKhoanId(), fullName, sdt, email);
-            }
+            isSuccess = dao.updateProfileEmployee(acc.getTaiKhoanId(), fullName, sdt, email);
         }
 
         // Cập nhật lại Session để hiển thị tên mới lập tức
         if (isSuccess) {
             acc.setHoTen(fullName);
-            acc.setSoDienThoai(sdt);
             session.setAttribute("acc", acc);
         }
 
@@ -77,10 +70,7 @@ public class UpdateProfileServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + studentPage
                     + "?profileUpdate=" + (isSuccess ? "success" : "failed"));
         } else if ("NHAN_VIEN".equals(acc.getVaiTro())) {
-            String employeePage = "history".equals(request.getParameter("profilePage"))
-                    ? "/employee-history" : "/employee-home";
-            response.sendRedirect(request.getContextPath() + employeePage
-                    + "?profileUpdate=" + (isSuccess ? "success" : "failed"));
+            response.sendRedirect(request.getContextPath() + "/employee-home");
         } else {
             response.sendRedirect(request.getContextPath() + "/admin-home");
         }
