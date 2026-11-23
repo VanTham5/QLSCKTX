@@ -247,38 +247,61 @@
         </staff:choose>
 
         <staff:if test="${teamView}">
-            <div class="mb-3">
-                <h5 id="staffTeamHeading" class="fw-bold mb-0"><i class="fa-solid fa-users text-primary me-2" aria-hidden="true"></i>Đồng nghiệp cùng tổ</h5>
-                <staff:if test="${not empty staffTeam.name}">
-                    <p class="text-muted small mb-0 mt-1"><staff:out value="${staffTeam.name}"/></p>
-                </staff:if>
-            </div>
-            <section aria-labelledby="staffTeamHeading" class="card border-0 shadow-sm rounded-3 mb-4">
-                <staff:choose>
-                    <staff:when test="${staffTeamError}"><p class="p-3 mb-0 text-muted">Không tải được thông tin tổ chuyên môn.</p></staff:when>
-                    <staff:when test="${empty staffTeam.name}"><p class="p-3 mb-0 text-muted">Bạn chưa được phân tổ.</p></staff:when>
-                    <staff:when test="${empty staffTeam.members}"><p class="p-3 mb-0 text-muted">Chưa có đồng nghiệp cùng tổ.</p></staff:when>
-                    <staff:otherwise>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" aria-labelledby="staffTeamHeading">
-                                <thead class="table-light text-muted" style="font-size: 0.85rem;">
-                                    <tr>
-                                        <th scope="col" class="ps-4 fw-medium py-3">HỌ VÀ TÊN</th>
-                                        <th scope="col" class="pe-4 fw-medium py-3">SỐ ĐIỆN THOẠI</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <staff:forEach var="member" items="${staffTeam.members}">
+            <section aria-labelledby="staffTeamHeading" class="mb-4">
+                <div class="d-flex align-items-center gap-3 p-3 p-md-4 mb-3 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-10">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-3 bg-white text-primary p-3 shadow-sm">
+                        <i class="fa-solid fa-users fs-5" aria-hidden="true"></i>
+                    </span>
+                    <div>
+                        <h5 id="staffTeamHeading" class="fw-bold mb-0">Đồng nghiệp cùng tổ</h5>
+                        <staff:if test="${not empty staffTeam.name}">
+                            <p class="text-secondary small mb-0 mt-1"><staff:out value="${staffTeam.name}"/></p>
+                        </staff:if>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <staff:choose>
+                        <staff:when test="${staffTeamError}"><p class="p-4 mb-0 text-secondary">Không tải được thông tin tổ chuyên môn.</p></staff:when>
+                        <staff:when test="${empty staffTeam.name}"><p class="p-4 mb-0 text-secondary">Bạn chưa được phân tổ.</p></staff:when>
+                        <staff:when test="${empty staffTeam.members}"><p class="p-4 mb-0 text-secondary">Chưa có đồng nghiệp cùng tổ.</p></staff:when>
+                        <staff:otherwise>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" aria-labelledby="staffTeamHeading">
+                                    <thead class="table-light small text-uppercase">
                                         <tr>
-                                            <td class="ps-4 fw-medium"><staff:out value="${member.name}"/></td>
-                                            <td class="pe-4"><staff:if test="${not empty member.phone}"><i class="fa-solid fa-phone text-muted small me-2" aria-hidden="true"></i></staff:if><staff:out value="${empty member.phone ? 'Chưa có số điện thoại' : member.phone}"/></td>
+                                            <th scope="col" class="ps-3 ps-md-4 py-3">Họ và tên</th>
+                                            <th scope="col" class="pe-3 pe-md-4 py-3">Số điện thoại</th>
                                         </tr>
-                                    </staff:forEach>
-                                </tbody>
-                            </table>
-                        </div>
-                    </staff:otherwise>
-                </staff:choose>
+                                    </thead>
+                                    <tbody>
+                                        <staff:forEach var="member" items="${staffTeam.members}">
+                                            <tr>
+                                                <td class="ps-3 ps-md-4 py-3">
+                                                    <div class="d-flex align-items-center gap-2 gap-md-3">
+                                                        <span class="d-inline-flex rounded-circle p-2 bg-primary bg-opacity-10 text-primary flex-shrink-0">
+                                                            <i class="fa-solid fa-user" aria-hidden="true"></i>
+                                                        </span>
+                                                        <span class="fw-semibold text-break"><staff:out value="${member.name}"/></span>
+                                                    </div>
+                                                </td>
+                                                <td class="pe-3 pe-md-4 py-3">
+                                                    <staff:choose>
+                                                        <staff:when test="${not empty member.phone}">
+                                                            <span class="text-nowrap">
+                                                                <i class="fa-solid fa-phone text-success small me-2" aria-hidden="true"></i><staff:out value="${member.phone}"/>
+                                                            </span>
+                                                        </staff:when>
+                                                        <staff:otherwise><span class="text-secondary small">Chưa có số điện thoại</span></staff:otherwise>
+                                                    </staff:choose>
+                                                </td>
+                                            </tr>
+                                        </staff:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </staff:otherwise>
+                    </staff:choose>
+                </div>
             </section>
         </staff:if>
 
