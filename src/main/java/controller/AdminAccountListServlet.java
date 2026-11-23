@@ -57,6 +57,24 @@ public class AdminAccountListServlet extends HttpServlet {
         }
 
         String action = request.getParameter("action");
+
+        if ("create".equals(action)) {
+            String hoTen = request.getParameter("hoTen");
+            String tenDangNhap = request.getParameter("tenDangNhap");
+            String matKhau = request.getParameter("matKhau");
+            String vaiTro = request.getParameter("vaiTro");
+            String toIdStr = request.getParameter("toId");
+
+            Integer toId = (toIdStr != null && !toIdStr.trim().isEmpty()) ? Integer.parseInt(toIdStr) : null;
+
+            TaiKhoanDAO dao = new TaiKhoanDAO();
+            dao.createAccountByAdmin(hoTen, tenDangNhap, matKhau, vaiTro, toId);
+
+            response.sendRedirect(request.getContextPath() + "/admin-accounts");
+            return;
+        }
+
+
         if ("updateStatus".equals(action)) {
             try {
                 int taiKhoanId = Integer.parseInt(request.getParameter("taiKhoanId"));
@@ -74,5 +92,7 @@ public class AdminAccountListServlet extends HttpServlet {
             role = "all";
         }
         response.sendRedirect(request.getContextPath() + "/admin-accounts?role=" + role);
+
+
     }
 }

@@ -15,6 +15,8 @@ public class SuCo {
     private Timestamp ngayGui;
     private Timestamp ngayCapNhat;
     private int nhanVienId;
+    private String tenNhanVien;
+    private String sdtNhanVien;
 
     // Các trường phụ trợ (dùng để hiển thị lên giao diện sau khi JOIN bảng)
     private String tenNguoiGui;
@@ -82,4 +84,10 @@ public class SuCo {
     public void setGhiChuKyThuat(String ghiChuKyThuat) {
         this.ghiChuKyThuat = ghiChuKyThuat;
     }
+
+    public String getTenNhanVien() { return tenNhanVien; }
+    public void setTenNhanVien(String tenNhanVien) { this.tenNhanVien = tenNhanVien; }
+
+    public String getSdtNhanVien() { return sdtNhanVien; }
+    public void setSdtNhanVien(String sdtNhanVien) { this.sdtNhanVien = sdtNhanVien; }
 }

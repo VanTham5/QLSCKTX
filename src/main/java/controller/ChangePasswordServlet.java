@@ -44,6 +44,29 @@ public class ChangePasswordServlet extends HttpServlet {
             return;
         }
 
+        if ("ADMIN".equals(acc.getVaiTro())) {
+            String confirmPass = request.getParameter("confirmPass");
+            String referer = request.getHeader("referer");
+            String base = (referer != null && !referer.isEmpty())
+                    ? referer.split("\\?")[0]
+                    : (request.getContextPath() + "/admin-home");
+
+            if (oldPass == null || oldPass.isEmpty() || newPass == null || newPass.trim().isEmpty()) {
+                response.sendRedirect(base + "?passError=empty");
+            } else if (!newPass.equals(confirmPass)) {
+                response.sendRedirect(base + "?passError=mismatch");
+            } else if (newPass.length() < 6) {
+                response.sendRedirect(base + "?passError=short");
+            } else if (new TaiKhoanDAO().changePassword(acc.getTaiKhoanId(), oldPass, newPass)) {
+                acc.setMatKhau(newPass);
+                session.setAttribute("acc", acc);
+                response.sendRedirect(base + "?msg=pass_success");
+            } else {
+                response.sendRedirect(base + "?error=wrong_old_pass");
+            }
+            return;
+        }
+
         TaiKhoanDAO dao = new TaiKhoanDAO();
         boolean success = dao.changePassword(acc.getTaiKhoanId(), oldPass, newPass);
 

@@ -9,6 +9,7 @@ public class TaiKhoan {
     private boolean trangThai;
     private String soDienThoai;
     private String tenTo;
+    private String email;
 
     public TaiKhoan() {}
 
@@ -77,4 +78,8 @@ public class TaiKhoan {
     public String getTenTo() {return tenTo;}
 
     public void setTenTo(String tenTo) {this.tenTo = tenTo;}
+
+    public String getEmail() { return email; }
+
+    public void setEmail(String email) { this.email = email; }
 }

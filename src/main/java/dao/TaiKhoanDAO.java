@@ -27,7 +27,7 @@ public class TaiKhoanDAO {
             rs = ps.executeQuery();
 
             if (rs.next()) {
-                return new TaiKhoan(
+                TaiKhoan tk = new TaiKhoan(
                         rs.getInt("tai_khoan_id"),
                         rs.getString("ten_dang_nhap"),
                         rs.getString("mat_khau"),
@@ -36,6 +36,8 @@ public class TaiKhoanDAO {
                         rs.getBoolean("trang_thai"),
                         rs.getString("so_dien_thoai")
                 );
+                tk.setEmail(rs.getString("email"));
+                return tk;
             }
         }  catch (Exception e) {
         System.out.println("LỖI ĐĂNG NHẬP AIVEN: " + e.getMessage());
@@ -329,5 +331,53 @@ public class TaiKhoanDAO {
             throw new java.sql.SQLException("Không thể kết nối cơ sở dữ liệu", e);
         }
         return team;
+    }
+
+    public boolean createAccountByAdmin(String hoTen, String tenDangNhap, String matKhau, String vaiTro, Integer toId) {
+        String sqlTaiKhoan = "INSERT INTO tai_khoan (ho_ten, ten_dang_nhap, mat_khau, vai_tro, trang_thai) VALUES (?, ?, ?, ?, 1)";
+        try (Connection conn = new DBContext().getConnection()) {
+            conn.setAutoCommit(false);
+
+            int newTaiKhoanId = -1;
+            try (PreparedStatement ps = conn.prepareStatement(sqlTaiKhoan, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, hoTen);
+                ps.setString(2, tenDangNhap);
+                ps.setString(3, matKhau);
+                ps.setString(4, vaiTro);
+                ps.executeUpdate();
+
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        newTaiKhoanId = rs.getInt(1);
+                    }
+                }
+            }
+
+            if (newTaiKhoanId <= 0) {
+                conn.rollback();
+                return false;
+            }
+
+            if ("NHAN_VIEN".equals(vaiTro)) {
+                String sqlNV = "INSERT INTO nhan_vien (tai_khoan_id, to_id) VALUES (?, ?)";
+                try (PreparedStatement psNV = conn.prepareStatement(sqlNV)) {
+                    psNV.setInt(1, newTaiKhoanId);
+                    psNV.setInt(2, toId);
+                    psNV.executeUpdate();
+                }
+            } else if ("SINH_VIEN".equals(vaiTro)) {
+                String sqlSV = "INSERT INTO sinh_vien (tai_khoan_id) VALUES (?)";
+                try (PreparedStatement psSV = conn.prepareStatement(sqlSV)) {
+                    psSV.setInt(1, newTaiKhoanId);
+                    psSV.executeUpdate();
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

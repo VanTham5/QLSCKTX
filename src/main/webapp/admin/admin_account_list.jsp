@@ -73,14 +73,53 @@
 
     <div class="container-fluid px-4 mt-4">
 
-        <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-users text-primary me-2"></i>Quản lý Tài khoản Hệ thống</h4>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-users text-primary me-2"></i>Quản lý Tài khoản Hệ thống
+            </h4>
+            <button type="button" class="btn btn-primary fw-semibold shadow-sm"
+                    data-bs-toggle="modal" data-bs-target="#createAccountModal">
+                <i class="fa-solid fa-user-plus me-1"></i> Cấp tài khoản
+            </button>
+        </div>
+        <%
+            String currentRole = request.getParameter("role");
+            if (currentRole == null || currentRole.trim().isEmpty()) {
+                currentRole = "all";
+            }
+        %>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <!-- BỘ LỌC THEO VAI TRÒ -->
+            <div class="btn-group shadow-sm" role="group">
+                <a href="?role=all" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("all") ? "active" : "" %>">Tất cả tài khoản</a>
+                <a href="?role=NHAN_VIEN" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("NHAN_VIEN") ? "active text-primary" : "" %>">Nhân viên kỹ thuật</a>
+                <a href="?role=SINH_VIEN" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("SINH_VIEN") ? "active text-success" : "" %>">Sinh viên</a>
+            </div>
 
-        <!-- BỘ LỌC THEO VAI TRÒ -->
-        <% String currentRole = (String) request.getAttribute("currentRole"); if (currentRole == null) currentRole = "all"; %>
-        <div class="btn-group mb-4 shadow-sm" role="group">
-            <a href="?role=all" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("all") ? "active" : "" %>">Tất cả tài khoản</a>
-            <a href="?role=NHAN_VIEN" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("NHAN_VIEN") ? "active text-primary" : "" %>">Nhân viên kỹ thuật</a>
-            <a href="?role=SINH_VIEN" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("SINH_VIEN") ? "active text-success" : "" %>">Sinh viên</a>
+            <!-- Bộ lọc Tổ phụ trách, Trạng thái & Ô tìm kiếm -->
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <select id="teamFilter" class="form-select form-select-sm shadow-sm" style="width: 170px;">
+                    <option value="">Tất cả tổ phụ trách</option>
+                    <option value="Tổ Bảo An">Tổ Bảo An</option>
+                    <option value="Tổ Cơ Sở Vật Chất">Tổ Cơ Sở Vật Chất</option>
+                    <option value="Tổ Điện Nước">Tổ Điện Nước</option>
+                    <option value="Tổ Mạng & Internet">Tổ Mạng & Internet</option>
+                </select>
+
+                <select id="statusFilter" class="form-select form-select-sm shadow-sm" style="width: 155px;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Hoạt động">Hoạt động</option>
+                    <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+                </select>
+
+                <div class="input-group input-group-sm shadow-sm" style="width: 270px;">
+            <span class="input-group-text bg-white border-end-0 text-muted">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+                    <input type="text" id="accountSearchInput" class="form-control border-start-0"
+                           placeholder="Tìm mã TK, tên, username, SĐT...">
+                </div>
+            </div>
         </div>
 
         <!-- BẢNG DANH SÁCH TÀI KHOẢN -->
@@ -100,7 +139,7 @@
                             <th class="pe-4 fw-medium py-3 text-center">THAO TÁC</th>
                         </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="accountTableBody">
                         <%
                             List<TaiKhoan> listAccounts = (List<TaiKhoan>) request.getAttribute("listAccounts");
                             if (listAccounts != null && !listAccounts.isEmpty()) {
@@ -209,5 +248,141 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const searchInput = document.getElementById('accountSearchInput');
+    const teamFilter = document.getElementById('teamFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const tableBody = document.getElementById('accountTableBody');
+
+    function filterAccounts() {
+        const keyword = searchInput.value.trim().toLowerCase();
+        const team = teamFilter.value.trim().toLowerCase();
+        const status = statusFilter.value.trim().toLowerCase();
+        const rows = tableBody.querySelectorAll('tr');
+
+        rows.forEach(row => {
+            if (row.cells.length < 7) return; // bỏ qua dòng thông báo trống
+
+            // Lấy dữ liệu các cột: 0=Mã TK, 1=Họ tên, 2=Username, 3=SĐT, 4=Tổ, 6=Trạng thái
+            const searchTarget = (
+                row.cells[0].innerText + ' ' +
+                row.cells[1].innerText + ' ' +
+                row.cells[2].innerText + ' ' +
+                row.cells[3].innerText
+            ).toLowerCase();
+
+            const teamText = row.cells[4].innerText.trim().toLowerCase();
+            const statusText = row.cells[6].innerText.trim().toLowerCase();
+
+            const matchKeyword = !keyword || searchTarget.includes(keyword);
+            const matchTeam = !team || teamText === team;
+            const matchStatus = !status || statusText === status;
+
+            row.style.display = (matchKeyword && matchTeam && matchStatus) ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterAccounts);
+    teamFilter.addEventListener('change', filterAccounts);
+    statusFilter.addEventListener('change', filterAccounts);
+</script>
+
+<!-- MODAL CẤP TÀI KHOẢN MỚI -->
+<div class="modal fade" id="createAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa-solid fa-user-plus me-2"></i>Cấp tài khoản mới
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form action="${pageContext.request.contextPath}/admin-accounts" method="POST">
+                <input type="hidden" name="action" value="create">
+                <div class="modal-body p-4">
+
+                    <!-- Chọn loại tài khoản (2 dạng) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Loại tài khoản <span class="text-danger">*</span></label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="vaiTro" id="roleStaff" value="NHAN_VIEN" checked>
+                            <label class="btn btn-outline-primary fw-medium" for="roleStaff">
+                                <i class="fa-solid fa-screwdriver-wrench me-1"></i> Nhân viên kỹ thuật
+                            </label>
+
+                            <input type="radio" class="btn-check" name="vaiTro" id="roleStudent" value="SINH_VIEN">
+                            <label class="btn btn-outline-success fw-medium" for="roleStudent">
+                                <i class="fa-solid fa-user-graduate me-1"></i> Sinh viên
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Các trường bắt buộc chung -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="hoTen" placeholder="VD: Nguyễn Văn A" required>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tên đăng nhập <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="tenDangNhap" placeholder="VD: nv09 hoặc sv51" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Mật khẩu mặc định <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="matKhau" value="123456" required>
+                        </div>
+                    </div>
+
+                    <!-- Chỉ hiện khi chọn Nhân viên -->
+                    <div class="mb-2" id="teamSelectWrapper">
+                        <label class="form-label fw-bold">Tổ phụ trách <span class="text-danger">*</span></label>
+                        <select class="form-select" name="toId" id="toIdSelect" required>
+                            <option value="">-- Chọn tổ kỹ thuật --</option>
+                            <option value="1">Tổ Điện Nước</option>
+                            <option value="2">Tổ Cơ Sở Vật Chất</option>
+                            <option value="3">Tổ Mạng & Internet</option>
+                            <option value="4">Tổ Bảo An</option>
+                        </select>
+                        <div class="form-text">Nhân viên sẽ nhận và xử lý các sự cố thuộc tổ này.</div>
+                    </div>
+
+                    <div class="alert alert-light border small text-muted mb-0 mt-3">
+                        <i class="fa-solid fa-circle-info text-primary me-1"></i>
+                        Số điện thoại và các thông tin cá nhân khác người dùng có thể tự cập nhật sau khi đăng nhập.
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4">Tạo tài khoản</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const roleStaff = document.getElementById('roleStaff');
+    const roleStudent = document.getElementById('roleStudent');
+    const teamWrapper = document.getElementById('teamSelectWrapper');
+    const toIdSelect = document.getElementById('toIdSelect');
+
+    function toggleTeamField() {
+        if (roleStaff.checked) {
+            teamWrapper.style.display = 'block';
+            toIdSelect.required = true;
+        } else {
+            teamWrapper.style.display = 'none';
+            toIdSelect.required = false;
+            toIdSelect.value = '';
+        }
+    }
+
+    roleStaff.addEventListener('change', toggleTeamField);
+    roleStudent.addEventListener('change', toggleTeamField);
+</script>
+
 </body>
 </html>

@@ -1,4 +1,3 @@
-<%@ taglib prefix="repair" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
@@ -76,13 +75,32 @@
 
         <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-triangle-exclamation text-primary me-2"></i>Quản lý toàn bộ sự cố hệ thống</h4>
 
-        <!-- BỘ LỌC TRẠNG THÁI -->
+        <!-- BỘ LỌC TRẠNG THÁI + TÌM KIẾM -->
         <% String currentFilter = request.getParameter("filter"); %>
-        <div class="btn-group mb-4 shadow-sm" role="group">
-            <a href="?filter=all" class="btn btn-outline-secondary filter-btn <%= (currentFilter == null || currentFilter.equals("all")) ? "active" : "" %>">Tất cả</a>
-            <a href="?filter=pending" class="btn btn-outline-secondary filter-btn <%= "pending".equals(currentFilter) ? "active text-warning" : "" %>">Chờ xử lý</a>
-            <a href="?filter=processing" class="btn btn-outline-secondary filter-btn <%= "processing".equals(currentFilter) ? "active text-primary" : "" %>">Đang xử lý</a>
-            <a href="?filter=done" class="btn btn-outline-secondary filter-btn <%= "done".equals(currentFilter) ? "active text-success" : "" %>">Đã hoàn thành</a>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div class="btn-group shadow-sm" role="group">
+                <a href="?filter=all" class="btn btn-outline-secondary filter-btn <%= (currentFilter == null || currentFilter.equals("all")) ? "active" : "" %>">Tất cả</a>
+                <a href="?filter=pending" class="btn btn-outline-secondary filter-btn <%= "pending".equals(currentFilter) ? "active text-warning" : "" %>">Chờ xử lý</a>
+                <a href="?filter=processing" class="btn btn-outline-secondary filter-btn <%= "processing".equals(currentFilter) ? "active text-primary" : "" %>">Đang xử lý</a>
+                <a href="?filter=done" class="btn btn-outline-secondary filter-btn <%= "done".equals(currentFilter) ? "active text-success" : "" %>">Đã hoàn thành</a>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <select id="priorityFilter" class="form-select form-select-sm shadow-sm" style="width: 150px;">
+                    <option value="">Tất cả mức độ</option>
+                    <option value="KHẨN CẤP">Khẩn cấp</option>
+                    <option value="TRUNG BÌNH">Trung bình</option>
+                    <option value="THẤP">Thấp</option>
+                </select>
+
+                <div class="input-group input-group-sm shadow-sm" style="width: 280px;">
+            <span class="input-group-text bg-white border-end-0 text-muted">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+                    <input type="text" id="searchInput" class="form-control border-start-0"
+                           placeholder="Tìm mã SC, tiêu đề, tên SV, phòng...">
+                </div>
+            </div>
         </div>
 
         <!-- BẢNG DANH SÁCH SỰ CỐ -->
@@ -92,17 +110,17 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light text-muted" style="font-size: 0.85rem;">
                         <tr>
-                            <th class="ps-4 fw-medium py-3">MÃ SC</th>
-                            <th class="fw-medium py-3">TIÊU ĐỀ SỰ CỐ</th>
-                            <th class="fw-medium py-3">NGƯỜI BÁO CÁO</th>
-                            <th class="fw-medium py-3">SĐT LIÊN HỆ</th>
-                            <th class="fw-medium py-3">VỊ TRÍ</th>
-                            <th class="fw-medium py-3">MỨC ĐỘ</th>
-                            <th class="fw-medium py-3">TRẠNG THÁI</th>
-                            <th class="pe-4 fw-medium py-3 text-center">CHI TIẾT</th>
+                            <th class="ps-4 fw-medium py-3 text-nowrap">MÃ SC</th>
+                            <th class="fw-medium py-3 text-nowrap">TIÊU ĐỀ SỰ CỐ</th>
+                            <th class="fw-medium py-3 text-nowrap">NGƯỜI BÁO CÁO</th>
+                            <th class="fw-medium py-3 text-nowrap">SĐT LIÊN HỆ</th>
+                            <th class="fw-medium py-3 text-nowrap">VỊ TRÍ</th>
+                            <th class="fw-medium py-3 text-nowrap">MỨC ĐỘ</th>
+                            <th class="fw-medium py-3 text-nowrap">TRẠNG THÁI</th>
+                            <th class="pe-4 fw-medium py-3 text-center text-nowrap">CHI TIẾT</th>
                         </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="incidentTableBody">
                         <%
                             List<SuCo> listSuCo = (List<SuCo>) request.getAttribute("listSuCo");
                             if (listSuCo != null && !listSuCo.isEmpty()) {
@@ -113,26 +131,36 @@
                                     String sdtNguoiGui = task.getSoDienThoai();
                         %>
                         <tr>
-                            <td class="ps-4"><span class="fw-bold text-secondary">#SC0<%= task.getSuCoId() %></span></td>
-                            <td>
-                                <div class="fw-bold text-dark"><%= task.getTieuDe() %></div>
-                                <div class="text-muted" style="font-size: 0.8rem;">Gửi lúc: <%= task.getNgayGui() %></div>
+                            <td class="ps-4 text-nowrap">
+                                <span class="fw-bold text-secondary">#SC0<%= task.getSuCoId() %></span>
                             </td>
-                            <td>
+                            <td style="min-width: 210px; max-width: 280px;">
+                                <div class="fw-bold text-dark"><%= task.getTieuDe() %></div>
+                                <div class="text-muted text-nowrap" style="font-size: 0.8rem;">Gửi lúc: <%= task.getNgayGui() %></div>
+                            </td>
+                            <td class="text-nowrap">
                                 <div class="d-flex align-items-center">
                                     <img src="https://ui-avatars.com/api/?name=<%= java.net.URLEncoder.encode(tenNguoiGui, "UTF-8") %>&background=random" class="rounded-circle me-2" width="28">
                                     <span class="fw-medium"><%= tenNguoiGui %></span>
                                 </div>
                             </td>
-                            <td>
-                                <a href="tel:<%= sdtNguoiGui %>" class="text-decoration-none fw-medium text-primary">
+                            <td class="text-nowrap">
+                                <a href="tel:<%= sdtNguoiGui %>" class="text-decoration-none fw-medium text-primary d-inline-flex align-items-center">
                                     <i class="fa-solid fa-phone fa-sm me-1"></i> <%= sdtNguoiGui %>
                                 </a>
                             </td>
-                            <td><span class="fw-medium text-dark"><i class="fa-solid fa-location-dot text-danger me-1"></i> <%= task.getViTriPhong() %></span></td>
-                            <td><span class="badge bg-<%= badgeMucDo %> bg-opacity-10 text-<%= badgeMucDo %> border border-<%= badgeMucDo %>"><%= task.getMucDo() %></span></td>
-                            <td><span class="badge bg-<%= badgeTrangThai %> <%= "Chờ xử lý".equals(task.getTrangThai()) ? "text-dark" : "text-white" %>"><%= task.getTrangThai() %></span></td>
-                            <td class="pe-4 text-center">
+                            <td class="text-nowrap">
+            <span class="fw-medium text-dark">
+                <i class="fa-solid fa-location-dot text-danger me-1"></i> <%= task.getViTriPhong() %>
+            </span>
+                            </td>
+                            <td class="text-nowrap">
+                                <span class="badge bg-<%= badgeMucDo %> bg-opacity-10 text-<%= badgeMucDo %> border border-<%= badgeMucDo %>"><%= task.getMucDo() %></span>
+                            </td>
+                            <td class="text-nowrap">
+                                <span class="badge bg-<%= badgeTrangThai %> <%= "Chờ xử lý".equals(task.getTrangThai()) ? "text-dark" : "text-white" %>"><%= task.getTrangThai() %></span>
+                            </td>
+                            <td class="pe-4 text-center text-nowrap">
                                 <button type="button" class="btn btn-sm btn-light text-primary border"
                                         data-bs-toggle="modal" data-bs-target="#detailModal<%= task.getSuCoId() %>" title="Xem chi tiết">
                                     <i class="fa-solid fa-eye"></i>
@@ -211,16 +239,41 @@
                 <div class="mb-2"><strong>Mức độ:</strong> <span class="badge bg-<%= badgeMucDo %>"><%= task.getMucDo() %></span></div>
                 <div class="mb-2"><strong>Trạng thái:</strong> <span class="badge bg-<%= badgeTrangThai %>"><%= task.getTrangThai() %></span></div>
                 <div class="mb-2"><strong>Ngày báo cáo:</strong> <%= task.getNgayGui() %></div>
+                <div class="mb-2">
+                    <strong>Nhân viên phụ trách:</strong>
+                    <%
+                        String trangThaiNV = task.getTrangThai();
+                        String tenNV = task.getTenNhanVien();
+                        String sdtNV = task.getSdtNhanVien();
+                        boolean daCoNV = !"Chờ xử lý".equals(trangThaiNV) && tenNV != null && !tenNV.trim().isEmpty();
+                        if (daCoNV) {
+                    %>
+                    <span class="text-primary fw-medium"><%= tenNV %></span>
+                    <% if (sdtNV != null && !sdtNV.trim().isEmpty()) { %>
+                    - <a href="tel:<%= sdtNV %>" class="text-decoration-none"><i class="fa-solid fa-phone fa-xs me-1"></i><%= sdtNV %></a>
+                    <% } %>
+                    <%
+                    } else {
+                    %>
+                    <span class="text-muted">---</span>
+                    <%
+                        }
+                    %>
+                </div>
                 <hr>
                 <div class="mb-1 fw-bold text-dark">Mô tả chi tiết từ sinh viên:</div>
                 <div class="p-3 bg-light rounded border text-muted" style="font-size: 0.95rem;">
                     <%= task.getMoTa() != null ? task.getMoTa() : "Không có mô tả chi tiết." %>
                 </div>
-                <% pageContext.setAttribute("repairNote", task.getGhiChuKyThuat()); %>
-                <repair:if test="${not empty repairNote}">
-                    <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
-                    <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
-                </repair:if>
+                <%
+                    String repairNote = task.getGhiChuKyThuat();
+                    if (repairNote != null && !repairNote.trim().isEmpty()) {
+                %>
+                <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
+                <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><%= repairNote %></div>
+                <%
+                    }
+                %>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
@@ -233,7 +286,34 @@
     }
 %>
 
+
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const priorityFilter = document.getElementById('priorityFilter');
+    const tableBody = document.getElementById('incidentTableBody');
+
+    function filterIncidents() {
+        const keyword = searchInput.value.trim().toLowerCase();
+        const priority = priorityFilter.value.trim().toUpperCase();
+        const rows = tableBody.querySelectorAll('tr');
+
+        rows.forEach(row => {
+            if (row.cells.length < 8) return; // bỏ qua dòng thông báo trống
+            const rowText = row.innerText.toLowerCase();
+            const priorityText = row.cells[5].innerText.trim().toUpperCase();
+
+            const matchKeyword = !keyword || rowText.includes(keyword);
+            const matchPriority = !priority || priorityText === priority;
+
+            row.style.display = (matchKeyword && matchPriority) ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterIncidents);
+    priorityFilter.addEventListener('change', filterIncidents);
+</script>
 </body>
 </html>

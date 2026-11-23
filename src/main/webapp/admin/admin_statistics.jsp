@@ -1,4 +1,3 @@
-<%@ taglib prefix="repair" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
@@ -172,12 +171,17 @@
                 <a href="?range=this_year" class="btn btn-sm filter-pill ${range == 'this_year' ? 'btn-primary' : 'btn-white border'}">Năm nay</a>
 
                 <!-- Chọn khoảng thời gian bằng lịch -->
-                <form method="get" action="${pageContext.request.contextPath}/admin-statistics" class="d-flex align-items-center gap-1 bg-white border rounded-3 px-2 py-1">
+                <form method="get" action="${pageContext.request.contextPath}/admin-statistics"
+                      class="d-flex align-items-center bg-white border rounded-3 px-2 py-1">
                     <input type="hidden" name="range" value="custom">
-                    <input type="date" name="fromDate" value="${fromDate}" class="form-control form-control-sm border-0 p-0" style="width: 122px;" required>
-                    <span class="text-muted small">–</span>
-                    <input type="date" name="toDate" value="${toDate}" class="form-control form-control-sm border-0 p-0" style="width: 122px;" required>
-                    <button type="submit" class="btn btn-sm btn-primary py-0 px-2">Lọc</button>
+                    <input type="date" name="fromDate" value="${fromDate}"
+                           class="form-control form-control-sm border-0 p-0 shadow-none"
+                           style="width: 104px;" required>
+                    <span class="text-muted small mx-2">–</span>
+                    <input type="date" name="toDate" value="${toDate}"
+                           class="form-control form-control-sm border-0 p-0 shadow-none"
+                           style="width: 104px;" required>
+                    <button type="submit" class="btn btn-sm btn-primary py-0 px-2 ms-2">Lọc</button>
                 </form>
             </div>
         </div>
@@ -382,16 +386,41 @@
                 <div class="mb-2"><strong>Vị trí:</strong> <%= sc.getViTriPhong() %></div>
                 <div class="mb-2"><strong>Trạng thái:</strong> <%= sc.getTrangThai() %></div>
                 <div class="mb-2"><strong>Thời gian báo cáo:</strong> <%= sc.getNgayGui() %></div>
+                <div class="mb-2">
+                    <strong>Nhân viên phụ trách:</strong>
+                    <%
+                        String trangThaiNV = sc.getTrangThai();
+                        String tenNV = sc.getTenNhanVien();
+                        String sdtNV = sc.getSdtNhanVien();
+                        boolean daCoNV = !"Chờ xử lý".equals(trangThaiNV) && tenNV != null && !tenNV.trim().isEmpty();
+                        if (daCoNV) {
+                    %>
+                    <span class="text-primary fw-medium"><%= tenNV %></span>
+                    <% if (sdtNV != null && !sdtNV.trim().isEmpty()) { %>
+                    - <a href="tel:<%= sdtNV %>" class="text-decoration-none"><i class="fa-solid fa-phone fa-xs me-1"></i><%= sdtNV %></a>
+                    <% } %>
+                    <%
+                    } else {
+                    %>
+                    <span class="text-muted">---</span>
+                    <%
+                        }
+                    %>
+                </div>
                 <hr>
                 <div class="fw-bold mb-1">Mô tả chi tiết:</div>
                 <div class="p-2 bg-light rounded border text-muted">
                     <%= sc.getMoTa() != null ? sc.getMoTa() : "Không có mô tả chi tiết." %>
                 </div>
-                <% pageContext.setAttribute("repairNote", sc.getGhiChuKyThuat()); %>
-                <repair:if test="${not empty repairNote}">
-                    <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
-                    <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
-                </repair:if>
+                <%
+                    String repairNote = sc.getGhiChuKyThuat();
+                    if (repairNote != null && !repairNote.trim().isEmpty()) {
+                %>
+                <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
+                <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><%= repairNote %></div>
+                <%
+                    }
+                %>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button>

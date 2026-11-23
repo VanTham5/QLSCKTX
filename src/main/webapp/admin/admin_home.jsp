@@ -1,4 +1,3 @@
-<%@ taglib prefix="repair" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
@@ -114,7 +113,9 @@
     <a href="${pageContext.request.contextPath}/admin-statistics" class="nav-link"><i class="fa-solid fa-chart-pie me-2 w-20px"></i> Thống kê</a>
 
     <div class="sidebar-heading">Hệ thống</div>
-    <a href="#" class="nav-link"><i class="fa-solid fa-gear me-2 w-20px"></i> Cài đặt</a>
+    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#adminProfileModal">
+        <i class="fa-solid fa-user-gear me-2 w-20px"></i> Cấu hình tài khoản
+    </a>
     <a href="${pageContext.request.contextPath}/logout" class="nav-link text-danger mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
 </div>
 
@@ -130,7 +131,9 @@
                 <i class="fa-solid fa-chevron-down ms-2" style="font-size: 12px;"></i>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#">Cấu hình tài khoản</a></li>
+                <li><a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#adminProfileModal">
+                    <i class="fa-solid fa-user-gear me-2 w-20px"></i> Cấu hình tài khoản
+                </a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout">Đăng xuất</a></li>
             </ul>
@@ -138,6 +141,22 @@
     </div>
 
     <div class="container-fluid px-4">
+
+        <%
+            String profileMsg = (String) session.getAttribute("profileMsg");
+            String profileMsgType = (String) session.getAttribute("profileMsgType"); // "success" hoặc "danger"
+            if (profileMsg != null) {
+                session.removeAttribute("profileMsg");
+                session.removeAttribute("profileMsgType");
+        %>
+        <div class="alert alert-<%= "success".equals(profileMsgType) ? "success" : "danger" %> alert-dismissible fade show mt-3 mb-3 shadow-sm" role="alert">
+            <i class="fa-solid <%= "success".equals(profileMsgType) ? "fa-circle-check" : "fa-circle-exclamation" %> me-2"></i>
+            <%= profileMsg %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <%
+            }
+        %>
 
         <!-- PAGE HEADER -->
         <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
@@ -199,12 +218,18 @@
         </div>
 
         <!-- BẢNG THEO DÕI SỰ CỐ TOÀN HỆ THỐNG -->
-        <repair:if test="${param.assignment == 'success'}">
-            <div class="alert alert-success" role="status">Đã phân công. Đang chờ nhân viên nhận việc.</div>
-        </repair:if>
-        <repair:if test="${param.assignment == 'failed'}">
-            <div class="alert alert-danger" role="alert">Không thể phân công. Kiểm tra trạng thái sự cố và nhân viên được chọn.</div>
-        </repair:if>
+        <%
+            String assignment = request.getParameter("assignment");
+            if ("success".equals(assignment)) {
+        %>
+        <div class="alert alert-success" role="status">Đã phân công. Đang chờ nhân viên nhận việc.</div>
+        <%
+        } else if ("failed".equals(assignment)) {
+        %>
+        <div class="alert alert-danger" role="alert">Không thể phân công. Kiểm tra trạng thái sự cố và nhân viên được chọn.</div>
+        <%
+            }
+        %>
 
         <div class="d-flex justify-content-between align-items-center mb-3 mt-5">
             <h5 class="fw-bold mb-0">Sự cố chờ điều phối & Phân công</h5>
@@ -343,16 +368,41 @@
                 <div class="mb-2"><strong>Mức độ:</strong> <span class="badge bg-<%= badgeMucDo %>"><%= task.getMucDo() %></span></div>
                 <div class="mb-2"><strong>Trạng thái:</strong> <span class="badge bg-<%= badgeTrangThai %> <%= "Chờ xử lý".equals(task.getTrangThai()) ? "text-dark" : "text-white" %>"><%= task.getTrangThai() %></span></div>
                 <div class="mb-2"><strong>Ngày báo cáo:</strong> <%= task.getNgayGui() %></div>
+                <div class="mb-2">
+                    <strong>Nhân viên phụ trách:</strong>
+                    <%
+                        String trangThaiNV = task.getTrangThai();
+                        String tenNV = task.getTenNhanVien();
+                        String sdtNV = task.getSdtNhanVien();
+                        boolean daCoNV = !"Chờ xử lý".equals(trangThaiNV) && tenNV != null && !tenNV.trim().isEmpty();
+                        if (daCoNV) {
+                    %>
+                    <span class="text-primary fw-medium"><%= tenNV %></span>
+                    <% if (sdtNV != null && !sdtNV.trim().isEmpty()) { %>
+                    - <a href="tel:<%= sdtNV %>" class="text-decoration-none"><i class="fa-solid fa-phone fa-xs me-1"></i><%= sdtNV %></a>
+                    <% } %>
+                    <%
+                    } else {
+                    %>
+                    <span class="text-muted">---</span>
+                    <%
+                        }
+                    %>
+                </div>
                 <hr>
                 <div class="mb-1 fw-bold text-dark">Mô tả chi tiết từ sinh viên:</div>
                 <div class="p-3 bg-light rounded border text-muted" style="font-size: 0.95rem;">
                     <%= task.getMoTa() != null ? task.getMoTa() : "Không có mô tả chi tiết." %>
                 </div>
-                <% pageContext.setAttribute("repairNote", task.getGhiChuKyThuat()); %>
-                <repair:if test="${not empty repairNote}">
-                    <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
-                    <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
-                </repair:if>
+                <%
+                    String repairNote = task.getGhiChuKyThuat();
+                    if (repairNote != null && !repairNote.trim().isEmpty()) {
+                %>
+                <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
+                <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><%= repairNote %></div>
+                <%
+                    }
+                %>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
@@ -416,7 +466,163 @@
     }
 %>
 
+<!-- MODAL CẤU HÌNH TÀI KHOẢN ADMIN -->
+<div class="modal fade" id="adminProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa-solid fa-user-gear me-2"></i>Cấu hình tài khoản
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-medium" id="tabBtnProfile" data-bs-toggle="tab" data-bs-target="#tabProfileInfo" type="button">
+                            Thông tin cá nhân
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-medium" id="tabBtnPass" data-bs-toggle="tab" data-bs-target="#tabChangePass" type="button">
+                            Đổi mật khẩu
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- TAB 1: THÔNG TIN CÁ NHÂN -->
+                    <div class="tab-pane fade show active" id="tabProfileInfo">
+                        <% String pUpdate = request.getParameter("profileUpdate"); %>
+                        <% if ("success".equals(pUpdate)) { %>
+                        <div class="alert alert-success py-2 small"><i class="fa-solid fa-circle-check me-1"></i> Cập nhật thông tin thành công!</div>
+                        <% } else if ("failed".equals(pUpdate)) { %>
+                        <div class="alert alert-danger py-2 small"><i class="fa-solid fa-circle-exclamation me-1"></i> Cập nhật thất bại. Vui lòng kiểm tra lại!</div>
+                        <% } %>
+
+                        <form id="adminProfileForm" action="${pageContext.request.contextPath}/update-profile" method="POST">
+                            <fieldset id="adminProfileFieldset" disabled>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">Tên đăng nhập</label>
+                                    <input type="text" class="form-control bg-light" value="${sessionScope.acc.tenDangNhap}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">Họ và tên <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="fullName" value="${sessionScope.acc.hoTen}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">Email</label>
+                                    <input type="email" class="form-control" name="email" value="${sessionScope.acc.email}" placeholder="Nhập địa chỉ email...">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">Số điện thoại</label>
+                                    <input type="text" class="form-control" name="sdt" value="${sessionScope.acc.soDienThoai}" placeholder="Nhập số điện thoại...">
+                                </div>
+                            </fieldset>
+
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button type="button" class="btn btn-light border" data-bs-dismiss="modal" id="btnCloseAdminProfile">Đóng</button>
+                                <button type="button" class="btn btn-outline-primary fw-bold" id="btnEditAdminProfile">
+                                    <i class="fa-solid fa-pen-to-square me-1"></i> Chỉnh sửa thông tin
+                                </button>
+                                <button type="button" class="btn btn-light border d-none" id="btnCancelAdminProfile">Hủy</button>
+                                <button type="submit" class="btn btn-primary fw-bold px-4 d-none" id="btnSaveAdminProfile">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i> Lưu thay đổi
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- TAB 2: ĐỔI MẬT KHẨU -->
+                    <div class="tab-pane fade" id="tabChangePass">
+                        <%
+                            String passMsg = request.getParameter("msg");
+                            String passErr = request.getParameter("error");
+                            String passErrDetail = request.getParameter("passError");
+                        %>
+                        <% if ("pass_success".equals(passMsg)) { %>
+                        <div class="alert alert-success py-2 small"><i class="fa-solid fa-circle-check me-1"></i> Đổi mật khẩu thành công!</div>
+                        <% } else if ("mismatch".equals(passErrDetail)) { %>
+                        <div class="alert alert-danger py-2 small"><i class="fa-solid fa-circle-exclamation me-1"></i> Mật khẩu xác nhận không khớp!</div>
+                        <% } else if ("short".equals(passErrDetail)) { %>
+                        <div class="alert alert-danger py-2 small"><i class="fa-solid fa-circle-exclamation me-1"></i> Mật khẩu mới phải có ít nhất 6 ký tự!</div>
+                        <% } else if ("empty".equals(passErrDetail)) { %>
+                        <div class="alert alert-danger py-2 small"><i class="fa-solid fa-circle-exclamation me-1"></i> Vui lòng nhập đầy đủ thông tin!</div>
+                        <% } %>
+
+                        <form action="${pageContext.request.contextPath}/change-password" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control <%= "wrong_old_pass".equals(passErr) ? "is-invalid" : "" %>" name="oldPass" required>
+                                <div class="invalid-feedback">Mật khẩu hiện tại không chính xác!</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Mật khẩu mới <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" name="newPass" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" name="confirmPass" required>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Đóng</button>
+                                <button type="submit" class="btn btn-primary fw-bold px-4">Đổi mật khẩu</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const modalEl = document.getElementById("adminProfileModal");
+        const form = document.getElementById("adminProfileForm");
+        const fieldset = document.getElementById("adminProfileFieldset");
+        const btnEdit = document.getElementById("btnEditAdminProfile");
+        const btnSave = document.getElementById("btnSaveAdminProfile");
+        const btnCancel = document.getElementById("btnCancelAdminProfile");
+        const btnClose = document.getElementById("btnCloseAdminProfile");
+
+        function setEditMode(editing) {
+            fieldset.disabled = !editing;
+            btnEdit.classList.toggle("d-none", editing);
+            btnClose.classList.toggle("d-none", editing);
+            btnSave.classList.toggle("d-none", !editing);
+            btnCancel.classList.toggle("d-none", !editing);
+        }
+
+        btnEdit.addEventListener("click", function () {
+            setEditMode(true);
+            form.elements.fullName.focus();
+        });
+
+        btnCancel.addEventListener("click", function () {
+            form.reset();
+            setEditMode(false);
+        });
+
+        modalEl.addEventListener("hidden.bs.modal", function () {
+            form.reset();
+            setEditMode(false);
+        });
+
+        // Tự động mở lại Modal và chuyển đúng Tab khi có thông báo
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("profileUpdate")) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        } else if (params.get("msg") === "pass_success" || params.get("error") === "wrong_old_pass" || params.has("passError")) {
+            bootstrap.Tab.getOrCreateInstance(document.getElementById("tabBtnPass")).show();
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    });
+</script>
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
