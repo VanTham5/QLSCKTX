@@ -21,13 +21,12 @@
         /* Sidebar Styles (Đã bỏ shadow, dùng border liền mạch) */
         .sidebar {
             width: 260px;
-            background-color: #ffffff;
+            background-color: #12443f;
             height: 100vh;
             position: fixed;
             left: 0;
             top: 0;
             border-right: 1px solid #e0e0e0;
-            z-index: 1000;
         }
         .main-content {
             margin-left: 260px;
@@ -35,20 +34,29 @@
             padding-bottom: 30px;
         }
         .sidebar .nav-link {
-            color: #4b5563;
+            color: #edf8f5;
             padding: 12px 20px;
             font-weight: 500;
             border-left: 3px solid transparent;
         }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            background-color: #f3f4f6;
-            color: #0d6efd;
-            border-left: 3px solid #0d6efd;
+        .sidebar .nav-link:hover, .sidebar .nav-link:focus-visible {
+            background-color: #1b544d;
+        }
+        .sidebar .nav-link.active {
+            background-color: #21645c;
+            color: #edf8f5;
+            border-left-color: #6ee7cb;
+        }
+        .sidebar .nav-link.sidebar-logout {
+            color: #ffb4b4;
+        }
+        .sidebar .sidebar-brand-icon {
+            color: #6ee7cb;
         }
         .sidebar-heading {
             font-size: 0.75rem;
             text-transform: uppercase;
-            color: #9ca3af;
+            color: #a8cbc2;
             font-weight: bold;
             padding: 10px 20px;
             margin-top: 15px;
@@ -98,14 +106,18 @@
                 flex-basis: 100%;
             }
         }
+        @media (min-width: 992px) {
+            .sidebar {
+                z-index: 1000;
+            }
+        }
         .sidebar.offcanvas-lg {
-            background-color: #fff !important;
+            background-color: #12443f !important;
         }
         @media (max-width: 991.98px) {
             .sidebar.offcanvas-lg {
                 --bs-offcanvas-width: min(260px, 90vw);
                 height: 100dvh;
-                z-index: var(--bs-offcanvas-zindex);
             }
             .main-content {
                 margin-left: 0;
@@ -115,31 +127,77 @@
                 padding: 0 1rem;
             }
         }
+        .employee-chart {
+            position: relative;
+            height: clamp(15rem, 32vw, 19rem);
+        }
+        .employee-chart-key {
+            width: .65rem;
+            height: .65rem;
+            background: var(--key-color);
+        }
+        .statistics-heading-icon {
+            color: #21645c;
+            background: #dcefeb;
+        }
+        .work-summary {
+            background: linear-gradient(110deg, #13294b, #1a4477);
+            color: #fff;
+        }
+        .work-summary dt {
+            color: #d9e7fa;
+        }
+        .work-summary-item + .work-summary-item {
+            border-top: 1px solid rgba(255, 255, 255, .2);
+        }
+        @media (min-width: 768px) {
+            .work-summary-item + .work-summary-item {
+                border-top: 0;
+                border-left: 1px solid rgba(255, 255, 255, .2);
+            }
+        }
+        @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+            .team-table-card {
+                transition: transform 0.2s;
+            }
+            .team-table-card:hover {
+                transform: translateY(-3px);
+            }
+        }
+        .team-heading {
+            background: linear-gradient(110deg, #10233f, #1d4674);
+        }
+        .team-heading-name {
+            color: #d4e4f7;
+        }
     </style>
 </head>
 <body>
 
 <!-- SIDEBAR NHÂN VIÊN -->
 <div class="sidebar offcanvas-lg offcanvas-start d-flex flex-column" id="employeeSidebar" tabindex="-1" aria-labelledby="employeeSidebarTitle" style="overflow-y: auto;">
-    <div class="d-flex align-items-center p-3" style="height: 60px; border-bottom: 1px solid #e0e0e0;">
-        <i class="fa-solid fa-screwdriver-wrench fs-4 text-primary me-2"></i>
-        <h5 id="employeeSidebarTitle" class="mb-0 fw-bold text-dark" style="font-size: 1.1rem;">TỔ KỸ THUẬT</h5>
-        <button type="button" class="btn-close d-lg-none ms-auto" data-bs-dismiss="offcanvas"
+    <div class="d-flex align-items-center p-3" style="height: 60px; border-bottom: 1px solid rgba(237, 248, 245, .2);">
+        <i class="fa-solid fa-screwdriver-wrench fs-4 sidebar-brand-icon me-2"></i>
+        <h5 id="employeeSidebarTitle" class="mb-0 fw-bold text-white" style="font-size: 1.1rem;">TỔ KỸ THUẬT</h5>
+        <button type="button" class="btn-close btn-close-white d-lg-none ms-auto" data-bs-dismiss="offcanvas"
                 data-bs-target="#employeeSidebar" aria-label="Đóng menu"></button>
     </div>
 
     <div class="sidebar-heading">Tổng quan</div>
-    <a href="${pageContext.request.contextPath}/employee-home" class="nav-link ${empty workFilter and not teamView ? 'active' : ''}">
+    <a href="${pageContext.request.contextPath}/employee-home" class="nav-link ${empty workFilter and not teamView and not statisticsView ? 'active' : ''}">
         <i class="fa-solid fa-chart-pie me-2 w-20px"></i> Bảng điều khiển
     </a>
     <div class="sidebar-heading">Quản lý công việc</div>
     <a href="${pageContext.request.contextPath}/employee-home?filter=pending#work-list" class="nav-link ${workFilter == 'pending' ? 'active' : ''}">
         <span><i class="fa-solid fa-clipboard-list me-2 w-20px"></i> Chờ xử lý</span>
-        <span class="badge bg-danger rounded-pill">${pending}</span>
+        <span class="badge bg-danger rounded-pill">${sidebarPending ne null ? sidebarPending : pending}</span>
     </a>
     <a href="${pageContext.request.contextPath}/employee-home?filter=processing#work-list" class="nav-link ${workFilter == 'processing' ? 'active' : ''}"><i class="fa-solid fa-person-digging me-2 w-20px"></i> Đang xử lý</a>
     <a href="${pageContext.request.contextPath}/employee-history" class="nav-link">
         <i class="fa-solid fa-clock-rotate-left me-2 w-20px"></i> Lịch sử công việc
+    </a>
+    <a href="${pageContext.request.contextPath}/employee-home?view=statistics" class="nav-link ${statisticsView ? 'active' : ''}">
+        <i class="fa-solid fa-chart-simple me-2 w-20px" aria-hidden="true"></i> Thống kê công việc
     </a>
     <a href="${pageContext.request.contextPath}/employee-home?view=team" class="nav-link ${teamView ? 'active' : ''}">
         <i class="fa-solid fa-users me-2 w-20px" aria-hidden="true"></i> Đồng nghiệp cùng tổ
@@ -150,7 +208,7 @@
     <div class="sidebar-heading">Hồ sơ cá nhân</div>
     <a href="#" class="nav-link" data-employee-modal="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
     <a href="#" class="nav-link" data-employee-modal="#changePassModal"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
-    <a href="${pageContext.request.contextPath}/logout" class="nav-link text-danger mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
+    <a href="${pageContext.request.contextPath}/logout" class="nav-link sidebar-logout mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
 </div>
 
 <!-- MAIN CONTENT -->
@@ -177,12 +235,12 @@
         </div>
     </div>
 
-    <div class="container-fluid px-4 ${empty workFilter and not teamView ? '' : 'pt-4'}">
+    <div class="container-fluid px-4 ${empty workFilter and not teamView and not statisticsView ? '' : 'pt-4'}">
         <staff:if test="${param.maintenanceNotice == 'success'}">
             <div class="alert alert-success mt-3" role="status">Đã đăng thông báo bảo trì cho sinh viên.</div>
         </staff:if>
 
-        <staff:if test="${empty workFilter and not teamView}">
+        <staff:if test="${empty workFilter and not teamView and not statisticsView}">
             <!-- PAGE HEADER -->
             <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
                 <div>
@@ -196,6 +254,31 @@
                 </button>
             </div>
 
+        </staff:if>
+
+        <staff:if test="${statisticsView}">
+            <div class="statistics-header d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <h4 class="d-flex align-items-center gap-3 fw-bold text-dark mb-0">
+                    <span class="statistics-heading-icon rounded-3 p-2 fs-5" aria-hidden="true"><i class="fa-solid fa-chart-simple"></i></span>
+                    Thống kê công việc
+                </h4>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <form method="get" action="${pageContext.request.contextPath}/employee-home" class="position-relative">
+                        <input type="hidden" name="view" value="statistics">
+                        <label for="statisticsMonth" class="position-absolute top-50 start-0 translate-middle-y ms-3 text-primary mb-0 pe-none">
+                            <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                            <span class="visually-hidden">Tháng thống kê</span>
+                        </label>
+                        <input id="statisticsMonth" name="month" type="month"
+                               class="form-control w-auto rounded-pill ps-5 pe-3 shadow-sm"
+                               value="${statisticsMonth}"
+                               onchange="if (this.validity.valid) this.form.requestSubmit()">
+                    </form>
+                </div>
+            </div>
+        </staff:if>
+
+        <staff:if test="${empty workFilter and not teamView and not statisticsView}">
             <!-- THỐNG KÊ NHANH CỦA NHÂN VIÊN -->
             <div class="row g-4 mb-4">
                 <div class="col-md-4">
@@ -246,20 +329,88 @@
             </staff:when>
         </staff:choose>
 
+        <staff:if test="${statisticsView}">
+            <div class="work-summary rounded-4 p-3 p-md-4 mb-4">
+                <dl class="row g-0 mb-0">
+                    <div class="col-12 col-md-4 work-summary-item px-3 py-2">
+                        <dt class="fw-medium"><i class="fa-solid fa-layer-group me-2" aria-hidden="true"></i>Sự cố đang chờ và đang xử lý</dt>
+                        <dd class="fs-2 fw-bold mb-0">${pending + processing}</dd>
+                    </div>
+                    <div class="col-12 col-md-4 work-summary-item px-3 py-2">
+                        <dt class="fw-medium"><i class="fa-solid fa-triangle-exclamation me-2" aria-hidden="true"></i>Sự cố khẩn cấp</dt>
+                        <dd class="fs-2 fw-bold mb-0 text-warning">${openByPriority['Khẩn cấp']}</dd>
+                    </div>
+                    <div class="col-12 col-md-4 work-summary-item px-3 py-2">
+                        <dt class="fw-medium"><i class="fa-solid fa-check-double me-2" aria-hidden="true"></i>${empty statisticsMonth ? 'Đã hoàn thành' : 'Đã hoàn thành trong tháng'}</dt>
+                        <dd class="fs-2 fw-bold mb-0">${done}</dd>
+                    </div>
+                </dl>
+            </div>
+            <staff:choose>
+                <staff:when test="${pending + processing + done == 0}">
+                    <p class="alert alert-light border" role="status">Không có số liệu công việc${empty statisticsMonth ? '' : ' cho tháng '.concat(statisticsMonthLabel)}.</p>
+                </staff:when>
+                <staff:otherwise>
+                    <div class="row g-3 mb-4" id="employeeWorkCharts">
+                        <div class="col-12 col-xl-5">
+                            <section class="card stat-card shadow-sm p-3 p-md-4 h-100" aria-labelledby="statusChartTitle">
+                                <h5 id="statusChartTitle" class="fw-bold mb-1">Theo trạng thái</h5>
+                                <p class="text-secondary small mb-3">${empty statisticsMonth ? 'Tất cả công việc theo trạng thái' : 'Việc đang mở theo ngày gửi và việc đã hoàn thành trong tháng '.concat(statisticsMonthLabel)}</p>
+                                <div class="employee-chart mb-3" hidden>
+                                    <canvas id="employeeStatusChart" aria-hidden="true"></canvas>
+                                </div>
+                                <ul class="list-unstyled d-flex flex-wrap justify-content-center gap-3 mb-0">
+                                    <li data-status-count="${pending}" style="--key-color: #f1ad1d">
+                                        <span class="employee-chart-key d-inline-block rounded-circle me-1" aria-hidden="true"></span>
+                                        <span>Chờ xử lý</span> <strong class="ms-1">${pending}</strong>
+                                    </li>
+                                    <li data-status-count="${processing}" style="--key-color: #3775ed">
+                                        <span class="employee-chart-key d-inline-block rounded-circle me-1" aria-hidden="true"></span>
+                                        <span>Đang xử lý</span> <strong class="ms-1">${processing}</strong>
+                                    </li>
+                                    <li data-status-count="${done}" style="--key-color: #198754">
+                                        <span class="employee-chart-key d-inline-block rounded-circle me-1" aria-hidden="true"></span>
+                                        <span>${empty statisticsMonth ? 'Đã hoàn thành' : 'Đã hoàn thành trong tháng'}</span> <strong class="ms-1">${done}</strong>
+                                    </li>
+                                </ul>
+                            </section>
+                        </div>
+                        <div class="col-12 col-xl-7">
+                            <section class="card stat-card shadow-sm p-3 p-md-4 h-100" aria-labelledby="priorityChartTitle">
+                                <h5 id="priorityChartTitle" class="fw-bold mb-1">Theo mức độ</h5>
+                                <p class="text-secondary small mb-3">Sự cố đang mở${empty statisticsMonth ? '' : ' được gửi trong tháng '.concat(statisticsMonthLabel)}</p>
+                                <div class="employee-chart mb-3" hidden>
+                                    <canvas id="employeePriorityChart" aria-hidden="true"></canvas>
+                                </div>
+                                <ul class="list-unstyled d-flex flex-wrap justify-content-center gap-3 mb-0">
+                                    <staff:forEach var="item" items="${openByPriority}">
+                                        <li data-priority-count="${item.value}" style="--key-color: ${item.key == 'Khẩn cấp' ? '#dc5061' : item.key == 'Trung bình' ? '#d7931a' : item.key == 'Thấp' ? '#3775ed' : '#64748b'}">
+                                            <span class="employee-chart-key d-inline-block rounded-circle me-1" aria-hidden="true"></span>
+                                            <span><staff:out value="${item.key}"/></span> <strong class="ms-1">${item.value}</strong>
+                                        </li>
+                                    </staff:forEach>
+                                </ul>
+                            </section>
+                        </div>
+                    </div>
+                </staff:otherwise>
+            </staff:choose>
+        </staff:if>
+
         <staff:if test="${teamView}">
             <section aria-labelledby="staffTeamHeading" class="mb-4">
-                <div class="d-flex align-items-center gap-3 p-3 p-md-4 mb-3 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-10">
-                    <span class="d-inline-flex align-items-center justify-content-center rounded-3 bg-white text-primary p-3 shadow-sm">
+                <div class="team-heading d-flex align-items-center gap-3 p-3 p-md-4 mb-3 rounded-4 text-white shadow-sm">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-3 border border-light border-opacity-25 bg-white bg-opacity-10 p-3 flex-shrink-0">
                         <i class="fa-solid fa-users fs-5" aria-hidden="true"></i>
                     </span>
                     <div>
-                        <h5 id="staffTeamHeading" class="fw-bold mb-0">Đồng nghiệp cùng tổ</h5>
+                        <h5 id="staffTeamHeading" class="fs-4 fw-bold mb-0">Đồng nghiệp cùng tổ</h5>
                         <staff:if test="${not empty staffTeam.name}">
-                            <p class="text-secondary small mb-0 mt-1"><staff:out value="${staffTeam.name}"/></p>
+                            <p class="team-heading-name small mb-0 mt-1"><staff:out value="${staffTeam.name}"/></p>
                         </staff:if>
                     </div>
                 </div>
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card team-table-card border-0 shadow-sm rounded-4 overflow-hidden">
                     <staff:choose>
                         <staff:when test="${staffTeamError}"><p class="p-4 mb-0 text-secondary">Không tải được thông tin tổ chuyên môn.</p></staff:when>
                         <staff:when test="${empty staffTeam.name}"><p class="p-4 mb-0 text-secondary">Bạn chưa được phân tổ.</p></staff:when>
@@ -307,10 +458,17 @@
 
 
         <% List<SuCo> listSuCo = (List<SuCo>) request.getAttribute("listSuCo"); %>
-        <staff:if test="${not teamView}">
+        <staff:if test="${not teamView and not statisticsView}">
         <!-- BẢNG CÔNG VIỆC CẦN XỬ LÝ NGAY -->
         <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-            <h5 id="work-list" class="fw-bold mb-0">${empty workListTitle ? 'Danh sách việc cần làm' : workListTitle}</h5>
+            <h5 id="work-list" class="fw-bold mb-0 ${not empty workFilter ? 'fs-3 d-flex align-items-center gap-2' : ''}">
+                <staff:if test="${not empty workFilter}">
+                    <span class="d-inline-flex rounded-3 p-2 ${workFilter == 'pending' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-primary-subtle text-primary'}" aria-hidden="true">
+                        <i class="fa-solid ${workFilter == 'pending' ? 'fa-clipboard-list' : 'fa-person-digging'} fs-5"></i>
+                    </span>
+                </staff:if>
+                ${empty workListTitle ? 'Danh sách việc cần làm' : workListTitle}
+            </h5>
             <div class="position-relative work-search ms-auto">
                 <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3 text-primary pe-none" aria-hidden="true"></i>
                 <input type="search" id="incidentSearch" class="form-control rounded-pill ps-5 pe-3 shadow-sm"
@@ -320,10 +478,12 @@
                 <label for="incidentDate" class="position-absolute top-50 start-0 translate-middle-y ms-3 text-primary mb-0 pe-none" title="Lọc theo ngày gửi"><i class="fa-regular fa-calendar" aria-hidden="true"></i><span class="visually-hidden">Lọc theo ngày gửi</span></label>
                 <input type="date" id="incidentDate" class="form-control w-auto rounded-pill ps-5 pe-3 shadow-sm">
             </div>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-sm btn-outline-secondary active" id="btnAll" onclick="filterByPriority('ALL')">Tất cả</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnUrgent" onclick="filterByPriority('KHẨN CẤP')">Khẩn cấp</button>
-            </div>
+            <select id="incidentPriority" class="form-select w-auto rounded-pill shadow-sm" aria-label="Lọc theo mức độ">
+                <option value="">Tất cả mức độ</option>
+                <option value="THẤP">Thấp</option>
+                <option value="TRUNG BÌNH">Trung bình</option>
+                <option value="KHẨN CẤP">Khẩn cấp</option>
+            </select>
         </div>
 
         <div class="card stat-card border-0 shadow-sm rounded-3 mb-4">
@@ -499,19 +659,16 @@
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    let selectedPriority = 'ALL';
     const incidentSearch = document.getElementById('incidentSearch');
     const incidentDate = document.getElementById('incidentDate');
+    const incidentPriority = document.getElementById('incidentPriority');
 
     function normalizeIncidentSearch(text) {
         return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
     }
 
-    function filterByPriority(priority) {
-        selectedPriority = priority;
-        document.getElementById('btnAll').classList.toggle('active', priority === 'ALL');
-        document.getElementById('btnUrgent').classList.toggle('active', priority !== 'ALL');
-
+    function filterIncidents() {
+        const priority = incidentPriority.value;
         const rows = document.querySelectorAll('.incident-row');
         const query = normalizeIncidentSearch(incidentSearch.value.trim());
         const date = incidentDate.value;
@@ -522,7 +679,7 @@
             const location = normalizeIncidentSearch(row.cells[2].textContent);
             const roomQuery = query.replace(/^p(?=\d)/, '');
             const matches = (!date || row.dataset.reportDate === date)
-                && (priority === 'ALL' || row.dataset.mucdo === priority)
+                && (!priority || row.dataset.mucdo === priority)
                 && (code.includes(query) || title.includes(query) || location.includes(roomQuery));
             row.hidden = !matches;
             if (matches) visible++;
@@ -530,8 +687,9 @@
         document.getElementById('noIncidentMatches').hidden = rows.length === 0 || visible > 0;
     }
 
-    incidentSearch?.addEventListener('input', () => filterByPriority(selectedPriority));
-    incidentDate?.addEventListener('input', () => filterByPriority(selectedPriority));
+    incidentSearch?.addEventListener('input', filterIncidents);
+    incidentDate?.addEventListener('input', filterIncidents);
+    incidentPriority?.addEventListener('change', filterIncidents);
 </script>
 
 <!-- VÒNG LẶP TẠO MODAL CHI TIẾT SỰ CỐ CHO TỪNG DÒNG -->
@@ -572,5 +730,61 @@
     }
 %>
 <%@ include file="/WEB-INF/employee_sidebar_script.jspf" %>
+<staff:if test="${statisticsView and pending + processing + done > 0}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        if (typeof Chart !== 'undefined') {
+            const chartPanel = document.getElementById('employeeWorkCharts');
+
+            function createEmployeeChart(canvasId, countAttribute, type, options) {
+                const rows = Array.from(chartPanel.querySelectorAll('[' + countAttribute + ']'));
+                const canvas = document.getElementById(canvasId);
+                canvas.parentElement.hidden = false;
+                new Chart(canvas, {
+                    type,
+                    data: {
+                        labels: rows.map(row => row.querySelector('span:nth-child(2)').textContent.trim()),
+                        datasets: [{
+                            label: 'Sự cố',
+                            data: rows.map(row => Number(row.getAttribute(countAttribute))),
+                            backgroundColor: rows.map(row => row.style.getPropertyValue('--key-color').trim()),
+                            borderColor: '#fff',
+                            borderWidth: type === 'pie' ? 3 : 0,
+                            borderRadius: type === 'bar' ? 7 : 0,
+                            maxBarThickness: 64
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, ...options.plugins },
+                        scales: options.scales
+                    }
+                });
+            }
+
+            createEmployeeChart('employeeStatusChart', 'data-status-count', 'pie', {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label(context) {
+                                const values = context.dataset.data;
+                                const total = values.reduce((sum, value) => sum + value, 0);
+                                const share = new Intl.NumberFormat('vi-VN', { style: 'percent', maximumFractionDigits: 1 });
+                                return context.label + ': ' + context.parsed + ' sự cố (' + share.format(context.parsed / total) + ')';
+                            }
+                        }
+                    }
+                }
+            });
+            createEmployeeChart('employeePriorityChart', 'data-priority-count', 'bar', {
+                scales: {
+                    x: { grid: { display: false }, ticks: { autoSkip: false } },
+                    y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#e9eef5' } }
+                }
+            });
+        }
+    </script>
+</staff:if>
 </body>
 </html>

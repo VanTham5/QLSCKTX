@@ -15,11 +15,11 @@
                     <input type="hidden" name="noticePage" value="${employeeHistoryView ? 'history' : 'home'}">
                     <div class="mb-3">
                         <label for="maintenanceTitle" class="form-label fw-bold">Tiêu đề</label>
-                        <input id="maintenanceTitle" type="text" class="form-control" name="tieuDe" maxlength="190" required>
+                        <input id="maintenanceTitle" type="text" class="form-control" name="tieuDe" placeholder="VD: Lịch bảo trì hệ thống nước tại tòa A1..." maxlength="190" required>
                     </div>
                     <div class="mb-4">
                         <label for="maintenanceContent" class="form-label fw-bold">Nội dung gửi sinh viên</label>
-                        <textarea id="maintenanceContent" class="form-control" name="noiDung" rows="5" maxlength="5000" required></textarea>
+                        <textarea id="maintenanceContent" class="form-control" name="noiDung" rows="5" placeholder="Nhập thời gian, khu vực bảo trì và lưu ý gửi đến sinh viên..." maxlength="5000" required></textarea>
                     </div>
                     <div class="d-flex justify-content-end gap-2">
                         <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Đóng</button>

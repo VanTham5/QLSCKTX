@@ -62,6 +62,23 @@ public class SuCoDAO implements ISuCoDAO {
     }
 
     // 2. Phiên bản CÓ THAM SỐ (Dùng cho EmployeeHomeServlet lọc theo tổ)
+    public int countPendingIssuesForStaff(int accountId) {
+        String sql = "SELECT COUNT(*) FROM su_co sc "
+                + "JOIN loai_su_co lsc ON sc.loai_su_co_id = lsc.loai_su_co_id "
+                + "JOIN nhan_vien nv ON sc.nhan_vien_id = nv.nhan_vien_id AND lsc.to_id = nv.to_id "
+                + "WHERE nv.tai_khoan_id = ? AND sc.trang_thai = 'Chờ xử lý'";
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, accountId);
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next() ? result.getInt(1) : 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     @Override
     public List<SuCo> getAllSuCoForStaff(int taiKhoanId) {
         List<SuCo> list = new ArrayList<>();
@@ -469,18 +486,25 @@ public class SuCoDAO implements ISuCoDAO {
 
     // Đếm số sự cố đã hoàn thành trong tháng này theo đúng tổ của nhân viên
     public int countCompletedIssuesThisMonth(int taiKhoanId) {
+        return countCompletedIssuesForStaff(taiKhoanId, java.time.YearMonth.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
+    }
+
+    public int countCompletedIssuesForStaff(int taiKhoanId, java.time.YearMonth month) {
         int count = 0;
         String query = "SELECT COUNT(*) FROM su_co sc " +
                 "JOIN loai_su_co lsc ON sc.loai_su_co_id = lsc.loai_su_co_id " +
                 "JOIN nhan_vien nv ON lsc.to_id = nv.to_id " +
                 "WHERE nv.tai_khoan_id = ? AND (sc.nhan_vien_id = nv.nhan_vien_id OR (sc.nhan_vien_id IS NULL AND sc.trang_thai <> 'Chờ xử lý')) " +
                 "AND sc.trang_thai = 'Đã hoàn thành' " +
-                "AND MONTH(sc.ngay_cap_nhat) = MONTH(CURRENT_DATE()) " +
-                "AND YEAR(sc.ngay_cap_nhat) = YEAR(CURRENT_DATE())";
+                (month == null ? "" : "AND sc.ngay_cap_nhat >= ? AND sc.ngay_cap_nhat < ?");
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
             ps.setInt(1, taiKhoanId);
+            if (month != null) {
+                ps.setTimestamp(2, Timestamp.valueOf(month.atDay(1).atStartOfDay()));
+                ps.setTimestamp(3, Timestamp.valueOf(month.plusMonths(1).atDay(1).atStartOfDay()));
+            }
             rs = ps.executeQuery();
             if (rs.next()) {
                 count = rs.getInt(1);
