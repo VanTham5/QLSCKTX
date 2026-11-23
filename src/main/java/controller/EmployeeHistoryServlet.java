@@ -42,6 +42,7 @@ public class EmployeeHistoryServlet extends HttpServlet {
         // Sửa lại đúng tên hàm trong SuCoDAO là getAllSuCoHistoryForStaff
         List<SuCo> historyList = dao.getAllSuCoHistoryForStaff(acc.getTaiKhoanId(), filter);
         request.setAttribute("historyList", historyList);
+        request.setAttribute("pending", dao.countPendingIssuesForStaff(acc.getTaiKhoanId()));
 
         request.getRequestDispatcher("employee/employee_history.jsp").forward(request, response);
     }
