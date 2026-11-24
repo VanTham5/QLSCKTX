@@ -278,7 +278,7 @@
                 <div class="p-3 bg-light rounded border">
                     <%= task.getMoTa() %>
                 </div>
-                <% pageContext.setAttribute("repairNote", task.getGhiChuKyThuat()); %>
+                <repair:set var="repairNote" value="<%= task.getGhiChuKyThuat() %>"/>
                 <repair:if test="${not empty repairNote}">
                     <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
                     <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>

@@ -202,8 +202,8 @@
         <%
             List<model.ThongBao> listTB = (List<model.ThongBao>) request.getAttribute("listTB");
             if (listTB != null && !listTB.isEmpty()) {
-                pageContext.setAttribute("latestNotice", listTB.get(0));
         %>
+        <c:set var="latestNotice" value="<%= listTB.get(0) %>"/>
         <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm rounded-3 mt-4 mb-3" role="alert" style="border-left: 5px solid #ffc107 !important;">
             <div class="d-flex align-items-center">
                 <div class="bg-warning bg-opacity-25 p-3 rounded-circle me-3 flex-shrink-0">
@@ -509,7 +509,7 @@
                 <div class="p-3 bg-light rounded border">
                     <%= task.getMoTa() %>
                 </div>
-                <% pageContext.setAttribute("repairNote", task.getGhiChuKyThuat()); %>
+                <repair:set var="repairNote" value="<%= task.getGhiChuKyThuat() %>"/>
                 <repair:if test="${not empty repairNote}">
                     <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
                     <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>

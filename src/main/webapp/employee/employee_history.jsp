@@ -21,13 +21,12 @@
         /* Sidebar Styles */
         .sidebar {
             width: 260px;
-            background-color: #ffffff;
+            background-color: #12443f;
             height: 100vh;
             position: fixed;
             left: 0;
             top: 0;
             border-right: 1px solid #e0e0e0;
-            z-index: 1000;
         }
         .main-content {
             margin-left: 260px;
@@ -35,20 +34,29 @@
             padding-bottom: 30px;
         }
         .sidebar .nav-link {
-            color: #4b5563;
+            color: #edf8f5;
             padding: 12px 20px;
             font-weight: 500;
             border-left: 3px solid transparent;
         }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            background-color: #f3f4f6;
-            color: #0d6efd;
-            border-left: 3px solid #0d6efd;
+        .sidebar .nav-link:hover, .sidebar .nav-link:focus-visible {
+            background-color: #1b544d;
+        }
+        .sidebar .nav-link.active {
+            background-color: #21645c;
+            color: #edf8f5;
+            border-left-color: #6ee7cb;
+        }
+        .sidebar .nav-link.sidebar-logout {
+            color: #ffb4b4;
+        }
+        .sidebar .sidebar-brand-icon {
+            color: #6ee7cb;
         }
         .sidebar-heading {
             font-size: 0.75rem;
             text-transform: uppercase;
-            color: #9ca3af;
+            color: #a8cbc2;
             font-weight: bold;
             padding: 10px 20px;
             margin-top: 15px;
@@ -85,14 +93,18 @@
                 flex-basis: 100%;
             }
         }
+        @media (min-width: 992px) {
+            .sidebar {
+                z-index: 1000;
+            }
+        }
         .sidebar.offcanvas-lg {
-            background-color: #fff !important;
+            background-color: #12443f !important;
         }
         @media (max-width: 991.98px) {
             .sidebar.offcanvas-lg {
                 --bs-offcanvas-width: min(260px, 90vw);
                 height: 100dvh;
-                z-index: var(--bs-offcanvas-zindex);
             }
             .main-content {
                 margin-left: 0;
@@ -102,16 +114,24 @@
                 padding: 0 1rem;
             }
         }
+        @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+            .history-table-card {
+                transition: transform 0.2s;
+            }
+            .history-table-card:hover {
+                transform: translateY(-3px);
+            }
+        }
     </style>
 </head>
 <body>
 
 <!-- SIDEBAR NHÂN VIÊN -->
 <div class="sidebar offcanvas-lg offcanvas-start d-flex flex-column" id="employeeSidebar" tabindex="-1" aria-labelledby="employeeSidebarTitle" style="overflow-y: auto;">
-    <div class="d-flex align-items-center p-3" style="height: 60px; border-bottom: 1px solid #e0e0e0;">
-        <i class="fa-solid fa-screwdriver-wrench fs-4 text-primary me-2"></i>
-        <h5 id="employeeSidebarTitle" class="mb-0 fw-bold text-dark" style="font-size: 1.1rem;">TỔ KỸ THUẬT</h5>
-        <button type="button" class="btn-close d-lg-none ms-auto" data-bs-dismiss="offcanvas"
+    <div class="d-flex align-items-center p-3" style="height: 60px; border-bottom: 1px solid rgba(237, 248, 245, .2);">
+        <i class="fa-solid fa-screwdriver-wrench fs-4 sidebar-brand-icon me-2"></i>
+        <h5 id="employeeSidebarTitle" class="mb-0 fw-bold text-white" style="font-size: 1.1rem;">TỔ KỸ THUẬT</h5>
+        <button type="button" class="btn-close btn-close-white d-lg-none ms-auto" data-bs-dismiss="offcanvas"
                 data-bs-target="#employeeSidebar" aria-label="Đóng menu"></button>
     </div>
 
@@ -121,11 +141,15 @@
     <div class="sidebar-heading">Quản lý công việc</div>
     <a href="${pageContext.request.contextPath}/employee-home?filter=pending#work-list" class="nav-link">
         <span><i class="fa-solid fa-clipboard-list me-2 w-20px"></i> Chờ xử lý</span>
+        <span class="badge bg-danger rounded-pill">${pending}</span>
     </a>
     <a href="${pageContext.request.contextPath}/employee-home?filter=processing#work-list" class="nav-link"><i class="fa-solid fa-person-digging me-2 w-20px"></i> Đang xử lý</a>
     <!-- Active state cho trang lịch sử công việc nhân viên -->
     <a href="${pageContext.request.contextPath}/employee-history" class="nav-link active"><i class="fa-solid fa-clock-rotate-left me-2 w-20px"></i> Lịch sử công việc</a>
 
+    <a href="${pageContext.request.contextPath}/employee-home?view=statistics" class="nav-link ${statisticsView ? 'active' : ''}">
+        <i class="fa-solid fa-chart-simple me-2 w-20px" aria-hidden="true"></i> Thống kê công việc
+    </a>
     <a href="${pageContext.request.contextPath}/employee-home?view=team" class="nav-link ${teamView ? 'active' : ''}">
         <i class="fa-solid fa-users me-2 w-20px" aria-hidden="true"></i> Đồng nghiệp cùng tổ
     </a>
@@ -135,7 +159,7 @@
     <div class="sidebar-heading">Hồ sơ cá nhân</div>
     <a href="#" class="nav-link" data-employee-modal="#profileModal"><i class="fa-regular fa-user me-2 w-20px"></i> Thông tin cá nhân</a>
     <a href="#" class="nav-link" data-employee-modal="#changePassModal"><i class="fa-solid fa-shield-halved me-2 w-20px"></i> Đổi mật khẩu</a>
-    <a href="${pageContext.request.contextPath}/logout" class="nav-link text-danger mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
+    <a href="${pageContext.request.contextPath}/logout" class="nav-link sidebar-logout mt-3 mb-4"><i class="fa-solid fa-right-from-bracket me-2 w-20px"></i> Đăng xuất</a>
 </div>
 
 <!-- MAIN CONTENT -->
@@ -192,7 +216,7 @@
         <p id="historySearchStatus" class="visually-hidden" role="status"></p>
 
         <!-- BẢNG LỊCH SỬ CÔNG VIỆC -->
-        <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card history-table-card border-0 shadow-sm rounded-3 mb-4">
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -283,7 +307,7 @@
                 <div class="p-3 bg-light rounded border text-muted" style="font-size: 0.95rem;">
                     <%= task.getMoTa() %>
                 </div>
-                <% pageContext.setAttribute("repairNote", task.getGhiChuKyThuat()); %>
+                <repair:set var="repairNote" value="<%= task.getGhiChuKyThuat() %>"/>
                 <repair:if test="${not empty repairNote}">
                     <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
                     <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><repair:out value="${repairNote}"/></div>
