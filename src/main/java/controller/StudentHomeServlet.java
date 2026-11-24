@@ -44,9 +44,7 @@ public class StudentHomeServlet extends HttpServlet {
         request.setAttribute("recentList", recentList);
 
         //LẤY THÔNG BÁO
-        dao.ThongBaoDAO tbDao = new dao.ThongBaoDAO();
-        List<model.ThongBao> listTB = tbDao.getAllThongBao();
-        request.setAttribute("listTB", listTB);
+        StudentNoticeServlet.loadInitialBatch(request);
 
         // Gọi DAO lấy dữ liệu thống kê loại sự cố
         SuCoDAO suCoDao = new SuCoDAO();

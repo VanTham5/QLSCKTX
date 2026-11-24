@@ -235,24 +235,19 @@ public class TaiKhoanDAO {
     }
 
     // Lấy danh sách tài khoản theo vai trò (Loại trừ ADMIN)
-    public List<TaiKhoan> getAccountsByRole(String role) {
+    public List<TaiKhoan> getAdminAccounts(String role, String team, String status, String keyword, int limit, int offset) {
         List<TaiKhoan> list = new ArrayList<>();
-        String query = "SELECT tk.tai_khoan_id, tk.ten_dang_nhap, tk.ho_ten, tk.vai_tro, tk.trang_thai, tk.so_dien_thoai, tt.ten_to " +
-                "FROM tai_khoan tk " +
-                "LEFT JOIN nhan_vien nv ON tk.tai_khoan_id = nv.tai_khoan_id " +
-                "LEFT JOIN to_nhan_vien tt ON nv.to_id = tt.to_id " +
-                "WHERE tk.vai_tro != 'ADMIN' ";
-
-        if (role != null && !role.isEmpty() && !role.equals("all")) {
-            query += "AND tk.vai_tro = ? ";
-        }
-        query += "ORDER BY tk.tai_khoan_id DESC";
-
+        List<String> parameters = new ArrayList<>();
+        String query = "SELECT tk.tai_khoan_id, tk.ten_dang_nhap, tk.ho_ten, tk.vai_tro, tk.trang_thai, tk.so_dien_thoai, tt.ten_to "
+                + adminAccountConditions(role, team, status, keyword, parameters)
+                + "ORDER BY tk.tai_khoan_id DESC LIMIT ? OFFSET ?";
         try (Connection conn = new DBContext().getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
-            if (role != null && !role.isEmpty() && !role.equals("all")) {
-                ps.setString(1, role);
+            for (int i = 0; i < parameters.size(); i++) {
+                ps.setString(i + 1, parameters.get(i));
             }
+            ps.setInt(parameters.size() + 1, limit);
+            ps.setInt(parameters.size() + 2, offset);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     TaiKhoan tk = new TaiKhoan();
@@ -279,8 +274,49 @@ public class TaiKhoanDAO {
     }
 
     // Cập nhật trạng thái tài khoản (1: Hoạt động, 0: Ngừng hoạt động)
+    public int countAdminAccounts(String role, String team, String status, String keyword) {
+        List<String> parameters = new ArrayList<>();
+        String query = "SELECT COUNT(*) " + adminAccountConditions(role, team, status, keyword, parameters);
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            for (int i = 0; i < parameters.size(); i++) {
+                ps.setString(i + 1, parameters.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    private String adminAccountConditions(String role, String team, String status, String keyword, List<String> parameters) {
+        StringBuilder sql = new StringBuilder("FROM tai_khoan tk "
+                + "LEFT JOIN nhan_vien nv ON tk.tai_khoan_id = nv.tai_khoan_id "
+                + "LEFT JOIN to_nhan_vien tt ON nv.to_id = tt.to_id WHERE tk.vai_tro <> 'ADMIN' ");
+        if (!"all".equals(role)) {
+            sql.append("AND tk.vai_tro = ? ");
+            parameters.add(role);
+        }
+        if (!team.isEmpty()) {
+            sql.append("AND tt.ten_to = ? ");
+            parameters.add(team);
+        }
+        if (!status.isEmpty()) {
+            sql.append("AND tk.trang_thai = ? ");
+            parameters.add(status);
+        }
+        if (!keyword.isEmpty()) {
+            sql.append("AND LOCATE(?, LOWER(CONCAT_WS(' ', CONCAT('#TK', tk.tai_khoan_id), "
+                    + "tk.ho_ten, tk.ten_dang_nhap, tk.so_dien_thoai))) > 0 ");
+            parameters.add(keyword.toLowerCase(java.util.Locale.ROOT));
+        }
+        return sql.toString();
+    }
+
     public boolean updateAccountStatus(int taiKhoanId, int trangThaiMoi) {
-        String query = "UPDATE tai_khoan SET trang_thai = ? WHERE tai_khoan_id = ?";
+        String query = "UPDATE tai_khoan SET trang_thai = ? WHERE tai_khoan_id = ? AND vai_tro <> 'ADMIN'";
         try (Connection connection = new DBContext().getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, trangThaiMoi);

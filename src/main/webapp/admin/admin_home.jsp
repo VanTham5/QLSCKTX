@@ -1,3 +1,4 @@
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
@@ -11,6 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/incident-pagination.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -305,6 +307,8 @@
                         </tbody>
                     </table>
                 </div>
+                <c:set var="adminPaginationPath" value="/admin-home"/>
+                <%@ include file="/WEB-INF/admin_pagination.jspf" %>
             </div>
         </div>
 
@@ -434,6 +438,7 @@
             <form action="${pageContext.request.contextPath}/assign-task" method="POST">
                 <div class="modal-body p-4 text-start">
                     <input type="hidden" name="suCoId" value="<%= task.getSuCoId() %>">
+                    <input type="hidden" name="page" value="${pageNumber}">
                     <h6 class="fw-bold text-primary mb-3"><%= task.getTieuDe() %></h6>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Chọn nhân viên kỹ thuật phụ trách <span class="text-danger">*</span></label>
@@ -501,7 +506,7 @@
                         <div class="alert alert-danger py-2 small"><i class="fa-solid fa-circle-exclamation me-1"></i> Cập nhật thất bại. Vui lòng kiểm tra lại!</div>
                         <% } %>
 
-                        <form id="adminProfileForm" action="${pageContext.request.contextPath}/update-profile" method="POST">
+                        <form id="adminProfileForm" action="${pageContext.request.contextPath}/update-profile" data-validation="profile" method="POST">
                             <fieldset id="adminProfileFieldset" disabled>
                                 <div class="mb-3">
                                     <label class="form-label fw-bold small">Tên đăng nhập</label>
@@ -509,15 +514,15 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-bold small">Họ và tên <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="fullName" value="${sessionScope.acc.hoTen}" required>
+                                    <input type="text" class="form-control" name="fullName" maxlength="100" value="${sessionScope.acc.hoTen}" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-bold small">Email</label>
-                                    <input type="email" class="form-control" name="email" value="${sessionScope.acc.email}" placeholder="Nhập địa chỉ email...">
+                                    <input type="email" class="form-control" name="email" maxlength="100" value="${sessionScope.acc.email}" placeholder="Nhập địa chỉ email...">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-bold small">Số điện thoại</label>
-                                    <input type="text" class="form-control" name="sdt" value="${sessionScope.acc.soDienThoai}" placeholder="Nhập số điện thoại...">
+                                    <input type="tel" inputmode="numeric" class="form-control" name="sdt" maxlength="10" value="${sessionScope.acc.soDienThoai}" placeholder="Nhập số điện thoại...">
                                 </div>
                             </fieldset>
 
@@ -551,7 +556,7 @@
                         <div class="alert alert-danger py-2 small"><i class="fa-solid fa-circle-exclamation me-1"></i> Vui lòng nhập đầy đủ thông tin!</div>
                         <% } %>
 
-                        <form action="${pageContext.request.contextPath}/change-password" method="POST">
+                        <form action="${pageContext.request.contextPath}/change-password" data-validation="password" method="POST">
                             <div class="mb-3">
                                 <label class="form-label fw-bold small">Mật khẩu hiện tại <span class="text-danger">*</span></label>
                                 <input type="password" class="form-control <%= "wrong_old_pass".equals(passErr) ? "is-invalid" : "" %>" name="oldPass" required>
@@ -559,7 +564,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-bold small">Mật khẩu mới <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control" name="newPass" required>
+                                <input type="password" class="form-control" name="newPass" minlength="6" maxlength="72" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-bold small">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
@@ -624,5 +629,6 @@
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+<script src="${pageContext.request.contextPath}/js/form-validation.js"></script>
 </body>
 </html>

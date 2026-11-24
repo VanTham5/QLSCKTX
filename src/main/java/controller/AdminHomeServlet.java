@@ -29,12 +29,13 @@ public class AdminHomeServlet extends HttpServlet {
         SuCoDAO dao = new SuCoDAO();
 
         // 1. CHỈ LẤY DANH SÁCH SỰ CỐ "CHỜ XỬ LÝ" CHO BẢNG CHÍNH TRANG CHỦ
-        List<SuCo> listSuCo = dao.getPendingSuCoForAdmin();
+        int pending = dao.countAdminIncidents("pending", "", "");
+        int offset = AdminPage.offset(request, pending);
+        List<SuCo> listSuCo = dao.getPendingSuCoForAdmin(AdminPage.SIZE, offset);
 
         // 2. TÍNH TOÁN SỐ LIỆU THỐNG KÊ TỔNG QUAN CHO CÁC THẺ STAT CARD
-        int total = dao.getAllSuCoForAdmin("all").size();       // Tổng số sự cố toàn hệ thống
-        int pending = listSuCo.size();                          // Số lượng đang chờ xử lý
-        int processing = dao.getAllSuCoForAdmin("processing").size(); // Số lượng đang tiến hành sửa chữa
+        int total = dao.countAdminIncidents("all", "", "");
+        int processing = dao.countAdminIncidents("processing", "", "");
         int totalStudents = dao.countTotalStudents();           // Tổng sinh viên nội trú
 
         // 3. ĐẨY DỮ LIỆU SANG JSP

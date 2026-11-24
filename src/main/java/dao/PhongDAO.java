@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class PhongDAO {
 
@@ -26,26 +27,57 @@ public class PhongDAO {
         return list;
     }
 
-    // 2. Lấy danh sách phòng theo tòa nhà (hoặc tất cả) kèm số lượng sinh viên đang ở
-    public List<Phong> getRoomsByBuilding(String toaNha) {
+    private String roomConditions(String building, String keyword, List<String> parameters) {
+        StringBuilder sql = new StringBuilder("WHERE 1=1 ");
+        if (!"all".equalsIgnoreCase(building)) {
+            sql.append("AND p.toa_nha = ? ");
+            parameters.add(building);
+        }
+        if (!keyword.isEmpty()) {
+            sql.append("AND LOCATE(?, LOWER(CONCAT_WS(' ', p.ma_phong, p.toa_nha, ")
+                    .append("CONCAT('Tầng ', p.tang), p.loai_phong, p.trang_thai))) > 0 ");
+            parameters.add(keyword.toLowerCase(Locale.ROOT));
+        }
+        return sql.toString();
+    }
+
+    public int countRooms(String building, String keyword) {
+        List<String> parameters = new ArrayList<>();
+        String query = "SELECT COUNT(*) FROM phong p " + roomConditions(building, keyword, parameters);
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            for (int i = 0; i < parameters.size(); i++) {
+                ps.setString(i + 1, parameters.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    // 2. Lấy danh sách phòng theo tòa nhà kèm số lượng sinh viên đang ở
+    public List<Phong> getRoomsByBuilding(String building, String keyword, int limit, int offset) {
         List<Phong> list = new ArrayList<>();
         String query = "SELECT p.phong_id, p.ma_phong, p.toa_nha, p.tang, p.loai_phong, p.trang_thai, " +
                 "COUNT(sv.sinh_vien_id) AS so_sinh_vien " +
                 "FROM phong p " +
                 "LEFT JOIN sinh_vien sv ON p.phong_id = sv.phong_id ";
 
-        boolean filterBuilding = toaNha != null && !toaNha.isEmpty() && !"all".equalsIgnoreCase(toaNha);
-        if (filterBuilding) {
-            query += "WHERE p.toa_nha = ? ";
-        }
-        query += "GROUP BY p.phong_id, p.ma_phong, p.toa_nha, p.tang, p.loai_phong, p.trang_thai " +
-                "ORDER BY p.toa_nha, p.tang, p.ma_phong";
+        List<String> parameters = new ArrayList<>();
+        query += roomConditions(building, keyword, parameters)
+                + "GROUP BY p.phong_id, p.ma_phong, p.toa_nha, p.tang, p.loai_phong, p.trang_thai "
+                + "ORDER BY p.toa_nha, p.tang, p.ma_phong, p.phong_id LIMIT ? OFFSET ?";
 
         try (Connection conn = new DBContext().getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
-            if (filterBuilding) {
-                ps.setString(1, toaNha);
+            for (int i = 0; i < parameters.size(); i++) {
+                ps.setString(i + 1, parameters.get(i));
             }
+            ps.setInt(parameters.size() + 1, limit);
+            ps.setInt(parameters.size() + 2, offset);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Phong p = new Phong();

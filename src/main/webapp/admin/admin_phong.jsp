@@ -1,6 +1,6 @@
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
-<%@ page import="java.net.URLEncoder" %>
 <%@ page import="model.Phong" %>
 <%@ page import="dao.PhongDAO" %>
 <!DOCTYPE html>
@@ -13,6 +13,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/incident-pagination.css">
     <style>
         body {
             background-color: #f4f6f9;
@@ -167,27 +168,35 @@
 
         <!-- BỘ LỌC TÒA NHÀ & TÌM KIẾM -->
         <%
-            String currentBuilding = (String) request.getAttribute("currentBuilding");
-            if (currentBuilding == null) currentBuilding = "all";
             List<String> listToaNha = (List<String>) request.getAttribute("listToaNha");
         %>
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <div class="btn-group shadow-sm" role="group">
-                <a href="${pageContext.request.contextPath}/admin-phong?building=all"
-                   class="btn btn-outline-secondary filter-btn <%= "all".equalsIgnoreCase(currentBuilding) ? "active" : "" %>">Tất cả tòa</a>
-                <% if (listToaNha != null) {
-                    for (String buildingName : listToaNha) {
-                %>
-                <a href="${pageContext.request.contextPath}/admin-phong?building=<%= URLEncoder.encode(buildingName, "UTF-8") %>"
-                   class="btn btn-outline-secondary filter-btn <%= buildingName.equals(currentBuilding) ? "active" : "" %>"><%= buildingName %></a>
-                <%  }
-                } %>
+                <c:url var="allRoomsUrl" value="/admin-phong">
+                    <c:param name="building" value="all"/>
+                    <c:param name="q" value="${keyword}"/>
+                </c:url>
+                <a href="<c:out value='${allRoomsUrl}'/>"
+                   class="btn btn-outline-secondary filter-btn ${currentBuilding == 'all' ? 'active' : ''}">Tất cả tòa</a>
+                <c:forEach var="buildingName" items="${listToaNha}">
+                    <c:url var="buildingUrl" value="/admin-phong">
+                        <c:param name="building" value="${buildingName}"/>
+                        <c:param name="q" value="${keyword}"/>
+                    </c:url>
+                    <a href="<c:out value='${buildingUrl}'/>"
+                       class="btn btn-outline-secondary filter-btn ${buildingName == currentBuilding ? 'active' : ''}"><c:out value="${buildingName}"/></a>
+                </c:forEach>
             </div>
 
-            <div style="min-width: 260px;">
-                <input type="text" id="roomSearchInput" class="form-control bg-white shadow-sm"
-                       placeholder="Tìm mã phòng, tầng, loại phòng..." onkeyup="filterRoomTable()">
-            </div>
+            <form action="${pageContext.request.contextPath}/admin-phong" method="get" class="input-group shadow-sm w-auto" role="search">
+                <input type="hidden" name="building" value="<c:out value='${currentBuilding}'/>">
+                <input type="search" id="roomSearchInput" name="q" class="form-control bg-white" maxlength="100"
+                       value="<c:out value='${keyword}'/>" aria-label="Tìm mã phòng, tầng hoặc loại phòng"
+                       placeholder="Tìm mã phòng, tầng, loại phòng...">
+                <button class="btn btn-outline-primary" type="submit" aria-label="Tìm phòng">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                </button>
+            </form>
         </div>
 
         <!-- BẢNG HIỂN THỊ DANH SÁCH PHÒNG -->
@@ -247,7 +256,9 @@
                                       onsubmit="return confirm('Bạn có chắc chắn muốn xóa phòng <%= p.getMaPhong() %> (<%= p.getToaNha() %>) không?');">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="phongId" value="<%= p.getPhongId() %>">
-                                    <input type="hidden" name="building" value="<%= currentBuilding %>">
+                                    <input type="hidden" name="building" value="<c:out value='${currentBuilding}'/>">
+                                    <input type="hidden" name="q" value="<c:out value='${keyword}'/>">
+                                    <input type="hidden" name="page" value="${pageNumber}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
                                         <i class="fa-solid fa-trash"></i> Xóa
                                     </button>
@@ -259,12 +270,14 @@
                         } else {
                         %>
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">Chưa có phòng nào trong danh mục.</td>
+                            <td colspan="7" class="text-center py-4 text-muted">${empty keyword ? 'Chưa có phòng nào trong danh mục.' : 'Không tìm thấy phòng phù hợp.'}</td>
                         </tr>
                         <% } %>
                         </tbody>
                     </table>
                 </div>
+                <c:set var="adminPaginationPath" value="/admin-phong"/>
+                <%@ include file="/WEB-INF/admin_pagination.jspf" %>
             </div>
         </div>
 
@@ -277,7 +290,9 @@
         <div class="modal-content">
             <form action="${pageContext.request.contextPath}/admin-phong" method="POST">
                 <input type="hidden" name="action" value="add">
-                <input type="hidden" name="building" value="<%= currentBuilding %>">
+                <input type="hidden" name="building" value="<c:out value='${currentBuilding}'/>">
+                <input type="hidden" name="q" value="<c:out value='${keyword}'/>">
+                <input type="hidden" name="page" value="${pageNumber}">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus-circle me-2"></i>Thêm phòng mới</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -389,7 +404,9 @@
             <form action="${pageContext.request.contextPath}/admin-phong" method="POST">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="phongId" value="<%= p.getPhongId() %>">
-                <input type="hidden" name="building" value="<%= currentBuilding %>">
+                <input type="hidden" name="building" value="<c:out value='${currentBuilding}'/>">
+                <input type="hidden" name="q" value="<c:out value='${keyword}'/>">
+                <input type="hidden" name="page" value="${pageNumber}">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Cập nhật phòng #P0<%= p.getPhongId() %> - <%= p.getMaPhong() %></h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -465,15 +482,5 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function filterRoomTable() {
-        const keyword = document.getElementById('roomSearchInput').value.toLowerCase().trim();
-        const rows = document.querySelectorAll('#roomTable tbody tr.room-row');
-        rows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(keyword) ? '' : 'none';
-        });
-    }
-</script>
 </body>
 </html>

@@ -1,7 +1,6 @@
 package controller;
 
 import dao.TaiKhoanDAO;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,75 +11,45 @@ import java.io.IOException;
 
 @WebServlet(name = "ChangePasswordServlet", urlPatterns = {"/change-password"})
 public class ChangePasswordServlet extends HttpServlet {
-
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
-
-        HttpSession session = request.getSession();
-        TaiKhoan acc = (TaiKhoan) session.getAttribute("acc");
-
-        if (acc == null) {
-            response.sendRedirect("login.jsp");
+        HttpSession session = request.getSession(false);
+        TaiKhoan account = session == null ? null : (TaiKhoan) session.getAttribute("acc");
+        if (account == null) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
 
-        String oldPass = request.getParameter("oldPass");
-        String newPass = request.getParameter("newPass");
+        String oldPassword = request.getParameter("oldPass");
+        String newPassword = request.getParameter("newPass");
+        boolean confirmed = newPassword != null && newPassword.equals(request.getParameter("confirmPass"));
+        boolean valid = oldPassword != null && !oldPassword.isEmpty()
+                && FormValidation.password(newPassword) && confirmed;
+        boolean changed = valid && new TaiKhoanDAO().changePassword(account.getTaiKhoanId(), oldPassword, newPassword);
 
-        if ("NHAN_VIEN".equals(acc.getVaiTro())) {
-            String page = "history".equals(request.getParameter("profilePage"))
-                    ? "/employee-history" : "/employee-home";
-            String result;
-            if (oldPass == null || oldPass.isEmpty() || newPass == null || newPass.trim().isEmpty()
-                    || !newPass.equals(request.getParameter("confirmPass"))) {
-                result = "invalid";
+        String role = account.getVaiTro();
+        boolean history = "history".equals(request.getParameter("profilePage"));
+        String destination;
+        String result;
+        if ("NHAN_VIEN".equals(role)) {
+            destination = history ? "/employee-history" : "/employee-home";
+            result = "passwordUpdate=" + (!valid ? "invalid" : changed ? "success" : "failed");
+        } else if ("ADMIN".equals(role)) {
+            destination = "/admin-home";
+            if (changed) {
+                result = "msg=pass_success";
+            } else if (oldPassword == null || oldPassword.isEmpty() || newPassword == null || newPassword.trim().isEmpty()) {
+                result = "passError=empty";
+            } else if (!confirmed) {
+                result = "passError=mismatch";
             } else {
-                result = new TaiKhoanDAO().changePassword(acc.getTaiKhoanId(), oldPass, newPass)
-                        ? "success" : "failed";
+                result = !valid ? "passError=short" : "error=wrong_old_pass";
             }
-            response.sendRedirect(request.getContextPath() + page + "?passwordUpdate=" + result);
-            return;
-        }
-
-        if ("ADMIN".equals(acc.getVaiTro())) {
-            String confirmPass = request.getParameter("confirmPass");
-            String referer = request.getHeader("referer");
-            String base = (referer != null && !referer.isEmpty())
-                    ? referer.split("\\?")[0]
-                    : (request.getContextPath() + "/admin-home");
-
-            if (oldPass == null || oldPass.isEmpty() || newPass == null || newPass.trim().isEmpty()) {
-                response.sendRedirect(base + "?passError=empty");
-            } else if (!newPass.equals(confirmPass)) {
-                response.sendRedirect(base + "?passError=mismatch");
-            } else if (newPass.length() < 6) {
-                response.sendRedirect(base + "?passError=short");
-            } else if (new TaiKhoanDAO().changePassword(acc.getTaiKhoanId(), oldPass, newPass)) {
-                acc.setMatKhau(newPass);
-                session.setAttribute("acc", acc);
-                response.sendRedirect(base + "?msg=pass_success");
-            } else {
-                response.sendRedirect(base + "?error=wrong_old_pass");
-            }
-            return;
-        }
-
-        TaiKhoanDAO dao = new TaiKhoanDAO();
-        boolean success = dao.changePassword(acc.getTaiKhoanId(), oldPass, newPass);
-
-        // Lấy đường dẫn trang hiện tại để redirect ngược lại
-        String referer = request.getHeader("referer");
-        if (referer == null) referer = request.getContextPath() + "/student-home";
-
-        if (success) {
-            // Đổi thành công -> Chuyển hướng kèm param thông báo thành công
-            response.sendRedirect(referer.split("\\?")[0] + "?msg=pass_success");
         } else {
-            // Sai mật khẩu cũ -> Điều hướng kèm param lỗi để hiện khung báo đỏ
-            response.sendRedirect(referer.split("\\?")[0] + "?error=wrong_old_pass");
+            destination = history ? "/student-history" : "/student-home";
+            result = !valid ? "passError=invalid" : changed ? "msg=pass_success" : "error=wrong_old_pass";
         }
+        response.sendRedirect(request.getContextPath() + destination + "?" + result);
     }
 }
-//okokokokokok

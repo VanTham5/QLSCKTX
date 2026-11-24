@@ -1,4 +1,5 @@
 <%@ taglib prefix="staff" uri="jakarta.tags.core" %>
+<%@ taglib prefix="staffFn" uri="jakarta.tags.functions" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
@@ -12,6 +13,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/incident-pagination.css">
     <style>
         body {
             background-color: #f0f2f5;
@@ -190,7 +192,7 @@
     <div class="sidebar-heading">Quản lý công việc</div>
     <a href="${pageContext.request.contextPath}/employee-home?filter=pending#work-list" class="nav-link ${workFilter == 'pending' ? 'active' : ''}">
         <span><i class="fa-solid fa-clipboard-list me-2 w-20px"></i> Chờ xử lý</span>
-        <span class="badge bg-danger rounded-pill">${sidebarPending ne null ? sidebarPending : pending}</span>
+        <span class="badge bg-danger rounded-pill" data-work-count="sidebar">${sidebarPending ne null ? sidebarPending : pending}</span>
     </a>
     <a href="${pageContext.request.contextPath}/employee-home?filter=processing#work-list" class="nav-link ${workFilter == 'processing' ? 'active' : ''}"><i class="fa-solid fa-person-digging me-2 w-20px"></i> Đang xử lý</a>
     <a href="${pageContext.request.contextPath}/employee-history" class="nav-link">
@@ -287,7 +289,7 @@
                             <i class="fa-solid fa-clipboard-question"></i>
                         </div>
                         <div>
-                            <h4 class="fw-bold mb-0">${pending != null ? pending : 0}</h4>
+                            <h4 class="fw-bold mb-0" data-work-count="pending">${pending != null ? pending : 0}</h4>
                             <span class="text-muted small">Sự cố chờ tiếp nhận</span>
                         </div>
                     </div>
@@ -298,7 +300,7 @@
                             <i class="fa-solid fa-person-digging"></i>
                         </div>
                         <div>
-                            <h4 class="fw-bold mb-0">${processing != null ? processing : 0}</h4>
+                            <h4 class="fw-bold mb-0" data-work-count="processing">${processing != null ? processing : 0}</h4>
                             <span class="text-muted small">Công việc đang xử lý</span>
                         </div>
                     </div>
@@ -309,7 +311,7 @@
                             <i class="fa-solid fa-check-double"></i>
                         </div>
                         <div>
-                            <h4 class="fw-bold mb-0">${done != null ? done : 0}</h4>
+                            <h4 class="fw-bold mb-0" data-work-count="done">${done != null ? done : 0}</h4>
                             <span class="text-muted small">Đã hoàn thành (Tháng này)</span>
                         </div>
                     </div>
@@ -461,7 +463,7 @@
         <staff:if test="${not teamView and not statisticsView}">
         <!-- BẢNG CÔNG VIỆC CẦN XỬ LÝ NGAY -->
         <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-            <h5 id="work-list" class="fw-bold mb-0 ${not empty workFilter ? 'fs-3 d-flex align-items-center gap-2' : ''}">
+            <h5 id="work-list" tabindex="-1" class="fw-bold mb-0 ${not empty workFilter ? 'fs-3 d-flex align-items-center gap-2' : ''}">
                 <staff:if test="${not empty workFilter}">
                     <span class="d-inline-flex rounded-3 p-2 ${workFilter == 'pending' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-primary-subtle text-primary'}" aria-hidden="true">
                         <i class="fa-solid ${workFilter == 'pending' ? 'fa-clipboard-list' : 'fa-person-digging'} fs-5"></i>
@@ -486,7 +488,11 @@
             </select>
         </div>
 
-        <div class="card stat-card border-0 shadow-sm rounded-3 mb-4">
+        <div id="employeeWorkFeedback" class="mb-3" hidden>
+            <span id="employeeWorkStatus" role="status"></span>
+            <button type="button" id="retryEmployeeWorkRefresh" class="btn btn-sm btn-outline-primary" hidden>Tải lại danh sách</button>
+        </div>
+        <div id="employeeWorkTable" class="card stat-card border-0 shadow-sm rounded-3 mb-4">
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -512,18 +518,18 @@
                                     String badgeMucDo = task.getMucDo().equals("KHẨN CẤP") ? "danger" : (task.getMucDo().equals("TRUNG BÌNH") ? "warning" : "success");
                                     String badgeTrangThai = task.getTrangThai().equals("Chờ xử lý") ? "warning" : (task.getTrangThai().equals("Đang xử lý") ? "primary" : "success");
                         %>
-                        <!-- Mỗi dòng <tr> nằm bên trong vòng lặp for nên biến task được nhận diện bình thường -->
-                        <tr class="incident-row" data-report-date="<%= task.getNgayGui() == null ? "" : task.getNgayGui().toLocalDateTime().toLocalDate() %>" data-mucdo="<%= task.getMucDo() %>">
+                        <% pageContext.setAttribute("workIssue", task); %>
+                        <tr class="incident-row" data-report-date="<%= task.getNgayGui() == null ? "" : task.getNgayGui().toLocalDateTime().toLocalDate() %>" data-mucdo="${staffFn:escapeXml(workIssue.mucDo)}">
                             <td class="ps-4"><span class="fw-bold text-secondary">#SC0<%= task.getSuCoId() %></span></td>
                             <td>
-                                <div class="fw-bold text-dark"><%= task.getTieuDe() %></div>
+                                <div class="fw-bold text-dark">${staffFn:escapeXml(workIssue.tieuDe)}</div>
                                 <div class="text-muted" style="font-size: 0.8rem;">Gửi lúc: <%= task.getNgayGui() %></div>
                             </td>
-                            <td><span class="fw-medium text-dark"><i class="fa-solid fa-location-dot text-danger me-1"></i> <%= task.getViTriPhong() %></span></td>
-                            <td><span class="badge bg-<%= badgeMucDo %> bg-opacity-10 text-<%= badgeMucDo %> border border-<%= badgeMucDo %>"><%= task.getMucDo() %></span></td>
+                            <td><span class="fw-medium text-dark"><i class="fa-solid fa-location-dot text-danger me-1"></i> ${staffFn:escapeXml(workIssue.viTriPhong)}</span></td>
+                            <td><span class="badge bg-<%= badgeMucDo %> bg-opacity-10 text-<%= badgeMucDo %> border border-<%= badgeMucDo %>">${staffFn:escapeXml(workIssue.mucDo)}</span></td>
                             <td>
-                                <a href="tel:<%= task.getSoDienThoai() != null ? task.getSoDienThoai().replace(".", "") : "" %>" class="text-decoration-none fw-medium text-primary">
-                                    <i class="fa-solid fa-phone fa-sm me-1"></i> <%= task.getSoDienThoai() %>
+                                <a href="tel:${staffFn:escapeXml(staffFn:replace(workIssue.soDienThoai, '.', ''))}" class="text-decoration-none fw-medium text-primary">
+                                    <i class="fa-solid fa-phone fa-sm me-1"></i> ${staffFn:escapeXml(workIssue.soDienThoai)}
                                 </a>
                             </td>
                             <td><span class="badge bg-<%= badgeTrangThai %> <%= task.getTrangThai().equals("Chờ xử lý") ? "text-dark" : "text-white" %>"><%= task.getTrangThai() %></span></td>
@@ -537,28 +543,22 @@
 
                             <td class="pe-4 text-center">
                                 <% if (task.getTrangThai().equals("Chờ xử lý")) { %>
-                                <!-- Nút Nhận việc (Đã dùng replace để loại bỏ dấu nháy chống vỡ giao diện) -->
                                 <button type="button" class="btn btn-sm btn-success shadow-sm"
                                         data-suco-id="<%= task.getSuCoId() %>"
                                         data-trang-thai="Đang xử lý"
                                         data-title="Xác nhận nhận việc"
-                                        data-message="Bạn có chắc chắn muốn nhận xử lý sự cố '<%= task.getTieuDe() != null ? task.getTieuDe().replace("'", "\\'").replace("\"", "&quot;") : "" %>' này không?"
                                         data-btn-class="btn-success"
-                                        data-btn-text="Nhận việc"
-                                        onclick="openConfirmModalFromBtn(this)">
+                                        data-btn-text="Nhận việc">
                                     <i class="fa-solid fa-hand-holding-hand me-1"></i> Nhận việc
                                 </button>
 
                                 <% } else if (task.getTrangThai().equals("Đang xử lý")) { %>
-                                <!-- Nút Xong (Đã dùng replace để loại bỏ dấu nháy chống vỡ giao diện) -->
                                 <button type="button" class="btn btn-sm btn-primary shadow-sm"
                                         data-suco-id="<%= task.getSuCoId() %>"
                                         data-trang-thai="Đã hoàn thành"
                                         data-title="Xác nhận hoàn thành"
-                                        data-message="Xác nhận sự cố '<%= task.getTieuDe() != null ? task.getTieuDe().replace("'", "\\'").replace("\"", "&quot;") : "" %>' đã sửa xong và chuyển sang trạng thái hoàn thành?"
                                         data-btn-class="btn-primary"
-                                        data-btn-text="Xác nhận xong"
-                                        onclick="openConfirmModalFromBtn(this)">
+                                        data-btn-text="Xác nhận xong">
                                     <i class="fa-solid fa-check me-1"></i> Xong
                                 </button>
                                 <% } else { %>
@@ -580,6 +580,9 @@
                 </tbody>
                     </table>
                 </div>
+                <div class="incident-pagination--employee">
+                    <%@ include file="/WEB-INF/incident_pagination.jspf" %>
+                </div>
             </div>
         </div>
         </staff:if>
@@ -587,15 +590,16 @@
 </div> <!-- End main-content -->
 
 <!-- MODAL XÁC NHẬN THAO TÁC CHUNG -->
-<div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="confirmActionModal" tabindex="-1" aria-labelledby="confirmModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold" id="confirmModalTitle"><i class="fa-solid fa-triangle-exclamation me-2"></i>Xác nhận</h5>
+                <h5 class="modal-title fw-bold" id="confirmModalTitle"><i class="fa-solid fa-triangle-exclamation me-2" aria-hidden="true"></i><span id="confirmActionTitle">Xác nhận</span></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <p id="confirmModalMessage" class="fs-6 text-dark mb-0 fw-medium">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+                <div id="confirmActionError" class="text-danger mt-3" role="alert" hidden></div>
                 <div id="repairNoteField" class="mt-3" hidden>
                     <label for="repairNote" class="form-label">Kết quả sửa chữa và vật tư thay thế</label>
                     <textarea id="repairNote" name="ghiChuKyThuat" form="confirmActionForm"
@@ -616,86 +620,19 @@
     </div>
 </div>
 
-<!-- SCRIPT ĐIỀU KHIỂN MODAL XÁC NHẬN -->
-<script>
-    function openConfirmModal(suCoId, trangThaiMoi, title, message, btnClass, btnText) {
-        document.getElementById('confirmModalTitle').innerHTML = '<i class="fa-solid fa-circle-question me-2"></i>' + title;
-        document.getElementById('confirmModalMessage').innerText = message;
-
-        document.getElementById('modalSuCoId').value = suCoId;
-        document.getElementById('modalTrangThaiMoi').value = trangThaiMoi;
-
-        const completed = trangThaiMoi === 'Đã hoàn thành';
-        const note = document.getElementById('repairNote');
-        document.getElementById('repairNoteField').hidden = !completed;
-        note.value = '';
-        note.disabled = !completed;
-        note.required = completed;
-
-        const submitBtn = document.getElementById('confirmModalSubmitBtn');
-        submitBtn.className = 'btn px-4 fw-bold text-white ' + btnClass;
-        submitBtn.innerText = btnText;
-
-        var myModal = new bootstrap.Modal(document.getElementById('confirmActionModal'));
-        myModal.show();
-    }
-
-    // <-- BỔ SUNG THÊM HÀM NÀY ĐỂ KẾT NỐI DỮ LIỆU TỪ NÚT BẤM VÀO MODAL -->
-    function openConfirmModalFromBtn(btn) {
-        const suCoId = btn.getAttribute('data-suco-id');
-        const trangThaiMoi = btn.getAttribute('data-trang-thai');
-        const title = btn.getAttribute('data-title');
-        const message = btn.getAttribute('data-message');
-        const btnClass = btn.getAttribute('data-btn-class');
-        const btnText = btn.getAttribute('data-btn-text');
-
-        openConfirmModal(suCoId, trangThaiMoi, title, message, btnClass, btnText);
-    }
-</script>
-
 <%@ include file="/WEB-INF/employee_account_modals.jspf" %>
 <%@ include file="/WEB-INF/employee_maintenance_notice.jspf" %>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    const incidentSearch = document.getElementById('incidentSearch');
-    const incidentDate = document.getElementById('incidentDate');
-    const incidentPriority = document.getElementById('incidentPriority');
-
-    function normalizeIncidentSearch(text) {
-        return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
-    }
-
-    function filterIncidents() {
-        const priority = incidentPriority.value;
-        const rows = document.querySelectorAll('.incident-row');
-        const query = normalizeIncidentSearch(incidentSearch.value.trim());
-        const date = incidentDate.value;
-        let visible = 0;
-        rows.forEach(row => {
-            const code = normalizeIncidentSearch(row.cells[0].textContent);
-            const title = normalizeIncidentSearch(row.cells[1].querySelector(".fw-bold").textContent);
-            const location = normalizeIncidentSearch(row.cells[2].textContent);
-            const roomQuery = query.replace(/^p(?=\d)/, '');
-            const matches = (!date || row.dataset.reportDate === date)
-                && (!priority || row.dataset.mucdo === priority)
-                && (code.includes(query) || title.includes(query) || location.includes(roomQuery));
-            row.hidden = !matches;
-            if (matches) visible++;
-        });
-        document.getElementById('noIncidentMatches').hidden = rows.length === 0 || visible > 0;
-    }
-
-    incidentSearch?.addEventListener('input', filterIncidents);
-    incidentDate?.addEventListener('input', filterIncidents);
-    incidentPriority?.addEventListener('change', filterIncidents);
-</script>
+<script src="${pageContext.request.contextPath}/js/incident-pagination.js"></script>
 
 <!-- VÒNG LẶP TẠO MODAL CHI TIẾT SỰ CỐ CHO TỪNG DÒNG -->
+<div id="employeeWorkDetails">
 <%
     if (listSuCo != null && !listSuCo.isEmpty()) {
         for (SuCo task : listSuCo) {
+            pageContext.setAttribute("workIssue", task);
             String badgeMucDo = "KHẨN CẤP".equals(task.getMucDo()) ? "danger" : ("TRUNG BÌNH".equals(task.getMucDo()) ? "warning" : "success");
             String badgeTrangThai = "Chờ xử lý".equals(task.getTrangThai()) ? "warning" : ("Đang xử lý".equals(task.getTrangThai()) ? "primary" : "success");
 %>
@@ -707,16 +644,16 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 text-start">
-                <h6 class="fw-bold text-primary mb-3"><%= task.getTieuDe() %></h6>
-                <div class="mb-2"><strong>Vị trí phòng:</strong> <span class="text-danger"><%= task.getViTriPhong() %></span></div>
-                <div class="mb-2"><strong>Mức độ:</strong> <span class="badge bg-<%= badgeMucDo %>"><%= task.getMucDo() %></span></div>
+                <h6 class="fw-bold text-primary mb-3">${staffFn:escapeXml(workIssue.tieuDe)}</h6>
+                <div class="mb-2"><strong>Vị trí phòng:</strong> <span class="text-danger">${staffFn:escapeXml(workIssue.viTriPhong)}</span></div>
+                <div class="mb-2"><strong>Mức độ:</strong> <span class="badge bg-<%= badgeMucDo %>">${staffFn:escapeXml(workIssue.mucDo)}</span></div>
                 <div class="mb-2"><strong>Trạng thái:</strong> <span class="badge bg-<%= badgeTrangThai %>"><%= task.getTrangThai() %></span></div>
-                <div class="mb-2"><strong>SĐT Sinh viên:</strong> <a href="tel:<%= task.getSoDienThoai() %>" class="text-decoration-none fw-bold"><%= task.getSoDienThoai() %></a></div>
+                <div class="mb-2"><strong>SĐT Sinh viên:</strong> <a href="tel:${staffFn:escapeXml(workIssue.soDienThoai)}" class="text-decoration-none fw-bold">${staffFn:escapeXml(workIssue.soDienThoai)}</a></div>
                 <div class="mb-2"><strong>Ngày báo cáo:</strong> <%= task.getNgayGui() %></div>
                 <hr>
                 <div class="mb-1 fw-bold text-dark">Mô tả chi tiết từ sinh viên:</div>
                 <div class="p-3 bg-light rounded border text-muted" style="font-size: 0.95rem;">
-                    <%= task.getMoTa() %>
+                    ${staffFn:escapeXml(workIssue.moTa)}
                 </div>
             </div>
             <div class="modal-footer">
@@ -729,6 +666,8 @@
         }
     }
 %>
+</div>
+<script src="${pageContext.request.contextPath}/js/employee-work-actions.js"></script>
 <%@ include file="/WEB-INF/employee_sidebar_script.jspf" %>
 <staff:if test="${statisticsView and pending + processing + done > 0}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -786,5 +725,6 @@
         }
     </script>
 </staff:if>
+<script src="${pageContext.request.contextPath}/js/form-validation.js"></script>
 </body>
 </html>
