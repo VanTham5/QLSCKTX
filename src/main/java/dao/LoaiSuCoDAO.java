@@ -9,9 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LoaiSuCoDAO {
-    Connection conn = null;
-    PreparedStatement ps = null;
-    ResultSet rs = null;
 
     // 1. Lấy danh sách toàn bộ loại sự cố kèm theo tên tổ phụ trách
     public List<LoaiSuCo> getAllLoaiSuCo() {
@@ -20,10 +17,9 @@ public class LoaiSuCoDAO {
                 "FROM loai_su_co lsc " +
                 "LEFT JOIN to_nhan_vien tnv ON lsc.to_id = tnv.to_id " +
                 "ORDER BY lsc.loai_su_co_id DESC";
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
-            rs = ps.executeQuery();
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 LoaiSuCo lsc = new LoaiSuCo();
                 lsc.setLoaiSuCoId(rs.getInt("loai_su_co_id"));
@@ -42,9 +38,8 @@ public class LoaiSuCoDAO {
     // 2. Thêm mới loại sự cố
     public boolean insertLoaiSuCo(String tenLoai, int toId, String moTa) {
         String query = "INSERT INTO loai_su_co (ten_loai, to_id, mo_ta) VALUES (?, ?, ?)";
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, tenLoai);
             ps.setInt(2, toId);
             ps.setString(3, moTa);
@@ -58,9 +53,8 @@ public class LoaiSuCoDAO {
     // 3. Cập nhật loại sự cố
     public boolean updateLoaiSuCo(int id, String tenLoai, int toId, String moTa) {
         String query = "UPDATE loai_su_co SET ten_loai = ?, to_id = ?, mo_ta = ? WHERE loai_su_co_id = ?";
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, tenLoai);
             ps.setInt(2, toId);
             ps.setString(3, moTa);
@@ -75,9 +69,8 @@ public class LoaiSuCoDAO {
     // 4. Xóa loại sự cố
     public boolean deleteLoaiSuCo(int id) {
         String query = "DELETE FROM loai_su_co WHERE loai_su_co_id = ?";
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {

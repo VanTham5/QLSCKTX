@@ -12,10 +12,9 @@ public class ThongBaoDAO {
     public List<ThongBao> getAllThongBao() {
         List<ThongBao> list = new ArrayList<>();
         String query = "SELECT * FROM thong_bao ORDER BY ngay_tao DESC";
-        try {
-            Connection conn = new DBContext().getConnection();
-            PreparedStatement ps = conn.prepareStatement(query);
-            ResultSet rs = ps.executeQuery();
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 ThongBao tb = new ThongBao();
                 tb.setId(rs.getInt("thong_bao_id"));

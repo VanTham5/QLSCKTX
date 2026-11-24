@@ -68,7 +68,19 @@ public class AdminAccountListServlet extends HttpServlet {
             Integer toId = (toIdStr != null && !toIdStr.trim().isEmpty()) ? Integer.parseInt(toIdStr) : null;
 
             TaiKhoanDAO dao = new TaiKhoanDAO();
-            dao.createAccountByAdmin(hoTen, tenDangNhap, matKhau, vaiTro, toId);
+            if (dao.checkExistUsername(tenDangNhap)) {
+                session.setAttribute("accountMsgType", "danger");
+                session.setAttribute("accountMsg", "Tên đăng nhập \"" + tenDangNhap + "\" đã tồn tại trong hệ thống!");
+            } else {
+                boolean created = dao.createAccountByAdmin(hoTen, tenDangNhap, matKhau, vaiTro, toId);
+                if (created) {
+                    session.setAttribute("accountMsgType", "success");
+                    session.setAttribute("accountMsg", "Cấp tài khoản \"" + tenDangNhap + "\" thành công!");
+                } else {
+                    session.setAttribute("accountMsgType", "danger");
+                    session.setAttribute("accountMsg", "Không thể tạo tài khoản. Vui lòng thử lại!");
+                }
+            }
 
             response.sendRedirect(request.getContextPath() + "/admin-accounts");
             return;

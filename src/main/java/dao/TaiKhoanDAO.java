@@ -2,6 +2,8 @@ package dao;
 
 import context.DBContext;
 import model.TaiKhoan;
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,52 +14,56 @@ import java.util.List;
 import java.util.Map;
 
 public class TaiKhoanDAO {
-    Connection conn = null;
-    PreparedStatement ps = null;
-    ResultSet rs = null;
+
+    // Kiểm tra mật khẩu: hỗ trợ cả mật khẩu đã mã hóa BCrypt và mật khẩu cũ chưa mã hóa trong DB
+    private boolean isPasswordMatch(String rawPass, String storedPass) {
+        if (rawPass == null || storedPass == null) {
+            return false;
+        }
+        if (storedPass.startsWith("$2a$") || storedPass.startsWith("$2b$") || storedPass.startsWith("$2y$")) {
+            return BCrypt.checkpw(rawPass, storedPass);
+        }
+        return rawPass.equals(storedPass);
+    }
 
     public TaiKhoan checkLogin(String user, String pass) {
-        // Kiểm tra user, pass và đảm bảo tài khoản đang hoạt động (trang_thai = 1)
-        String query = "SELECT * FROM tai_khoan WHERE ten_dang_nhap = ? AND mat_khau = ? AND trang_thai = 1";
-        try {
-            conn = new DBContext().getConnection(); // Mở kết nối tới MySQL
-            ps = conn.prepareStatement(query);
+        String query = "SELECT * FROM tai_khoan WHERE ten_dang_nhap = ? AND trang_thai = 1";
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, user);
-            ps.setString(2, pass);
-            rs = ps.executeQuery();
-
-            if (rs.next()) {
-                TaiKhoan tk = new TaiKhoan(
-                        rs.getInt("tai_khoan_id"),
-                        rs.getString("ten_dang_nhap"),
-                        rs.getString("mat_khau"),
-                        rs.getString("ho_ten"),
-                        rs.getString("vai_tro"),
-                        rs.getBoolean("trang_thai"),
-                        rs.getString("so_dien_thoai")
-                );
-                tk.setEmail(rs.getString("email"));
-                return tk;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String storedPass = rs.getString("mat_khau");
+                    if (isPasswordMatch(pass, storedPass)) {
+                        TaiKhoan tk = new TaiKhoan(
+                                rs.getInt("tai_khoan_id"),
+                                rs.getString("ten_dang_nhap"),
+                                storedPass,
+                                rs.getString("ho_ten"),
+                                rs.getString("vai_tro"),
+                                rs.getBoolean("trang_thai"),
+                                rs.getString("so_dien_thoai")
+                        );
+                        tk.setEmail(rs.getString("email"));
+                        return tk;
+                    }
+                }
             }
-        }  catch (Exception e) {
-        System.out.println("LỖI ĐĂNG NHẬP AIVEN: " + e.getMessage());
-        e.printStackTrace();
-    }
-        return null; // Trả về null nếu sai tài khoản/mật khẩu
+        } catch (Exception e) {
+            System.out.println("LỖI ĐĂNG NHẬP AIVEN: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
     }
 
-    // Hàm kiểm tra xem tên đăng nhập (Mã SV) đã tồn tại trong Database chưa
+    // Kiểm tra tên đăng nhập đã tồn tại chưa
     public boolean checkExistUsername(String username) {
-        String query = "SELECT * FROM tai_khoan WHERE ten_dang_nhap = ?";
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
+        String query = "SELECT 1 FROM tai_khoan WHERE ten_dang_nhap = ?";
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, username);
-            rs = ps.executeQuery();
-
-            // Nếu có kết quả trả về nghĩa là tài khoản đã tồn tại
-            if (rs.next()) {
-                return true;
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -65,36 +71,32 @@ public class TaiKhoanDAO {
         return false;
     }
 
-    // Hàm Đăng ký tài khoản Sinh viên mới
+    // Đăng ký tài khoản Sinh viên mới (mã hóa mật khẩu bằng BCrypt)
     public boolean registerStudent(String username, String password, String fullName) {
         if (checkExistUsername(username)) {
             return false;
         }
 
-        // ĐÃ SỬA: Thêm cột trang_thai = 1 và sửa vai trò thành 'SINH_VIEN' chuẩn với database
+        String hashedPass = BCrypt.hashpw(password, BCrypt.gensalt(10));
         String queryTK = "INSERT INTO tai_khoan (ten_dang_nhap, mat_khau, ho_ten, vai_tro, trang_thai) VALUES (?, ?, ?, 'SINH_VIEN', 1)";
 
-        try {
-            conn = new DBContext().getConnection();
-
-            // Bật tính năng lấy lại ID (tai_khoan_id) vừa được tự động tăng (Auto Increment)
-            ps = conn.prepareStatement(queryTK, Statement.RETURN_GENERATED_KEYS);
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(queryTK, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, username);
-            ps.setString(2, password);
+            ps.setString(2, hashedPass);
             ps.setString(3, fullName);
 
             int result = ps.executeUpdate();
-
             if (result > 0) {
-                ResultSet generatedKeys = ps.getGeneratedKeys();
-                if (generatedKeys.next()) {
-                    int newTaiKhoanId = generatedKeys.getInt(1);
-
-                    // Thêm thông tin vào bảng sinh_vien để liên kết tài khoản
-                    String querySV = "INSERT INTO sinh_vien (tai_khoan_id, phong_id) VALUES (?, 1)";
-                    PreparedStatement psSV = conn.prepareStatement(querySV);
-                    psSV.setInt(1, newTaiKhoanId);
-                    psSV.executeUpdate();
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        int newTaiKhoanId = generatedKeys.getInt(1);
+                        String querySV = "INSERT INTO sinh_vien (tai_khoan_id, phong_id) VALUES (?, 1)";
+                        try (PreparedStatement psSV = conn.prepareStatement(querySV)) {
+                            psSV.setInt(1, newTaiKhoanId);
+                            psSV.executeUpdate();
+                        }
+                    }
                 }
                 return true;
             }
@@ -168,12 +170,11 @@ public class TaiKhoanDAO {
         return false;
     }
 
-    // 2. Cập nhật thông tin cho NHÂN VIÊN / ADMIN
+    // Cập nhật thông tin cho NHÂN VIÊN / ADMIN
     public boolean updateProfileEmployee(int taiKhoanId, String hoTen, String sdt, String email) {
         String queryTK = "UPDATE tai_khoan SET ho_ten = ?, so_dien_thoai = ?, email = ? WHERE tai_khoan_id = ?";
-        try {
-            Connection conn = new DBContext().getConnection();
-            PreparedStatement psTK = conn.prepareStatement(queryTK);
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement psTK = conn.prepareStatement(queryTK)) {
             psTK.setString(1, hoTen);
             psTK.setString(2, sdt);
             psTK.setString(3, email);
@@ -205,25 +206,37 @@ public class TaiKhoanDAO {
         return null;
     }
 
+    // Đổi mật khẩu (xác thực mật khẩu cũ và mã hóa mật khẩu mới bằng BCrypt)
     public boolean changePassword(int taiKhoanId, String oldPass, String newPass) {
-        String sql = "UPDATE tai_khoan SET mat_khau = ? WHERE tai_khoan_id = ? AND mat_khau = ?";
+        String selectSql = "SELECT mat_khau FROM tai_khoan WHERE tai_khoan_id = ?";
+        String updateSql = "UPDATE tai_khoan SET mat_khau = ? WHERE tai_khoan_id = ?";
         try (Connection connection = new DBContext().getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, newPass);
-            statement.setInt(2, taiKhoanId);
-            statement.setString(3, oldPass);
-            return statement.executeUpdate() > 0;
+             PreparedStatement selectStmt = connection.prepareStatement(selectSql)) {
+            selectStmt.setInt(1, taiKhoanId);
+            try (ResultSet rs = selectStmt.executeQuery()) {
+                if (!rs.next()) {
+                    return false;
+                }
+                String storedPass = rs.getString("mat_khau");
+                if (!isPasswordMatch(oldPass, storedPass)) {
+                    return false;
+                }
+            }
+            String hashedNewPass = BCrypt.hashpw(newPass, BCrypt.gensalt(10));
+            try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+                updateStmt.setString(1, hashedNewPass);
+                updateStmt.setInt(2, taiKhoanId);
+                return updateStmt.executeUpdate() > 0;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    // Lấy danh sách tài khoản theo vai trò (Loại trừ ADMIN) một cách an toàn
+    // Lấy danh sách tài khoản theo vai trò (Loại trừ ADMIN)
     public List<TaiKhoan> getAccountsByRole(String role) {
         List<TaiKhoan> list = new ArrayList<>();
-
-        // Đã sửa 'to_ky_thuat' thành 'to_nhan_vien' khớp với cơ sở dữ liệu của bạn
         String query = "SELECT tk.tai_khoan_id, tk.ten_dang_nhap, tk.ho_ten, tk.vai_tro, tk.trang_thai, tk.so_dien_thoai, tt.ten_to " +
                 "FROM tai_khoan tk " +
                 "LEFT JOIN nhan_vien nv ON tk.tai_khoan_id = nv.tai_khoan_id " +
@@ -235,55 +248,34 @@ public class TaiKhoanDAO {
         }
         query += "ORDER BY tk.tai_khoan_id DESC";
 
-        try {
-            Connection conn = new DBContext().getConnection();
-            PreparedStatement ps = conn.prepareStatement(query);
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
             if (role != null && !role.isEmpty() && !role.equals("all")) {
                 ps.setString(1, role);
             }
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                TaiKhoan tk = new TaiKhoan();
-                tk.setTaiKhoanId(rs.getInt("tai_khoan_id"));
-                tk.setTenDangNhap(rs.getString("ten_dang_nhap"));
-                tk.setHoTen(rs.getString("ho_ten"));
-                tk.setVaiTro(rs.getString("vai_tro"));
-                tk.setTrangThai(rs.getBoolean("trang_thai"));
-                tk.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Chưa cập nhật");
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    TaiKhoan tk = new TaiKhoan();
+                    tk.setTaiKhoanId(rs.getInt("tai_khoan_id"));
+                    tk.setTenDangNhap(rs.getString("ten_dang_nhap"));
+                    tk.setHoTen(rs.getString("ho_ten"));
+                    tk.setVaiTro(rs.getString("vai_tro"));
+                    tk.setTrangThai(rs.getBoolean("trang_thai"));
+                    tk.setSoDienThoai(rs.getString("so_dien_thoai") != null ? rs.getString("so_dien_thoai") : "Chưa cập nhật");
 
-                String tenTo = rs.getString("ten_to");
-                if ("NHAN_VIEN".equals(tk.getVaiTro())) {
-                    tk.setTenTo(tenTo != null ? tenTo : "Chưa phân tổ");
-                } else {
-                    tk.setTenTo("---");
+                    String tenTo = rs.getString("ten_to");
+                    if ("NHAN_VIEN".equals(tk.getVaiTro())) {
+                        tk.setTenTo(tenTo != null ? tenTo : "Chưa phân tổ");
+                    } else {
+                        tk.setTenTo("---");
+                    }
+                    list.add(tk);
                 }
-
-                list.add(tk);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return list;
-    }
-
-    // Hàm phụ lấy tên tổ của nhân viên (tránh lỗi JOIN toàn cục)
-    private String getTenToByTaiKhoanId(int taiKhoanId, Connection conn) {
-        String tenTo = "Chưa phân tổ";
-        String query = "SELECT tt.ten_to FROM nhan_vien nv " +
-                "JOIN to_ky_thuat tt ON nv.to_id = tt.to_id " +
-                "WHERE nv.tai_khoan_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setInt(1, taiKhoanId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    String t = rs.getString("ten_to");
-                    if (t != null) tenTo = t;
-                }
-            }
-        } catch (Exception e) {
-            // Nếu bảng nhan_vien hoặc to_ky_thuat có tên khác, code vẫn chạy bình thường và trả về "Chưa phân tổ"
-        }
-        return tenTo;
     }
 
     // Cập nhật trạng thái tài khoản (1: Hoạt động, 0: Ngừng hoạt động)
@@ -307,8 +299,8 @@ public class TaiKhoanDAO {
                 + "AND colleague.tai_khoan_id <> nv.tai_khoan_id "
                 + "LEFT JOIN tai_khoan tk ON tk.tai_khoan_id = colleague.tai_khoan_id AND tk.trang_thai = 1 "
                 + "WHERE nv.tai_khoan_id = ? ORDER BY tk.ho_ten";
-        Map<String, Object> team = new LinkedHashMap<>();
-        List<Map<String, String>> members = new ArrayList<>();
+        Map<String, Object> team = new LinkedHashMap<String, Object>();
+        List<Object> members = new ArrayList<>();
         team.put("members", members);
         try (Connection connection = new DBContext().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -318,7 +310,7 @@ public class TaiKhoanDAO {
                     team.put("name", result.getString("ten_to"));
                     String name = result.getString("ho_ten");
                     if (name != null) {
-                        Map<String, String> member = new LinkedHashMap<>();
+                        Map<String, String> member = new LinkedHashMap<String, String>();
                         member.put("name", name);
                         member.put("phone", result.getString("so_dien_thoai"));
                         members.add(member);
@@ -333,16 +325,18 @@ public class TaiKhoanDAO {
         return team;
     }
 
+    // Admin cấp tài khoản mới (mã hóa mật khẩu bằng BCrypt)
     public boolean createAccountByAdmin(String hoTen, String tenDangNhap, String matKhau, String vaiTro, Integer toId) {
+        String hashedPass = BCrypt.hashpw(matKhau, BCrypt.gensalt(10));
         String sqlTaiKhoan = "INSERT INTO tai_khoan (ho_ten, ten_dang_nhap, mat_khau, vai_tro, trang_thai) VALUES (?, ?, ?, ?, 1)";
         try (Connection conn = new DBContext().getConnection()) {
             conn.setAutoCommit(false);
 
             int newTaiKhoanId = -1;
-            try (PreparedStatement ps = conn.prepareStatement(sqlTaiKhoan, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlTaiKhoan, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, hoTen);
                 ps.setString(2, tenDangNhap);
-                ps.setString(3, matKhau);
+                ps.setString(3, hashedPass);
                 ps.setString(4, vaiTro);
                 ps.executeUpdate();
 

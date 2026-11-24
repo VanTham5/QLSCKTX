@@ -363,6 +363,43 @@
     </div>
 </div>
 
+<%
+    String accountMsg = (String) session.getAttribute("accountMsg");
+    String accountMsgType = (String) session.getAttribute("accountMsgType");
+    if (accountMsg != null) {
+        session.removeAttribute("accountMsg");
+        session.removeAttribute("accountMsgType");
+        boolean isSuccess = "success".equals(accountMsgType);
+%>
+<!-- MODAL THÔNG BÁO KẾT QUẢ TẠO TÀI KHOẢN -->
+<div class="modal fade" id="resultNotifyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow text-center">
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <% if (isSuccess) { %>
+                    <i class="fa-solid fa-circle-check text-success" style="font-size: 3rem;"></i>
+                    <% } else { %>
+                    <i class="fa-solid fa-circle-xmark text-danger" style="font-size: 3rem;"></i>
+                    <% } %>
+                </div>
+                <h5 class="fw-bold mb-2"><%= isSuccess ? "Thành công" : "Thất bại" %></h5>
+                <p class="text-muted mb-4"><%= accountMsg %></p>
+                <button type="button" class="btn btn-<%= isSuccess ? "success" : "danger" %> px-4 fw-semibold" data-bs-dismiss="modal">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const notifyModal = new bootstrap.Modal(document.getElementById('resultNotifyModal'));
+        notifyModal.show();
+    });
+</script>
+<% } %>
+
 <script>
     const roleStaff = document.getElementById('roleStaff');
     const roleStudent = document.getElementById('roleStudent');

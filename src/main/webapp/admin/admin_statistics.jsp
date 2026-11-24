@@ -20,7 +20,7 @@
         /* Sidebar xanh đậm */
         .sidebar {
             width: 260px;
-            background-color: #1e293b;
+            background-color: #343a40;
             height: 100vh;
             position: fixed;
             left: 0;
@@ -142,8 +142,7 @@
     <div class="top-header">
         <div class="dropdown">
             <a href="#" class="d-flex align-items-center text-decoration-none text-dark" data-bs-toggle="dropdown">
-                <img src="https://ui-avatars.com/api/?name=${not empty sessionScope.acc ? sessionScope.acc.hoTen : 'Admin'}&background=1e293b&color=fff"
-                     alt="Avatar" width="32" height="32" class="rounded-circle me-2">
+                <img src="https://ui-avatars.com/api/?name=${not empty sessionScope.acc ? sessionScope.acc.hoTen : 'Admin'}&background=random" alt="Avatar" width="32" height="32" class="rounded-circle me-2">
                 <span class="fw-semibold">${not empty sessionScope.acc ? sessionScope.acc.hoTen : 'Quản trị viên'}</span>
                 <i class="fa-solid fa-chevron-down ms-2 text-muted" style="font-size: 12px;"></i>
             </a>

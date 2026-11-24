@@ -96,7 +96,7 @@
     </div>
 
     <div class="sidebar-heading">Tổng quan</div>
-    <a href="admin_home.jsp" class="nav-link active"><i class="fa-solid fa-chart-line me-2 w-20px"></i> Bảng điều khiển</a>
+    <a href="${pageContext.request.contextPath}/admin-home" class="nav-link"><i class="fa-solid fa-chart-line me-2 w-20px"></i> Bảng điều khiển</a>
 
     <div class="sidebar-heading">Nghiệp vụ</div>
     <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#createNoticeModal">
