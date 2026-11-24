@@ -1,0 +1,88 @@
+.incident-pagination {
+    --pager-accent: #1754ba;
+    --pager-background: #eef4ff;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .65rem 1rem;
+    padding: .85rem 1.25rem;
+    background: linear-gradient(180deg, #fff, #f8fafc);
+    border-top: 1px solid #e2e8f0;
+    border-radius: 0 0 var(--bs-card-border-radius, .5rem) var(--bs-card-border-radius, .5rem);
+}
+
+.incident-pagination[hidden],
+.incident-pagination__nav[hidden] {
+    display: none;
+}
+
+.incident-pagination--employee {
+    --pager-accent: #08665f;
+    --pager-background: #e7f5f2;
+}
+
+.incident-pagination__nav,
+.incident-pagination__numbers {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+.incident-pagination__control {
+    display: grid;
+    place-items: center;
+    min-width: 2.3rem;
+    height: 2.3rem;
+    padding-inline: .4rem;
+    border: 1px solid #dbe3ee;
+    border-radius: .65rem;
+    background: #fff;
+    color: #334155;
+    font-size: .875rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.incident-pagination__control:hover:not([aria-disabled="true"]):not([aria-current="page"]) {
+    border-color: var(--pager-accent);
+    background: var(--pager-background);
+    color: var(--pager-accent);
+}
+
+.incident-pagination__control:focus-visible {
+    outline: 2px solid var(--pager-accent);
+    outline-offset: 2px;
+}
+
+.incident-pagination__control[aria-current="page"] {
+    border-color: var(--pager-accent);
+    background: var(--pager-accent);
+    color: #fff;
+}
+
+.incident-pagination__control[aria-disabled="true"] {
+    color: #64748b;
+    background: #f1f5f9;
+    cursor: default;
+}
+
+.incident-pagination__gap {
+    color: #64748b;
+}
+
+@media (max-width: 575.98px) {
+    .incident-pagination {
+        justify-content: center;
+        padding-inline: .5rem;
+    }
+
+    .incident-pagination__nav,
+    .incident-pagination__numbers {
+        gap: .2rem;
+    }
+
+    .incident-pagination__control {
+        min-width: 2rem;
+    }
+}

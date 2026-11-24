@@ -26,12 +26,16 @@ public class UpdateProfileServlet extends HttpServlet {
         }
 
         // Lấy các trường thông tin chung (bảng tai_khoan)
-        String fullName = request.getParameter("fullName");
-        String sdt = request.getParameter("sdt");
-        String email = request.getParameter("email");
+        String fullName = FormValidation.trim(request.getParameter("fullName"));
+        String sdt = FormValidation.trim(request.getParameter("sdt"));
+        String email = FormValidation.trim(request.getParameter("email"));
 
         TaiKhoanDAO dao = new TaiKhoanDAO();
         boolean isSuccess = false;
+        boolean contactValid = FormValidation.text(fullName, 1, 100) && FormValidation.contact(sdt, email);
+        if (!"ADMIN".equals(acc.getVaiTro())) {
+            contactValid = contactValid && !sdt.isEmpty();
+        }
 
         // Phân quyền cập nhật dựa trên Vai trò
         if ("SINH_VIEN".equals(acc.getVaiTro())) {
@@ -41,26 +45,21 @@ public class UpdateProfileServlet extends HttpServlet {
             } catch (NumberFormatException e) {
                 phongId = 0;
             }
-            String maSV = request.getParameter("maSV");
-            String khoa = request.getParameter("khoa");
-            String lop = request.getParameter("lop");
+            String maSV = FormValidation.trim(request.getParameter("maSV"));
+            String khoa = FormValidation.trim(request.getParameter("khoa"));
+            String lop = FormValidation.trim(request.getParameter("lop"));
 
-            if (phongId > 0 && fullName != null && !fullName.trim().isEmpty()
-                    && sdt != null && !sdt.trim().isEmpty()
-                    && maSV != null && !maSV.trim().isEmpty()
-                    && khoa != null && !khoa.trim().isEmpty()
-                    && lop != null && !lop.trim().isEmpty()) {
+            if (contactValid && phongId > 0 && FormValidation.text(maSV, 1, 20)
+                    && FormValidation.text(khoa, 1, 100) && FormValidation.text(lop, 1, 50)) {
                 isSuccess = dao.updateProfileStudent(acc.getTaiKhoanId(), fullName, sdt, email, phongId, maSV, khoa, lop);
             }
         } else if ("NHAN_VIEN".equals(acc.getVaiTro())) {
-            if (fullName != null && !fullName.trim().isEmpty()) {
-                fullName = fullName.trim();
+            if (contactValid) {
                 isSuccess = dao.updateProfileEmployee(acc.getTaiKhoanId(), fullName, sdt, email);
             }
         } else {
             // Dành cho ADMIN
-            if (fullName != null && !fullName.trim().isEmpty()) {
-                fullName = fullName.trim();
+            if (contactValid) {
                 isSuccess = dao.updateProfileEmployee(acc.getTaiKhoanId(), fullName, sdt, email);
             }
         }
@@ -85,11 +84,7 @@ public class UpdateProfileServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + page
                     + "?profileUpdate=" + (isSuccess ? "success" : "failed"));
         } else {
-            String referer = request.getHeader("referer");
-            String base = (referer != null && !referer.isEmpty())
-                    ? referer.split("\\?")[0]
-                    : (request.getContextPath() + "/admin-home");
-            response.sendRedirect(base + "?profileUpdate=" + (isSuccess ? "success" : "failed"));
+            response.sendRedirect(request.getContextPath() + "/admin-home?profileUpdate=" + (isSuccess ? "success" : "failed"));
         }
     }
 }

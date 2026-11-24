@@ -9,17 +9,25 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 bg-light">
-                <notice:choose><notice:when test="${not empty listTB}"><notice:forEach var="noticeItem" items="${listTB}">
-                <div class="card mb-3 border-0 shadow-sm">
-                    <div class="card-body">
-                        <h6 class="fw-bold text-primary mb-1"><notice:out value="${noticeItem.tieuDe}"/></h6>
-                        <div class="text-muted small mb-2"><i class="fa-regular fa-clock me-1"></i> <notice:out value="${noticeItem.ngayTao}"/></div>
-                        <p class="mb-0 text-dark" style="font-size: 0.95rem;"><notice:out value="${noticeItem.noiDung}"/></p>
-                    </div>
+                <div id="noticeList">
+                    <jsp:include page="/WEB-INF/student_notice_batch.jsp"/>
                 </div>
-                </notice:forEach></notice:when><notice:otherwise>
-                <p class="text-center text-muted mt-3">Hiện không có thông báo nào từ BQL.</p>
-                </notice:otherwise></notice:choose>
+                <notice:if test="${empty listTB}">
+                    <p class="text-center text-muted mt-3">
+                        ${noticesUnavailable ? 'Chưa tải được thông báo. Vui lòng tải lại trang.' : 'Hiện không có thông báo nào từ BQL.'}
+                    </p>
+                </notice:if>
+                <notice:if test="${not empty nextNoticeBefore}">
+                    <notice:url var="noticeEndpoint" value="/student-notices"/>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-outline-primary rounded-pill px-3" id="loadMoreNotices"
+                                data-url="<notice:out value='${noticeEndpoint}'/>" aria-controls="noticeList">
+                            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true" hidden></span>
+                            Xem thêm thông báo
+                        </button>
+                    </div>
+                    <div id="noticeLoadStatus" class="small text-center mt-2" role="status"></div>
+                </notice:if>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
@@ -27,3 +35,4 @@
         </div>
     </div>
 </div>
+<script src="${pageContext.request.contextPath}/js/student-notices.js" defer></script>

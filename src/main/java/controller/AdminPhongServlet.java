@@ -30,20 +30,23 @@ public class AdminPhongServlet extends HttpServlet {
         }
 
         String building = request.getParameter("building");
-        if (building == null || building.isEmpty()) {
+        if (building == null || building.isEmpty() || "all".equalsIgnoreCase(building)) {
             building = "all";
         }
 
+        String keyword = searchKeyword(request);
         PhongDAO phongDao = new PhongDAO();
-        List<Phong> listPhong = phongDao.getRoomsByBuilding(building);
+        int offset = AdminPage.offset(request, phongDao.countRooms(building, keyword));
+        List<Phong> listPhong = phongDao.getRoomsByBuilding(building, keyword, AdminPage.SIZE, offset);
         List<String> listToaNha = phongDao.getAllToaNha();
 
         SuCoDAO scDao = new SuCoDAO();
-        int pending = scDao.getAllSuCoForAdmin("pending").size();
+        int pending = scDao.countAdminIncidents("pending", "", "");
 
         request.setAttribute("listPhong", listPhong);
         request.setAttribute("listToaNha", listToaNha);
         request.setAttribute("currentBuilding", building);
+        request.setAttribute("keyword", keyword);
         request.setAttribute("pending", pending);
 
         request.getRequestDispatcher("/admin/admin_phong.jsp").forward(request, response);
@@ -62,7 +65,7 @@ public class AdminPhongServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         String building = request.getParameter("building");
-        if (building == null || building.isEmpty()) {
+        if (building == null || building.isEmpty() || "all".equalsIgnoreCase(building)) {
             building = "all";
         }
 
@@ -107,6 +110,13 @@ public class AdminPhongServlet extends HttpServlet {
 
         session.setAttribute("phongMsg", msg);
         session.setAttribute("phongMsgType", msgType);
-        response.sendRedirect(request.getContextPath() + "/admin-phong?building=" + URLEncoder.encode(building, "UTF-8"));
+        response.sendRedirect(request.getContextPath() + "/admin-phong?building=" + URLEncoder.encode(building, "UTF-8")
+                + "&q=" + URLEncoder.encode(searchKeyword(request), "UTF-8")
+                + "&page=" + AdminPage.requestedPage(request));
+    }
+
+    private String searchKeyword(HttpServletRequest request) {
+        String keyword = FormValidation.trim(request.getParameter("q"));
+        return keyword.substring(0, Math.min(keyword.length(), 100));
     }
 }

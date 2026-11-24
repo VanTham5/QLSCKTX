@@ -1,3 +1,4 @@
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.TaiKhoan" %>
@@ -11,6 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/incident-pagination.css">
     <style>
         body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
         .sidebar { width: 260px; background-color: #343a40; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; }
@@ -82,23 +84,21 @@
                 <i class="fa-solid fa-user-plus me-1"></i> Cấp tài khoản
             </button>
         </div>
-        <%
-            String currentRole = request.getParameter("role");
-            if (currentRole == null || currentRole.trim().isEmpty()) {
-                currentRole = "all";
-            }
-        %>
+        <p id="adminListMessage" class="text-danger mb-2" role="status"></p>
+        <div id="adminList" data-tab-param="role">
+        <% String currentRole = (String) request.getAttribute("currentRole"); %>
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <!-- BỘ LỌC THEO VAI TRÒ -->
             <div class="btn-group shadow-sm" role="group">
-                <a href="?role=all" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("all") ? "active" : "" %>">Tất cả tài khoản</a>
-                <a href="?role=NHAN_VIEN" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("NHAN_VIEN") ? "active text-primary" : "" %>">Nhân viên kỹ thuật</a>
-                <a href="?role=SINH_VIEN" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("SINH_VIEN") ? "active text-success" : "" %>">Sinh viên</a>
+                <a data-list-link data-list-tab href="?role=all" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("all") ? "active" : "" %>">Tất cả tài khoản</a>
+                <a data-list-link data-list-tab href="?role=NHAN_VIEN" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("NHAN_VIEN") ? "active text-primary" : "" %>">Nhân viên kỹ thuật</a>
+                <a data-list-link data-list-tab href="?role=SINH_VIEN" class="btn btn-outline-secondary filter-btn <%= currentRole.equals("SINH_VIEN") ? "active text-success" : "" %>">Sinh viên</a>
             </div>
 
             <!-- Bộ lọc Tổ phụ trách, Trạng thái & Ô tìm kiếm -->
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                <select id="teamFilter" class="form-select form-select-sm shadow-sm" style="width: 170px;">
+            <form method="get" data-list-filters class="d-flex flex-wrap align-items-center gap-2">
+                <input type="hidden" name="role" value="${currentRole}">
+                <select id="teamFilter" name="team" aria-label="Tổ phụ trách" class="form-select form-select-sm shadow-sm" style="width: 170px;">
                     <option value="">Tất cả tổ phụ trách</option>
                     <option value="Tổ Bảo An">Tổ Bảo An</option>
                     <option value="Tổ Cơ Sở Vật Chất">Tổ Cơ Sở Vật Chất</option>
@@ -106,20 +106,21 @@
                     <option value="Tổ Mạng & Internet">Tổ Mạng & Internet</option>
                 </select>
 
-                <select id="statusFilter" class="form-select form-select-sm shadow-sm" style="width: 155px;">
+                <select id="statusFilter" name="status" aria-label="Trạng thái tài khoản" class="form-select form-select-sm shadow-sm" style="width: 155px;">
                     <option value="">Tất cả trạng thái</option>
-                    <option value="Hoạt động">Hoạt động</option>
-                    <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+                    <option value="1">Hoạt động</option>
+                    <option value="0">Ngừng hoạt động</option>
                 </select>
 
                 <div class="input-group input-group-sm shadow-sm" style="width: 270px;">
             <span class="input-group-text bg-white border-end-0 text-muted">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </span>
-                    <input type="text" id="accountSearchInput" class="form-control border-start-0"
+                    <input type="text" id="accountSearchInput" name="q" maxlength="100" aria-label="Tìm tài khoản" value="<c:out value='${keyword}'/>" class="form-control border-start-0"
                            placeholder="Tìm mã TK, tên, username, SĐT...">
                 </div>
-            </div>
+                <noscript><button type="submit" class="btn btn-sm btn-primary">Lọc</button></noscript>
+            </form>
         </div>
 
         <!-- BẢNG DANH SÁCH TÀI KHOẢN -->
@@ -152,18 +153,18 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <img src="https://ui-avatars.com/api/?name=<%= java.net.URLEncoder.encode(tk.getHoTen() != null ? tk.getHoTen() : "User", "UTF-8") %>&background=random" class="rounded-circle me-2" width="28">
-                                    <span class="fw-bold text-dark"><%= tk.getHoTen() %></span>
+                                    <span class="fw-bold text-dark"><c:out value='<%= tk.getHoTen() %>'/></span>
                                 </div>
                             </td>
-                            <td><%= tk.getTenDangNhap() %></td>
+                            <td><c:out value='<%= tk.getTenDangNhap() %>'/></td>
                             <td>
-                                <a href="tel:<%= tk.getSoDienThoai() %>" class="text-decoration-none fw-medium text-primary">
-                                    <i class="fa-solid fa-phone fa-sm me-1"></i> <%= tk.getSoDienThoai() %>
+                                <a href="tel:<c:out value='<%= tk.getSoDienThoai() %>'/>" class="text-decoration-none fw-medium text-primary">
+                                    <i class="fa-solid fa-phone fa-sm me-1"></i> <c:out value='<%= tk.getSoDienThoai() %>'/>
                                 </a>
                             </td>
                             <td>
                                 <% if ("NHAN_VIEN".equals(tk.getVaiTro())) { %>
-                                <span class="badge bg-secondary bg-opacity-10 text-dark border"><%= tk.getTenTo() %></span>
+                                <span class="badge bg-secondary bg-opacity-10 text-dark border"><c:out value='<%= tk.getTenTo() %>'/></span>
                                 <% } else { %>
                                 <span class="text-muted small">--</span>
                                 <% } %>
@@ -183,17 +184,16 @@
                                     <input type="hidden" name="action" value="updateStatus">
                                     <input type="hidden" name="taiKhoanId" value="<%= tk.getTaiKhoanId() %>">
                                     <input type="hidden" name="role" value="<%= currentRole %>">
+                                    <input type="hidden" name="page" value="${pageNumber}">
                                     <% if (tk.isTrangThai()) { %>
                                     <input type="hidden" name="trangThaiMoi" value="0">
                                     <button type="submit" class="btn btn-sm btn-outline-danger shadow-sm"
-                                            onclick="return confirm('Chuyển tài khoản <%= tk.getTenDangNhap() %> sang Ngừng hoạt động (0)?');"
                                             title="Ngừng hoạt động">
                                         <i class="fa-solid fa-ban me-1"></i> Ngừng hoạt động
                                     </button>
                                     <% } else { %>
                                     <input type="hidden" name="trangThaiMoi" value="1">
                                     <button type="submit" class="btn btn-sm btn-outline-success shadow-sm"
-                                            onclick="return confirm('Kích hoạt lại tài khoản <%= tk.getTenDangNhap() %> (1)?');"
                                             title="Kích hoạt">
                                         <i class="fa-solid fa-check me-1"></i> Hoạt động
                                     </button>
@@ -212,7 +212,10 @@
                         </tbody>
                     </table>
                 </div>
+                <c:set var="adminPaginationPath" value="/admin-accounts"/>
+                <%@ include file="/WEB-INF/admin_pagination.jspf" %>
             </div>
+        </div>
         </div>
 
     </div>
@@ -248,44 +251,7 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    const searchInput = document.getElementById('accountSearchInput');
-    const teamFilter = document.getElementById('teamFilter');
-    const statusFilter = document.getElementById('statusFilter');
-    const tableBody = document.getElementById('accountTableBody');
 
-    function filterAccounts() {
-        const keyword = searchInput.value.trim().toLowerCase();
-        const team = teamFilter.value.trim().toLowerCase();
-        const status = statusFilter.value.trim().toLowerCase();
-        const rows = tableBody.querySelectorAll('tr');
-
-        rows.forEach(row => {
-            if (row.cells.length < 7) return; // bỏ qua dòng thông báo trống
-
-            // Lấy dữ liệu các cột: 0=Mã TK, 1=Họ tên, 2=Username, 3=SĐT, 4=Tổ, 6=Trạng thái
-            const searchTarget = (
-                row.cells[0].innerText + ' ' +
-                row.cells[1].innerText + ' ' +
-                row.cells[2].innerText + ' ' +
-                row.cells[3].innerText
-            ).toLowerCase();
-
-            const teamText = row.cells[4].innerText.trim().toLowerCase();
-            const statusText = row.cells[6].innerText.trim().toLowerCase();
-
-            const matchKeyword = !keyword || searchTarget.includes(keyword);
-            const matchTeam = !team || teamText === team;
-            const matchStatus = !status || statusText === status;
-
-            row.style.display = (matchKeyword && matchTeam && matchStatus) ? '' : 'none';
-        });
-    }
-
-    searchInput.addEventListener('input', filterAccounts);
-    teamFilter.addEventListener('change', filterAccounts);
-    statusFilter.addEventListener('change', filterAccounts);
-</script>
 
 <!-- MODAL CẤP TÀI KHOẢN MỚI -->
 <div class="modal fade" id="createAccountModal" tabindex="-1" aria-hidden="true">
@@ -298,7 +264,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
-            <form action="${pageContext.request.contextPath}/admin-accounts" method="POST">
+            <form id="createAccountForm" data-validation="account" action="${pageContext.request.contextPath}/admin-accounts" method="POST">
                 <input type="hidden" name="action" value="create">
                 <div class="modal-body p-4">
 
@@ -321,17 +287,17 @@
                     <!-- Các trường bắt buộc chung -->
                     <div class="mb-3">
                         <label class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="hoTen" placeholder="VD: Nguyễn Văn A" required>
+                        <input type="text" class="form-control" name="hoTen" maxlength="100" placeholder="VD: Nguyễn Văn A" required>
                     </div>
 
                     <div class="row g-2 mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Tên đăng nhập <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="tenDangNhap" placeholder="VD: nv09 hoặc sv51" required>
+                            <input type="text" class="form-control" name="tenDangNhap" minlength="3" maxlength="50" placeholder="VD: nv09 hoặc sv51" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Mật khẩu mặc định <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="matKhau" value="123456" required>
+                            <input type="text" class="form-control" name="matKhau" minlength="6" maxlength="72" value="123456" required>
                         </div>
                     </div>
 
@@ -384,7 +350,7 @@
                     <% } %>
                 </div>
                 <h5 class="fw-bold mb-2"><%= isSuccess ? "Thành công" : "Thất bại" %></h5>
-                <p class="text-muted mb-4"><%= accountMsg %></p>
+                <p class="text-muted mb-4"><c:out value='<%= accountMsg %>'/></p>
                 <button type="button" class="btn btn-<%= isSuccess ? "success" : "danger" %> px-4 fw-semibold" data-bs-dismiss="modal">
                     Đóng
                 </button>
@@ -421,5 +387,7 @@
     roleStudent.addEventListener('change', toggleTeamField);
 </script>
 
+<script src="${pageContext.request.contextPath}/js/admin-lists.js"></script>
+<script src="${pageContext.request.contextPath}/js/form-validation.js"></script>
 </body>
 </html>

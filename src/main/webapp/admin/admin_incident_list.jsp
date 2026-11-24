@@ -1,3 +1,4 @@
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="model.SuCo" %>
@@ -11,6 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/incident-pagination.css">
     <style>
         body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
         .sidebar { width: 260px; background-color: #343a40; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; }
@@ -76,17 +78,20 @@
         <h4 class="fw-bold text-dark mb-4"><i class="fa-solid fa-triangle-exclamation text-primary me-2"></i>Quản lý toàn bộ sự cố hệ thống</h4>
 
         <!-- BỘ LỌC TRẠNG THÁI + TÌM KIẾM -->
-        <% String currentFilter = request.getParameter("filter"); %>
+        <p id="adminListMessage" class="text-danger mb-2" role="status"></p>
+        <div id="adminList" data-tab-param="filter">
+        <% String currentFilter = (String) request.getAttribute("currentFilter"); %>
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <div class="btn-group shadow-sm" role="group">
-                <a href="?filter=all" class="btn btn-outline-secondary filter-btn <%= (currentFilter == null || currentFilter.equals("all")) ? "active" : "" %>">Tất cả</a>
-                <a href="?filter=pending" class="btn btn-outline-secondary filter-btn <%= "pending".equals(currentFilter) ? "active text-warning" : "" %>">Chờ xử lý</a>
-                <a href="?filter=processing" class="btn btn-outline-secondary filter-btn <%= "processing".equals(currentFilter) ? "active text-primary" : "" %>">Đang xử lý</a>
-                <a href="?filter=done" class="btn btn-outline-secondary filter-btn <%= "done".equals(currentFilter) ? "active text-success" : "" %>">Đã hoàn thành</a>
+                <a data-list-link data-list-tab href="?filter=all" class="btn btn-outline-secondary filter-btn <%= (currentFilter == null || currentFilter.equals("all")) ? "active" : "" %>">Tất cả</a>
+                <a data-list-link data-list-tab href="?filter=pending" class="btn btn-outline-secondary filter-btn <%= "pending".equals(currentFilter) ? "active text-warning" : "" %>">Chờ xử lý</a>
+                <a data-list-link data-list-tab href="?filter=processing" class="btn btn-outline-secondary filter-btn <%= "processing".equals(currentFilter) ? "active text-primary" : "" %>">Đang xử lý</a>
+                <a data-list-link data-list-tab href="?filter=done" class="btn btn-outline-secondary filter-btn <%= "done".equals(currentFilter) ? "active text-success" : "" %>">Đã hoàn thành</a>
             </div>
 
-            <div class="d-flex align-items-center gap-2">
-                <select id="priorityFilter" class="form-select form-select-sm shadow-sm" style="width: 150px;">
+            <form method="get" data-list-filters class="d-flex align-items-center gap-2">
+                <input type="hidden" name="filter" value="${currentFilter}">
+                <select id="priorityFilter" name="priority" aria-label="Mức độ" class="form-select form-select-sm shadow-sm" style="width: 150px;">
                     <option value="">Tất cả mức độ</option>
                     <option value="KHẨN CẤP">Khẩn cấp</option>
                     <option value="TRUNG BÌNH">Trung bình</option>
@@ -97,10 +102,11 @@
             <span class="input-group-text bg-white border-end-0 text-muted">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </span>
-                    <input type="text" id="searchInput" class="form-control border-start-0"
+                    <input type="text" id="searchInput" name="q" maxlength="100" aria-label="Tìm sự cố" value="<c:out value='${keyword}'/>" class="form-control border-start-0"
                            placeholder="Tìm mã SC, tiêu đề, tên SV, phòng...">
                 </div>
-            </div>
+                <noscript><button type="submit" class="btn btn-sm btn-primary">Lọc</button></noscript>
+            </form>
         </div>
 
         <!-- BẢNG DANH SÁCH SỰ CỐ -->
@@ -135,30 +141,30 @@
                                 <span class="fw-bold text-secondary">#SC0<%= task.getSuCoId() %></span>
                             </td>
                             <td style="min-width: 210px; max-width: 280px;">
-                                <div class="fw-bold text-dark"><%= task.getTieuDe() %></div>
+                                <div class="fw-bold text-dark"><c:out value='<%= task.getTieuDe() %>'/></div>
                                 <div class="text-muted text-nowrap" style="font-size: 0.8rem;">Gửi lúc: <%= task.getNgayGui() %></div>
                             </td>
                             <td class="text-nowrap">
                                 <div class="d-flex align-items-center">
                                     <img src="https://ui-avatars.com/api/?name=<%= java.net.URLEncoder.encode(tenNguoiGui, "UTF-8") %>&background=random" class="rounded-circle me-2" width="28">
-                                    <span class="fw-medium"><%= tenNguoiGui %></span>
+                                    <span class="fw-medium"><c:out value='<%= tenNguoiGui %>'/></span>
                                 </div>
                             </td>
                             <td class="text-nowrap">
-                                <a href="tel:<%= sdtNguoiGui %>" class="text-decoration-none fw-medium text-primary d-inline-flex align-items-center">
-                                    <i class="fa-solid fa-phone fa-sm me-1"></i> <%= sdtNguoiGui %>
+                                <a href="tel:<c:out value='<%= sdtNguoiGui %>'/>" class="text-decoration-none fw-medium text-primary d-inline-flex align-items-center">
+                                    <i class="fa-solid fa-phone fa-sm me-1"></i> <c:out value='<%= sdtNguoiGui %>'/>
                                 </a>
                             </td>
                             <td class="text-nowrap">
             <span class="fw-medium text-dark">
-                <i class="fa-solid fa-location-dot text-danger me-1"></i> <%= task.getViTriPhong() %>
+                <i class="fa-solid fa-location-dot text-danger me-1"></i> <c:out value='<%= task.getViTriPhong() %>'/>
             </span>
                             </td>
                             <td class="text-nowrap">
-                                <span class="badge bg-<%= badgeMucDo %> bg-opacity-10 text-<%= badgeMucDo %> border border-<%= badgeMucDo %>"><%= task.getMucDo() %></span>
+                                <span class="badge bg-<%= badgeMucDo %> bg-opacity-10 text-<%= badgeMucDo %> border border-<%= badgeMucDo %>"><c:out value='<%= task.getMucDo() %>'/></span>
                             </td>
                             <td class="text-nowrap">
-                                <span class="badge bg-<%= badgeTrangThai %> <%= "Chờ xử lý".equals(task.getTrangThai()) ? "text-dark" : "text-white" %>"><%= task.getTrangThai() %></span>
+                                <span class="badge bg-<%= badgeTrangThai %> <%= "Chờ xử lý".equals(task.getTrangThai()) ? "text-dark" : "text-white" %>"><c:out value='<%= task.getTrangThai() %>'/></span>
                             </td>
                             <td class="pe-4 text-center text-nowrap">
                                 <button type="button" class="btn btn-sm btn-light text-primary border"
@@ -178,7 +184,10 @@
                         </tbody>
                     </table>
                 </div>
+                <c:set var="adminPaginationPath" value="/admin-incidents"/>
+                <%@ include file="/WEB-INF/admin_pagination.jspf" %>
             </div>
+        </div>
         </div>
 
     </div>
@@ -212,6 +221,7 @@
     </div>
 </div>
 
+<div id="adminListDetails">
 <!-- VÒNG LẶP MODAL CHI TIẾT SỰ CỐ -->
 <%
     if (listSuCo != null && !listSuCo.isEmpty()) {
@@ -227,17 +237,17 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 text-start">
-                <h6 class="fw-bold text-primary mb-3"><%= task.getTieuDe() %></h6>
-                <div class="mb-2"><strong>Người báo cáo:</strong> <span class="fw-bold text-dark"><%= task.getTenNguoiGui() %></span></div>
+                <h6 class="fw-bold text-primary mb-3"><c:out value='<%= task.getTieuDe() %>'/></h6>
+                <div class="mb-2"><strong>Người báo cáo:</strong> <span class="fw-bold text-dark"><c:out value='<%= task.getTenNguoiGui() %>'/></span></div>
                 <div class="mb-2">
                     <strong>Số điện thoại:</strong>
-                    <a href="tel:<%= task.getSoDienThoai() %>" class="text-decoration-none fw-bold text-primary">
-                        <i class="fa-solid fa-phone me-1"></i> <%= task.getSoDienThoai() %>
+                    <a href="tel:<c:out value='<%= task.getSoDienThoai() %>'/>" class="text-decoration-none fw-bold text-primary">
+                        <i class="fa-solid fa-phone me-1"></i> <c:out value='<%= task.getSoDienThoai() %>'/>
                     </a>
                 </div>
-                <div class="mb-2"><strong>Vị trí phòng:</strong> <span class="text-danger fw-medium"><%= task.getViTriPhong() %></span></div>
-                <div class="mb-2"><strong>Mức độ:</strong> <span class="badge bg-<%= badgeMucDo %>"><%= task.getMucDo() %></span></div>
-                <div class="mb-2"><strong>Trạng thái:</strong> <span class="badge bg-<%= badgeTrangThai %>"><%= task.getTrangThai() %></span></div>
+                <div class="mb-2"><strong>Vị trí phòng:</strong> <span class="text-danger fw-medium"><c:out value='<%= task.getViTriPhong() %>'/></span></div>
+                <div class="mb-2"><strong>Mức độ:</strong> <span class="badge bg-<%= badgeMucDo %>"><c:out value='<%= task.getMucDo() %>'/></span></div>
+                <div class="mb-2"><strong>Trạng thái:</strong> <span class="badge bg-<%= badgeTrangThai %>"><c:out value='<%= task.getTrangThai() %>'/></span></div>
                 <div class="mb-2"><strong>Ngày báo cáo:</strong> <%= task.getNgayGui() %></div>
                 <div class="mb-2">
                     <strong>Nhân viên phụ trách:</strong>
@@ -248,9 +258,9 @@
                         boolean daCoNV = !"Chờ xử lý".equals(trangThaiNV) && tenNV != null && !tenNV.trim().isEmpty();
                         if (daCoNV) {
                     %>
-                    <span class="text-primary fw-medium"><%= tenNV %></span>
+                    <span class="text-primary fw-medium"><c:out value='<%= tenNV %>'/></span>
                     <% if (sdtNV != null && !sdtNV.trim().isEmpty()) { %>
-                    - <a href="tel:<%= sdtNV %>" class="text-decoration-none"><i class="fa-solid fa-phone fa-xs me-1"></i><%= sdtNV %></a>
+                    - <a href="tel:<c:out value='<%= sdtNV %>'/>" class="text-decoration-none"><i class="fa-solid fa-phone fa-xs me-1"></i><c:out value='<%= sdtNV %>'/></a>
                     <% } %>
                     <%
                     } else {
@@ -263,14 +273,14 @@
                 <hr>
                 <div class="mb-1 fw-bold text-dark">Mô tả chi tiết từ sinh viên:</div>
                 <div class="p-3 bg-light rounded border text-muted" style="font-size: 0.95rem;">
-                    <%= task.getMoTa() != null ? task.getMoTa() : "Không có mô tả chi tiết." %>
+                    <c:out value='<%= task.getMoTa() != null ? task.getMoTa() : "Không có mô tả chi tiết." %>'/>
                 </div>
                 <%
                     String repairNote = task.getGhiChuKyThuat();
                     if (repairNote != null && !repairNote.trim().isEmpty()) {
                 %>
                 <div class="mt-3 mb-1 fw-bold">Kết quả sửa chữa và vật tư thay thế</div>
-                <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><%= repairNote %></div>
+                <div class="p-3 bg-light rounded border text-break" style="white-space: pre-wrap"><c:out value='<%= repairNote %>'/></div>
                 <%
                     }
                 %>
@@ -288,32 +298,10 @@
 
 
 
+</div>
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    const searchInput = document.getElementById('searchInput');
-    const priorityFilter = document.getElementById('priorityFilter');
-    const tableBody = document.getElementById('incidentTableBody');
 
-    function filterIncidents() {
-        const keyword = searchInput.value.trim().toLowerCase();
-        const priority = priorityFilter.value.trim().toUpperCase();
-        const rows = tableBody.querySelectorAll('tr');
-
-        rows.forEach(row => {
-            if (row.cells.length < 8) return; // bỏ qua dòng thông báo trống
-            const rowText = row.innerText.toLowerCase();
-            const priorityText = row.cells[5].innerText.trim().toUpperCase();
-
-            const matchKeyword = !keyword || rowText.includes(keyword);
-            const matchPriority = !priority || priorityText === priority;
-
-            row.style.display = (matchKeyword && matchPriority) ? '' : 'none';
-        });
-    }
-
-    searchInput.addEventListener('input', filterIncidents);
-    priorityFilter.addEventListener('change', filterIncidents);
-</script>
+<script src="${pageContext.request.contextPath}/js/admin-lists.js"></script>
 </body>
 </html>

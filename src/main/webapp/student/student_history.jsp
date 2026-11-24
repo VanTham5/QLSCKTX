@@ -12,6 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/incident-pagination.css">
     <style>
             body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
             .sidebar { width: 260px; background-color: #ffffff; height: 100vh; position: fixed; left: 0; top: 0; border-right: 1px solid #e0e0e0; z-index: 1050; transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease; overflow-x: hidden !important; }
@@ -245,9 +246,13 @@
                             <td colspan="7" class="text-center py-5 text-muted">Không tìm thấy báo cáo nào trong mục này.</td>
                         </tr>
                         <% } %>
+                        <tr id="noFilterResultRow" hidden>
+                            <td colspan="7" class="text-center py-5 text-muted">Không tìm thấy báo cáo nào phù hợp.</td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
+                <%@ include file="/WEB-INF/incident_pagination.jspf" %>
             </div>
         </div>
 
@@ -350,22 +355,22 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="${pageContext.request.contextPath}/js/incident-pagination.js"></script>
 
 <!-- SCRIPT TÌM KIẾM & SẮP XẾP SỰ CỐ -->
 <script>
+    const issueTableBody = document.getElementById("issueTableBody");
+    const issueRows = Array.from(issueTableBody.querySelectorAll("tr.issue-row"));
+    const issueEmptyRow = document.getElementById("noFilterResultRow");
+    const issuePagination = createIncidentPagination(".issue-row", "noFilterResultRow");
+
     function filterAndSortIssues() {
         const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
         const typeFilter = document.getElementById("typeFilter").value.toLowerCase();
         const dateFilter = document.getElementById("dateFilter").value;
         const sortBy = document.getElementById("sortSelect").value;
 
-        const tbody = document.getElementById("issueTableBody");
-        const rows = Array.from(tbody.querySelectorAll("tr.issue-row"));
-        if (rows.length === 0) return;
-
-        let visibleCount = 0;
-
-        rows.forEach(row => {
+        const matches = row => {
             const code = (row.getAttribute("data-code") || "").toLowerCase();
             const title = (row.getAttribute("data-title") || "").toLowerCase();
             const type = (row.getAttribute("data-type") || "").toLowerCase();
@@ -375,15 +380,10 @@
             const matchType = !typeFilter || type.includes(typeFilter);
             const matchDate = !dateFilter || date === dateFilter;
 
-            if (matchKeyword && matchType && matchDate) {
-                row.style.display = "";
-                visibleCount++;
-            } else {
-                row.style.display = "none";
-            }
-        });
+            return matchKeyword && matchType && matchDate;
+        };
 
-        rows.sort((a, b) => {
+        issueRows.sort((a, b) => {
             const titleA = (a.getAttribute("data-title") || "").toLowerCase();
             const titleB = (b.getAttribute("data-title") || "").toLowerCase();
             const typeA = (a.getAttribute("data-type") || "").toLowerCase();
@@ -399,20 +399,8 @@
             return 0;
         });
 
-        rows.forEach(row => tbody.appendChild(row));
-
-        let emptyRow = document.getElementById("noFilterResultRow");
-        if (visibleCount === 0) {
-            if (!emptyRow) {
-                emptyRow = document.createElement("tr");
-                emptyRow.id = "noFilterResultRow";
-                emptyRow.innerHTML = '<td colspan="7" class="text-center py-5 text-muted">Không tìm thấy báo cáo nào phù hợp.</td>';
-                tbody.appendChild(emptyRow);
-            }
-            emptyRow.style.display = "";
-        } else if (emptyRow) {
-            emptyRow.style.display = "none";
-        }
+        issueRows.forEach(row => issueTableBody.insertBefore(row, issueEmptyRow));
+        issuePagination.update(matches, issueRows);
     }
 
     function resetSearchAndSort() {
@@ -422,6 +410,9 @@
         document.getElementById("sortSelect").value = "date_desc";
         filterAndSortIssues();
     }
+
+    filterAndSortIssues();
 </script>
+<script src="${pageContext.request.contextPath}/js/form-validation.js"></script>
 </body>
 </html>

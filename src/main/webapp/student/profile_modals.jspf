@@ -19,7 +19,7 @@
                 <profile:if test="${empty studentProfile or empty profileRooms}">
                     <div class="alert alert-warning" role="alert">Không tải được đầy đủ dữ liệu hồ sơ.</div>
                 </profile:if>
-                <form id="studentProfileForm" action="${pageContext.request.contextPath}/update-profile" method="POST">
+                <form id="studentProfileForm" action="${pageContext.request.contextPath}/update-profile" data-validation="profile" method="POST">
                     <input type="hidden" name="profilePage" value="${profileFromHistory ? 'history' : 'home'}">
                     <fieldset disabled>
 
@@ -30,18 +30,18 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Họ và Tên <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="fullName" value="${profileFn:escapeXml(studentProfile.fullName)}" required>
+                                <input type="text" class="form-control" name="fullName" maxlength="100" value="${profileFn:escapeXml(studentProfile.fullName)}" required>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Số điện thoại</label>
-                                <input type="text" class="form-control" name="sdt" value="${profileFn:escapeXml(studentProfile.sdt)}" placeholder="Nhập SĐT..." required>
+                                <input type="tel" inputmode="numeric" class="form-control" name="sdt" maxlength="10" value="${profileFn:escapeXml(studentProfile.sdt)}" placeholder="Nhập SĐT..." required>
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Email</label>
-                                <input type="email" class="form-control" name="email" value="${profileFn:escapeXml(studentProfile.email)}" placeholder="Nhập Email...">
+                                <input type="email" class="form-control" name="email" maxlength="100" value="${profileFn:escapeXml(studentProfile.email)}" placeholder="Nhập Email...">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Mã Sinh Viên <span class="text-danger">*</span></label>
@@ -147,8 +147,12 @@
                 </div>
                 <% } %>
 
+                <profile:if test="${param.passError == 'invalid'}">
+                    <div class="alert alert-danger" role="alert">Nhập mật khẩu mới ít nhất 6 ký tự và xác nhận đúng mật khẩu.</div>
+                </profile:if>
                 <!-- Form đổi mật khẩu -->
-                <form action="${pageContext.request.contextPath}/change-password" method="POST">
+                <form action="${pageContext.request.contextPath}/change-password" data-validation="password" method="POST">
+                    <input type="hidden" name="profilePage" value="${profileFromHistory ? 'history' : 'home'}">
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Mật khẩu cũ <span class="text-danger">*</span></label>
@@ -161,7 +165,12 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Mật khẩu mới <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" name="newPass" required>
+                        <input type="password" class="form-control" name="newPass" minlength="6" maxlength="72" autocomplete="new-password" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="studentConfirmPass" class="form-label fw-bold">Nhập lại mật khẩu mới</label>
+                        <input id="studentConfirmPass" type="password" class="form-control" name="confirmPass" autocomplete="new-password" required>
                     </div>
 
                     <div class="d-flex justify-content-end mt-4">
@@ -178,7 +187,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('error') === 'wrong_old_pass' || urlParams.get('msg') === 'pass_success') {
+        if (urlParams.get('passError') === 'invalid' || urlParams.get('error') === 'wrong_old_pass' || urlParams.get('msg') === 'pass_success') {
             var myModal = new bootstrap.Modal(document.getElementById('changePassModal'));
             myModal.show();
         }

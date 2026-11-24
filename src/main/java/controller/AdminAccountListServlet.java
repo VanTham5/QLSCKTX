@@ -3,7 +3,6 @@ package controller;
 import dao.SuCoDAO;
 import dao.TaiKhoanDAO;
 import model.TaiKhoan;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,100 +10,132 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.List;
 
 @WebServlet(name = "AdminAccountListServlet", urlPatterns = {"/admin-accounts"})
 public class AdminAccountListServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        TaiKhoan acc = (TaiKhoan) session.getAttribute("acc");
-
-        if (acc == null || !"ADMIN".equals(acc.getVaiTro())) {
-            response.sendRedirect("login.jsp");
+        if (!checkAdmin(request, response)) {
+            return;
+        }
+        TaiKhoanDAO dao = new TaiKhoanDAO();
+        if ("checkUsername".equals(request.getParameter("action"))) {
+            String username = FormValidation.trim(request.getParameter("username"));
+            if (!FormValidation.username(username)) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            response.setContentType("application/json;charset=UTF-8");
+            response.setHeader("Cache-Control", "no-store");
+            response.getWriter().print(dao.checkExistUsername(username));
             return;
         }
 
-        // Lấy tham số lọc vai trò (mặc định là 'all')
-        String role = request.getParameter("role");
-        if (role == null) {
-            role = "all";
+        String role = roleFilter(request.getParameter("role"));
+        String team = FormValidation.trim(request.getParameter("team"));
+        String status = FormValidation.trim(request.getParameter("status"));
+        if (!"0".equals(status) && !"1".equals(status)) {
+            status = "";
+        }
+        String keyword = FormValidation.trim(request.getParameter("q"));
+        if (keyword.length() > 100) {
+            keyword = keyword.substring(0, 100);
         }
 
-        TaiKhoanDAO tkDao = new TaiKhoanDAO();
-        List<TaiKhoan> listAccounts = tkDao.getAccountsByRole(role);
-
-        // Đếm số lượng sự cố chờ xử lý để hiển thị badge đỏ trên sidebar menu
-        SuCoDAO scDao = new SuCoDAO();
-        int pending = scDao.getAllSuCoForAdmin("pending").size();
-
-        request.setAttribute("listAccounts", listAccounts);
+        int total = dao.countAdminAccounts(role, team, status, keyword);
+        int offset = AdminPage.offset(request, total);
+        request.setAttribute("listAccounts", dao.getAdminAccounts(role, team, status, keyword, AdminPage.SIZE, offset));
         request.setAttribute("currentRole", role);
-        request.setAttribute("pending", pending);
-
+        request.setAttribute("teamFilter", team);
+        request.setAttribute("statusFilter", status);
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("pending", new SuCoDAO().countAdminIncidents("pending", "", ""));
         request.getRequestDispatcher("/admin/admin_account_list.jsp").forward(request, response);
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
-        HttpSession session = request.getSession();
-        TaiKhoan acc = (TaiKhoan) session.getAttribute("acc");
-
-        if (acc == null || !"ADMIN".equals(acc.getVaiTro())) {
-            response.sendRedirect(request.getContextPath() + "/login.jsp");
+        if (!checkAdmin(request, response)) {
             return;
         }
 
         String action = request.getParameter("action");
-
+        TaiKhoanDAO dao = new TaiKhoanDAO();
         if ("create".equals(action)) {
-            String hoTen = request.getParameter("hoTen");
-            String tenDangNhap = request.getParameter("tenDangNhap");
-            String matKhau = request.getParameter("matKhau");
-            String vaiTro = request.getParameter("vaiTro");
-            String toIdStr = request.getParameter("toId");
-
-            Integer toId = (toIdStr != null && !toIdStr.trim().isEmpty()) ? Integer.parseInt(toIdStr) : null;
-
-            TaiKhoanDAO dao = new TaiKhoanDAO();
-            if (dao.checkExistUsername(tenDangNhap)) {
-                session.setAttribute("accountMsgType", "danger");
-                session.setAttribute("accountMsg", "Tên đăng nhập \"" + tenDangNhap + "\" đã tồn tại trong hệ thống!");
-            } else {
-                boolean created = dao.createAccountByAdmin(hoTen, tenDangNhap, matKhau, vaiTro, toId);
-                if (created) {
-                    session.setAttribute("accountMsgType", "success");
-                    session.setAttribute("accountMsg", "Cấp tài khoản \"" + tenDangNhap + "\" thành công!");
-                } else {
-                    session.setAttribute("accountMsgType", "danger");
-                    session.setAttribute("accountMsg", "Không thể tạo tài khoản. Vui lòng thử lại!");
-                }
-            }
-
+            createAccount(request, dao);
             response.sendRedirect(request.getContextPath() + "/admin-accounts");
             return;
         }
+        if (!"updateStatus".equals(action)) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
 
+        int accountId = FormValidation.positiveId(request.getParameter("taiKhoanId"));
+        String status = request.getParameter("trangThaiMoi");
+        if (accountId == 0 || (!"0".equals(status) && !"1".equals(status))) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
 
-        if ("updateStatus".equals(action)) {
-            try {
-                int taiKhoanId = Integer.parseInt(request.getParameter("taiKhoanId"));
-                int trangThaiMoi = Integer.parseInt(request.getParameter("trangThaiMoi")); // 1 hoặc 0
+        boolean updated = dao.updateAccountStatus(accountId, Integer.parseInt(status));
+        if ("fetch".equals(request.getHeader("X-Requested-With"))) {
+            response.setStatus(updated ? HttpServletResponse.SC_NO_CONTENT : HttpServletResponse.SC_CONFLICT);
+        } else {
+            if (!updated) {
+                request.getSession().setAttribute("accountMsgType", "danger");
+                request.getSession().setAttribute("accountMsg", "Không thể cập nhật trạng thái tài khoản.");
+            }
+            String role = roleFilter(request.getParameter("role"));
+            int page = Math.max(1, FormValidation.positiveId(request.getParameter("page")));
+            response.sendRedirect(request.getContextPath() + "/admin-accounts?role=" + role + "&page=" + page);
+        }
+    }
 
-                TaiKhoanDAO tkDao = new TaiKhoanDAO();
-                tkDao.updateAccountStatus(taiKhoanId, trangThaiMoi);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
+    private void createAccount(HttpServletRequest request, TaiKhoanDAO dao) {
+        String name = FormValidation.trim(request.getParameter("hoTen"));
+        String username = FormValidation.trim(request.getParameter("tenDangNhap"));
+        String password = request.getParameter("matKhau");
+        String role = request.getParameter("vaiTro");
+        boolean employee = "NHAN_VIEN".equals(role);
+        int teamId = FormValidation.positiveId(request.getParameter("toId"));
+
+        String message;
+        boolean created = false;
+        if (!FormValidation.text(name, 1, 100) || !FormValidation.username(username)
+                || !FormValidation.password(password) || (!employee && !"SINH_VIEN".equals(role))) {
+            message = "Kiểm tra họ tên, tên đăng nhập (3–50 ký tự hợp lệ), mật khẩu (ít nhất 6 ký tự) và vai trò.";
+        } else if (employee && teamId == 0) {
+            message = "Vui lòng chọn tổ phụ trách cho nhân viên.";
+        } else if (dao.checkExistUsername(username)) {
+            message = "Tên đăng nhập đã tồn tại trong hệ thống.";
+        } else {
+            created = dao.createAccountByAdmin(name, username, password, role, employee ? teamId : null);
+            if (created) {
+                message = "Cấp tài khoản thành công.";
+            } else if (dao.checkExistUsername(username)) {
+                message = "Tên đăng nhập đã tồn tại trong hệ thống.";
+            } else {
+                message = "Không thể tạo tài khoản. Kiểm tra tổ phụ trách hoặc thử lại.";
             }
         }
+        HttpSession session = request.getSession();
+        session.setAttribute("accountMsgType", created ? "success" : "danger");
+        session.setAttribute("accountMsg", message);
+    }
 
-        String role = request.getParameter("role");
-        if (role == null || role.isEmpty()) {
-            role = "all";
+    private boolean checkAdmin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        HttpSession session = request.getSession(false);
+        TaiKhoan account = session == null ? null : (TaiKhoan) session.getAttribute("acc");
+        if (account == null || !"ADMIN".equals(account.getVaiTro())) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return false;
         }
-        response.sendRedirect(request.getContextPath() + "/admin-accounts?role=" + role);
+        return true;
+    }
 
-
+    private String roleFilter(String role) {
+        return "NHAN_VIEN".equals(role) || "SINH_VIEN".equals(role) ? role : "all";
     }
 }

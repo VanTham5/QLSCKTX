@@ -35,6 +35,6 @@ public class AssignTaskServlet extends HttpServlet {
         }
 
         response.sendRedirect(request.getContextPath() + "/admin-home?assignment="
-                + (assigned ? "success" : "failed"));
+                + (assigned ? "success" : "failed") + "&page=" + AdminPage.requestedPage(request));
     }
 }

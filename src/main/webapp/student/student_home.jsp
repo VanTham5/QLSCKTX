@@ -419,7 +419,7 @@
             </div>
             <div class="modal-body p-4">
 
-                <form action="${pageContext.request.contextPath}/report-issue" method="POST" class="needs-validation" novalidate>
+                <form action="${pageContext.request.contextPath}/report-issue" data-validation="report" method="POST" class="needs-validation" novalidate>
 
                     <div class="mb-3" >
                         <label for="tieuDe" class="form-label fw-bold">Tiêu đề sự cố <span class="text-danger">*</span></label>
@@ -465,7 +465,7 @@
                         <label for="moTa" class="form-label fw-bold">Mô tả chi tiết <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="moTa" name="moTa" rows="4"
                                   placeholder="Mô tả chính xác vị trí và tình trạng hư hỏng..."
-                                  minlength="20" required></textarea>
+                                  minlength="20" maxlength="5000" required></textarea>
                         <div class="invalid-feedback">
                             Vui lòng mô tả chi tiết (ít nhất 20 ký tự) để kỹ thuật viên chuẩn bị đồ nghề.
                         </div>
@@ -659,5 +659,6 @@
         });
     });
 </script>
+<script src="${pageContext.request.contextPath}/js/form-validation.js"></script>
 </body>
 </html>

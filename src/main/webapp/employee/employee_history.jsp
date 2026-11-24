@@ -12,6 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/incident-pagination.css">
     <style>
         body {
             background-color: #f0f2f5;
@@ -275,6 +276,9 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="incident-pagination--employee">
+                    <%@ include file="/WEB-INF/incident_pagination.jspf" %>
+                </div>
             </div>
         </div>
 
@@ -329,10 +333,11 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="${pageContext.request.contextPath}/js/incident-pagination.js"></script>
 <script>
     const historySearch = document.getElementById('historySearch');
     const historyDate = document.getElementById('historyDate');
-    const historyRows = Array.from(document.querySelectorAll('.history-incident'));
+    const historyPagination = createIncidentPagination('.history-incident', 'historyNoMatches');
     const historyStatusLinks = document.querySelectorAll('.filter-btn');
 
     function normalizeHistorySearch(text) {
@@ -343,14 +348,11 @@
         const value = historySearch.value.trim();
         const date = historyDate.value;
         const terms = normalizeHistorySearch(value).split(/\s+/).filter(Boolean);
-        let matches = 0;
-        historyRows.forEach(row => {
+        const matches = historyPagination.update(row => {
             const searchable = normalizeHistorySearch(Array.from(row.cells).slice(0, 3)
                 .map(cell => cell.textContent.trim()).join(' '));
-            row.hidden = (date && row.dataset.reportDate !== date) || !terms.every(term => searchable.includes(term));
-            if (!row.hidden) matches++;
+            return (!date || row.dataset.reportDate === date) && terms.every(term => searchable.includes(term));
         });
-        document.getElementById('historyNoMatches').hidden = !historyRows.length || matches > 0;
         document.getElementById('historySearchStatus').textContent = value || date ? matches + ' sự cố phù hợp.' : '';
         historyStatusLinks.forEach(link => {
             const url = new URL(link.href);
@@ -370,5 +372,6 @@
     updateHistorySearch();
 </script>
 <%@ include file="/WEB-INF/employee_sidebar_script.jspf" %>
+<script src="${pageContext.request.contextPath}/js/form-validation.js"></script>
 </body>
 </html>

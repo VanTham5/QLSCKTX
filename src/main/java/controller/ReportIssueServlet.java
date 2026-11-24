@@ -33,30 +33,36 @@ public class ReportIssueServlet extends HttpServlet {
             return;
         }
 
+        if (!"SINH_VIEN".equals(acc.getVaiTro())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
         // 3. Lấy dữ liệu người dùng nhập từ Form
-        String tieuDe = request.getParameter("tieuDe");
-        int loaiSuCoId;
-        try {
-            loaiSuCoId = Integer.parseInt(request.getParameter("loaiSuCoId"));
-        } catch (NumberFormatException e) {
+        String tieuDe = FormValidation.trim(request.getParameter("tieuDe"));
+        int loaiSuCoId = FormValidation.positiveId(request.getParameter("loaiSuCoId"));
+        String mucDo = request.getParameter("mucDo");
+        String moTa = FormValidation.trim(request.getParameter("moTa"));
+        if (!FormValidation.text(tieuDe, 10, 100) || !FormValidation.text(moTa, 20, 5000)
+                || loaiSuCoId == 0
+                || (!"THẤP".equals(mucDo) && !"TRUNG BÌNH".equals(mucDo) && !"KHẨN CẤP".equals(mucDo))) {
             session.setAttribute("reportSuccess", false);
             response.sendRedirect(request.getContextPath() + "/student-home");
             return;
         }
-        String mucDo = request.getParameter("mucDo");
-        String moTa = request.getParameter("moTa");
 
         // 4. Truy vấn nhanh để lấy sinh_vien_id và phong_id từ tài khoản đang đăng nhập
         int sinhVienId = 0;
         int phongId = 0;
-        try {
-            Connection conn = new context.DBContext().getConnection();
-            PreparedStatement ps = conn.prepareStatement("SELECT sinh_vien_id, phong_id FROM sinh_vien WHERE tai_khoan_id = ?");
+        String query = "SELECT sinh_vien_id, phong_id FROM sinh_vien WHERE tai_khoan_id = ?";
+        try (Connection conn = new context.DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setInt(1, acc.getTaiKhoanId());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                sinhVienId = rs.getInt("sinh_vien_id");
-                phongId = rs.getInt("phong_id");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    sinhVienId = rs.getInt("sinh_vien_id");
+                    phongId = rs.getInt("phong_id");
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
