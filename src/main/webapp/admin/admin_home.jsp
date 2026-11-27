@@ -166,9 +166,9 @@
                 <h4 class="fw-bold text-dark mb-1">Bảng điều khiển Trung tâm</h4>
                 <p class="text-muted mb-0" style="font-size: 0.9rem;">Thống kê tình hình hoạt động của toàn bộ Ký túc xá.</p>
             </div>
-            <button class="btn btn-primary fw-medium shadow-sm px-4">
+            <a href="${pageContext.request.contextPath}/admin-export-excel" class="btn btn-primary fw-medium shadow-sm px-4">
                 <i class="fa-solid fa-file-export me-2"></i> Xuất báo cáo Excel
-            </button>
+            </a>
         </div>
 
         <!-- THỐNG KÊ TỔNG QUAN -->
